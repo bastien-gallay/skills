@@ -131,8 +131,8 @@ vérité** de l'état d'avancement d'un écrit long. Il survit aux sessions,
 porte la thèse verrouillée, l'architecture courante, les bijoux à
 préserver, les pièges déjà traversés, les décisions actées et le journal.
 
-**Template** : `~/.claude/skills/redaction/suivi-template.md` (à copier
-tel quel pour scaffolder un nouveau SUIVI).
+**Template** : `suivi-template.md` (fichier voisin de ce `SKILL.md` dans
+le skill installé — à copier tel quel pour scaffolder un nouveau SUIVI).
 
 ### Cycle de vie
 
