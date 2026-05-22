@@ -1,0 +1,16 @@
+{
+  "name": "redaction",
+  "version": "0.1.0",
+  "description": "Boucle d'édition critique pour écrits longs (articles, billets, essais).",
+  "author": {
+    "name": "Bastien Gallay"
+  },
+  "license": "MIT",
+  "keywords": [
+    "redaction",
+    "writing",
+    "editing",
+    "critique",
+    "french-writing"
+  ]
+}
