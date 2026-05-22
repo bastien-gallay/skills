@@ -63,7 +63,24 @@ ln -s ~/Dev/personal/skills/redaction/skills/redaction \
   Claude »). Toute évolution qui assouplirait cet interdit casserait
   la valeur de facilitation du skill.
 
+## Lint
+
+Les deux fichiers produits du skill (`SKILL.md`, `suivi-template.md`) sont
+chargés tels quels comme prompts par Claude Code — un markdown cassé
+pollue le contexte de chaque session consommatrice. Lint avant commit :
+
+```bash
+markdownlint '**/*.md' --ignore node_modules
+```
+
+Configuration dans `.markdownlint.json`.
+
 ## Release
+
+Prérequis : `just` et `jq` sur le `PATH`, working tree clean sur `main`,
+section `## vX.Y.Z — YYYY-MM-DD` créée dans `CHANGELOG.md` (renommer
+`## Unreleased` **avant** d'appeler `just release` — sinon la commande
+refuse de tagger).
 
 Quick path :
 
@@ -73,4 +90,9 @@ just release 0.2.0    # bump + commit + tag (nécessite une section CHANGELOG.md
 just package          # construit dist/redaction-v<version>.skill
 ```
 
-Voir `docs/RELEASING.md` pour les détails du processus.
+Le push du tag déclenche `.github/workflows/release.yml`, qui rebuild le
+bundle `.skill` et crée la GitHub Release avec l'asset attaché —
+`git push --tags` n'est donc pas optionnel.
+
+Voir `docs/RELEASING.md` pour les détails du processus et les failure
+modes.
