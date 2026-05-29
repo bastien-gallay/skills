@@ -144,6 +144,29 @@ le skill installé — à copier tel quel pour scaffolder un nouveau SUIVI).
 | Fin de session | Une entrée datée dans `Journal de session` — bullets résumant le diff (3-5 lignes max). |
 | Reprise | **Lire le SUIVI avant toute critique.** Ne pas re-cadrer ce qu'il verrouille. |
 
+### Fallback sans filesystem persistant (claude.ai, Desktop sans repo)
+
+Le cycle de vie ci-dessus suppose un filesystem accessible où scaffolder
+`.personal/ecriture/SUIVI-<basename>.md`. Sur un host **sans écriture
+fichier persistante** (web claude.ai, Desktop hors d'un repo local), le
+SUIVI ne peut pas vivre en fichier. Bascule alors en **mode inline** :
+
+- **Tenir le SUIVI dans la conversation**, pas en fichier. Même
+  structure (sections obligatoires, tables), maintenu à jour à chaque
+  tour comme s'il s'agissait du fichier.
+- **Exporter en fin de session.** Émettre le SUIVI complet dans **un seul
+  bloc de code copiable** (markdown brut), en invitant explicitement
+  l'utilisateur à le sauvegarder hors de la conversation.
+- **Réimporter à la reprise.** Au démarrage d'une nouvelle session,
+  demander à l'utilisateur de **recoller son dernier export de SUIVI**,
+  puis le lire intégralement avant toute critique — exactement comme la
+  lecture du fichier en mode normal.
+
+Cet export/réimport remplace la persistance fichier : c'est
+l'utilisateur qui porte la matière d'une session à l'autre. Le reste du
+contrat (thèse verrouillée, une dérive par tour, pas de rédaction des
+paragraphes-cœur) est inchangé.
+
 ### Sections du SUIVI
 
 **Obligatoires** : `Métadonnées`, `Thèse`, `Architecture actuelle`,

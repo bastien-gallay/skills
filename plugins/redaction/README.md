@@ -90,19 +90,44 @@ Catalogue propre au skill (cross-référencé aux codes `Axx`/`Bxx` de
 
 ## Installation
 
+### Comme plugin Claude Code (marketplace)
+
+```bash
+/plugin marketplace add bastien-gallay/redaction
+/plugin install redaction@redaction
+```
+
+### Comme skill `.skill` (Claude Desktop, claude.ai web)
+
+Chaque release attache un bundle `redaction-vX.Y.Z.skill` (un zip avec
+`redaction/SKILL.md` à la racine) — voir la page
+[Releases](https://github.com/bastien-gallay/redaction/releases).
+
+- **Claude Desktop** : double-clic sur le `.skill` téléchargé (le format
+  est enregistré par l'OS pour l'installation en un clic).
+- **claude.ai (web)** : importer le `.skill` via l'uploader de skills.
+
+> **Note hors Claude Code.** Le cœur du skill (boucle critique, taxonomie
+> des pièges, interdit de rédaction des paragraphes-cœur) fonctionne
+> partout. La **persistance fichier** du `SUIVI-*.md` suppose un
+> filesystem ; sur un host sans écriture persistante, le skill bascule en
+> **mode inline** — il maintient le SUIVI dans la conversation et
+> l'exporte en fin de session pour que vous le recolliez à la reprise
+> (cf. `SKILL.md`, section « Fallback sans filesystem persistant »).
+
 ### En dev local (symlink, recommandé pour itérer sur le skill)
 
 ```bash
-git clone <repo-url> ~/Dev/personal/skills/redaction
-ln -s ~/Dev/personal/skills/redaction/skills/redaction \
+git clone https://github.com/bastien-gallay/redaction.git \
+      ~/Dev/oss/skills/redaction
+ln -s ~/Dev/oss/skills/redaction/skills/redaction \
       ~/.claude/skills/redaction
 ```
 
-### Comme plugin Claude Code (quand un remote sera publié)
+### Construire le bundle `.skill` localement
 
 ```bash
-/plugin marketplace add <owner>/redaction
-/plugin install redaction@redaction
+just package   # → dist/redaction-vX.Y.Z.skill
 ```
 
 ## License

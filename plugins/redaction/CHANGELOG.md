@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+## v0.2.0 — 2026-05-29
+
+### Added
+
+- **Fallback « mode inline » sans filesystem persistant.** Nouvelle
+  section de `SKILL.md` : sur un host sans écriture fichier (claude.ai
+  web, Desktop hors repo), le SUIVI est tenu inline dans la conversation,
+  exporté en fin de session dans un bloc copiable et réimporté à la
+  reprise. L'export/réimport remplace la persistance fichier ; le reste
+  du contrat (thèse verrouillée, une dérive par tour, pas de rédaction
+  des paragraphes-cœur) est inchangé.
+- **README — install multi-host.** Documentation des trois voies
+  d'installation : plugin Claude Code (marketplace), bundle `.skill`
+  (Claude Desktop double-clic / uploader claude.ai web), et symlink dev
+  local. Note explicite sur la dégradation du SUIVI hors Claude Code.
+
+### Changed
+
+- **README — install plugin/dev corrigée.** Remplacement des
+  placeholders `<repo-url>` / `<owner>` par le remote public
+  `bastien-gallay/redaction` désormais publié.
+
 ## v0.1.0 — 2026-05-22
 
 ### Added
