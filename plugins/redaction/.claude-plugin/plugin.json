@@ -1,6 +1,6 @@
 {
   "name": "redaction",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Boucle d'édition critique pour écrits longs (articles, billets, essais).",
   "author": {
     "name": "Bastien Gallay"
