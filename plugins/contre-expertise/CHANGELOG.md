@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.0 — 2026-06-12
+
+Two lessons from author review of the reference execution's report — both
+errors had survived the phase 7 counter-verification:
+
+- New cross-cutting rule 0.9 **corpus stratification**: every corpus piece
+  is tagged published / unpublished at framing; propositions sourced only
+  from unpublished material (drafts, seeds, hidden lab pages) are criticized
+  prospectively, with an owned disclaimer — never levelled with public
+  claims. Carried through phase 1 (grid tags), phase 6 (report rule) and
+  the templates.
+- Phase 7 brief extended to **lead-in attributions**: sentences that
+  attribute a finding to an actor ("the author cites X") are grep-checkable
+  and must be checked — verdict boxes were verified, framing sentences were
+  not. Two new known pitfalls.
+
 ## 2.0.0 — 2026-06-12
 
 Internationalization and genericization, after the first full field run

@@ -3,9 +3,12 @@
 <!-- Template note: instantiate the content in the dossier language; the
      filename `00-modele.md` and the P-xx ID scheme stay fixed. -->
 
-Date: <YYYY-MM-DD>. Corpus: <sources>.
+Date: <YYYY-MM-DD>. Corpus: <sources, each tagged published / unpublished>.
 Each proposition is numbered P-xx for traceability. One proposition = one
 refutable thing (practice, belief, measurement choice) — not a summary.
+A proposition sourced only from unpublished material carries the tag on its
+line (e.g. **P-xx** *(draft, unpublished — prospective critique only)*) and
+may never be levelled with public claims downstream (rule 0.9).
 
 ## A. <Proposition family — e.g. flow structure>
 

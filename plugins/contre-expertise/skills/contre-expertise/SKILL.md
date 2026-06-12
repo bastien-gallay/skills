@@ -67,6 +67,17 @@ description: >
    `corroborated / nuanced / weakened / refuted / not-found`
    (French rendering used by the reference execution: corroborée / nuancée /
    fragilisée / réfutée / introuvable).
+9. **Corpus stratification — published vs unpublished.** At framing, tag
+   every corpus piece `published` or `unpublished` (drafts, seeds, hidden
+   /lab pages, private notes) and record the tags in `etat.md`. Propositions
+   sourced *only* from unpublished material carry the tag through the grid,
+   the report and the action plan, and may only be criticized
+   **prospectively** ("what must not ship as-is") with an explicit
+   disclaimer — never levelled with public claims. The author has not
+   committed to a draft; a draft that carries unsourced material *and says
+   so* is the drafting process working, not a fault of the method. The
+   report names ONE owning chapter for this disclaimer (rule 0.6) and
+   recalls the status at every mention.
 
 ## 1. Inputs and framing (phase 0)
 
@@ -85,10 +96,11 @@ Accepted arguments (all optional, ask for what is missing):
 - `--reflect`: re-run/diff mode (see §8).
 
 Framing: read the corpus, restate in one sentence what is being audited and
-for which decision (publish? improve? settle a debate?). If the caliber is
-missing, ask via AskUserQuestion with the costs alongside each option.
-Create the dossier and initialize `etat.md` from `templates/etat.md`:
-framing decisions, caliber, language, planned unit list, timestamp.
+for which decision (publish? improve? settle a debate?). Tag every corpus
+piece published / unpublished (rule 0.9). If the caliber is missing, ask via
+AskUserQuestion with the costs alongside each option. Create the dossier and
+initialize `etat.md` from `templates/etat.md`: framing decisions, caliber,
+language, corpus tags, planned unit list, timestamp.
 
 ## 2. Incremental mode (default) and `--overwrite`
 
@@ -158,7 +170,9 @@ Reconstruct the method as **numbered falsifiable propositions** `P-xx`
 section "self-inconsistencies to investigate" (where the corpus contradicts
 itself or exempts itself from its own rules). Template:
 `templates/grille-modele.md`. This is the backbone of everything else — get
-the granularity right: one proposition = one refutable thing.
+the granularity right: one proposition = one refutable thing. Propositions
+sourced only from unpublished corpus pieces carry the tag from rule 0.9 on
+their grid line.
 
 ### Phase 2 — Interview (espoused theory vs theory-in-use)
 
@@ -236,16 +250,20 @@ asymmetries) · sources: verdicts by status · critique of the fundamentals
 rough, never omitted) · challenger · action plan (pointer) · bibliography.
 
 Writing rules: verdicts referenced by C-ids; one finding = one home (rule
-0.6); the bibliography is **generated from the notes** (script or
-extraction), never written from memory; in Typst, reuse the layout from a
-previous execution when one exists.
+0.6); critiques of propositions from unpublished material framed
+prospectively, with the rule-0.9 disclaimer owned by one chapter; the
+bibliography is **generated from the notes** (script or extraction), never
+written from memory; in Typst, reuse the layout from a previous execution
+when one exists.
 
 ### Phase 7 — Counter-verification of the report
 
 The stage the first execution had skipped: note claims were verified, the
 document's conclusions were not. Launch 3-6 agents (by caliber) tasked with
 **refuting the report's own verdicts and syntheses** (each verdict box, the
-executive summary, the gap analysis), with access to the notes. Integrate
+executive summary, the gap analysis — and every lead-in sentence that
+attributes a finding to an actor: "the author cites X" is grep-checkable
+against the corpus), with access to the notes. Integrate
 the corrections, trace them in `notes/98-contre-verification.md`, set the
 "corrections integrated" marker in `etat.md`. A report that preaches
 non-exemption must apply it to itself.
@@ -355,3 +373,16 @@ fan-out:
 - When phases run out of nominal order (interview after the report), treat
   the late phase's findings as new evidence against the existing artifacts
   and re-derive what they invalidate — don't bolt them on as a footnote.
+- **Verify lead-in attributions, not just verdicts.** Counter-verification
+  (phase 7) naturally checks facts and verdict boxes; it misses framing
+  sentences that attribute a finding to the wrong actor ("an example
+  internal to the corpus" when the evidence came from the research notes
+  and the trap threatens the report itself). For every "the author
+  does/cites X" sentence, grep the corpus before letting it stand.
+- **Never level published and unpublished material.** Criticizing a
+  draft's unsourced numbers as if they were public claims is unfair twice
+  over: the author hasn't committed to them, and a draft that flags its own
+  gaps is the drafting process working. Rule 0.9 exists because the
+  reference execution got this wrong (a seed-only proposition criticized at
+  the same level as published claims, caught by the author, not by
+  phase 7).

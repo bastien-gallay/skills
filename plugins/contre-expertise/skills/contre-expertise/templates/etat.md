@@ -12,7 +12,8 @@
 - Opened: <YYYY-MM-DD>
 - Audited subject: <one sentence>
 - Target decision: <publish / improve / settle>
-- Corpus: <paths>
+- Corpus: <paths — each tagged published / unpublished (draft, seed,
+  hidden lab page, private note); rule 0.9>
 - Caliber: <light|standard|full> (confirmed by the user: yes/no) —
   per-phase overrides if any
 - Language: <dossier language>
