@@ -1,38 +1,43 @@
-# <Unité> — <titre de la mission>
+# <Unit> — <mission title>
 
-Note de recherche du <YYYY-MM-DD>. Méthode : <n> recherches croisées
-(EN + FR), <n> fetches réussis de sources primaires. Objectif : instruire
-**à charge et à décharge**. Les références P-xx renvoient à
+<!-- Template note: instantiate the content in the dossier language; the
+     C-<unit>-<n> ID scheme stays fixed. -->
+
+Research note, <YYYY-MM-DD>. Method: <n> cross-checked searches
+(English + <corpus language>), <n> successful fetches of primary sources.
+Goal: investigate **for and against**. P-xx references point to
 `notes/00-modele.md`.
 
-<!-- OBLIGATOIRE : au moins une recherche de cas d'échec de la méthode/pratique
-     instruite, et une recherche non anglophone quand le sujet s'y prête.
-     Une URL ne figure ici QUE si elle provient d'un résultat de recherche ou
-     d'un fetch réussi. Source attendue introuvable = le dire tel quel. -->
+<!-- MANDATORY: at least one search for failure cases of the investigated
+     method/practice, and one non-English search when the topic lends
+     itself. A URL appears here ONLY if it came from a search result or a
+     successful fetch. Expected source not found = say so verbatim. -->
 
-## <Source / méthode 1>
+## <Source / method 1>
 
-- **Auteur / date** : …
-- **URL** : <https://…>
+- **Author / date**: …
+- **URL**: <https://…>
 
-**Résumé.** 4-8 phrases.
+**Summary.** 4-8 sentences.
 
-**Convergences avec le modèle.** (référencer les P-xx)
+**Convergences with the model.** (reference the P-xx)
 
-**Tensions / contradictions.** (idem — c'est la section qui justifie la fiche)
+**Tensions / contradictions.** (same — this is the section that justifies
+the note)
 
-**Citations.** Courtes, localisées.
+**Quotations.** Short, located.
 
-## Cas d'échec trouvés
+## Failure cases found
 
-<!-- échecs documentés, abandons, critiques publiées — ou constat d'absence -->
+<!-- documented failures, abandonments, published critiques — or a finding
+     of absence -->
 
-## Claims porteuses
+## Carrying claims
 
-<!-- 1-2 selon calibre ; ID stable C-<unité>-<n> ; ce sont elles qui passent
-     en vérification adversariale (phase 4) -->
+<!-- 1-2 depending on caliber; stable ID C-<unit>-<n>; these are what goes
+     through adversarial verification (phase 4) -->
 
-1. **C-<unité>-1** — <l'affirmation que le rapport pourrait reprendre>.
-   Source : <https://…>
-2. **C-<unité>-2** — …
-   Source : <https://…>
+1. **C-<unit>-1** — <the statement the report might reuse>.
+   Source: <https://…>
+2. **C-<unit>-2** — …
+   Source: <https://…>

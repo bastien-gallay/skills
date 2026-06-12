@@ -1,284 +1,357 @@
 ---
 name: contre-expertise
 description: >
-  Contre-expertise critique et sourcée d'une méthode de travail décrite par
-  l'utilisateur (articles, notes, README de pratique) : extraction du modèle en
-  propositions falsifiables, interview de l'auteur, deep research multi-agents
-  (méthodes comparables, pratiques, sources), vérification adversariale à deux
-  étages, méthode rivale (challenger), rapport à verdicts datés et plan d'action
-  plafonné au format expérimental. Avance de façon incrémentale par défaut
-  (reprise sur artefacts). Trigger : l'utilisateur tape /contre-expertise,
-  demande de « passer ma méthode au crible », « analyse critique de ma façon de
-  travailler », « contre-expertise de mes articles/pratiques », ou veut
-  confronter sa pratique à l'état de l'art sans complaisance.
+  Critical, sourced counter-assessment ("contre-expertise") of a working
+  method described by the user (articles, notes, practice README): extraction
+  of the model into falsifiable propositions, author interview, multi-agent
+  deep research (comparable methods, practices, cited sources), two-stage
+  adversarial verification, rival method (challenger steelman), report with
+  dated perishable verdicts, and a capped action plan in experimental format.
+  Progresses incrementally by default (resumes from on-disk artifacts).
+  Trigger: the user types /contre-expertise, asks to "audit my method",
+  "critically review the way I work", "stress-test my practices against the
+  state of the art", « passer ma méthode au crible », « analyse critique de ma
+  façon de travailler », or wants their practice confronted with the state of
+  the art without flattery.
 ---
 
-# Contre-expertise — v1
+# Contre-expertise — v2
 
-> **Ce que c'est.** Un audit à charge ET à décharge d'une méthode de travail
-> personnelle, mené comme une instruction : grille falsifiable, recherche
-> multi-agents, réfutation systématique, verdicts datés, plan d'action borné.
-> Le facilitateur ne conforte pas — il instruit. Première exécution de
-> référence : livre blanc du 2026-06-11 (`.personal/research/2026-06-11-livre-blanc-methode/`).
+> **What it is.** A for-and-against audit of a personal working method, run
+> like a judicial investigation: falsifiable grid, multi-agent research,
+> systematic refutation, dated verdicts, bounded action plan. The facilitator
+> does not reassure — it investigates.
 >
-> **Sortie.** Un dossier `.personal/research/<date>-contre-expertise-<slug>/`
-> contenant les fiches de recherche, les vérifications, un rapport (markdown ou
-> Typst selon calibre) et un `plan-action.md` routable vers daily-ops.
+> **Output.** A dossier `<output-root>/<date>-contre-expertise-<slug>/`
+> containing research notes, verifications, a report (markdown or Typst
+> depending on caliber) and an action plan routable to the user's task
+> system.
+>
+> **Language.** These instructions are in English. All deliverables (notes,
+> interview, report, action plan) and all agent prompts are written in the
+> **dossier language** (see rule 0.8). Artifact *filenames* are fixed
+> identifiers and are never localized (see §2).
 
-## 0. Règles transversales (s'appliquent à toutes les phases)
+## 0. Cross-cutting rules (apply to every phase)
 
-1. **Non-complaisance.** Chaque agent et chaque synthèse reçoit la consigne
-   « cherche à réfuter, pas à confirmer ». Le positif n'est gardé que s'il sert
-   la calibration.
-2. **`.personal/` s'écrit sur main.** Toujours en chemin absolu vers la copie
-   principale, jamais dans le `.personal/` local d'un worktree.
-3. **Aucune référence de mémoire.** Toute URL ou citation du rapport provient
-   d'une fiche où elle a été obtenue par recherche/fetch vérifié. Une source
-   attendue mais introuvable est déclarée introuvable, jamais inventée.
-4. **Traçabilité mécanique.** Les propositions du modèle portent des IDs
-   `P-xx` ; les claims des fiches portent des IDs `C-<unité>-<n>`
-   (ex. `C-a1-2`) ; chaque verdict et chaque item du plan d'action référence
-   ses IDs. Avant clôture, vérifier par grep que chaque C-id « nuancé » ou
-   « fragilisé » est bien référencé ou amendé dans le rapport.
-5. **Verdicts datés et périssables.** Chaque verdict porte sa date et une date
-   de péremption (défaut : +6 mois ; +3 mois pour les sujets à benchmarks
-   mouvants). Le mode `--reflect` ne ré-instruit que ce qui est périmé ou
-   contesté.
-6. **Un constat, un domicile.** Chaque constat du rapport a UN chapitre
-   propriétaire ; les autres chapitres y renvoient au lieu de le répéter.
-7. **Coût annoncé avant dépense.** Avant tout lancement de Workflow, annoncer
-   le nombre d'agents et l'ordre de grandeur de tokens du calibre choisi, et
-   obtenir confirmation (sauf si le calibre a été passé explicitement en
-   argument).
+1. **No flattery.** Every agent and every synthesis receives the instruction
+   "seek to refute, not to confirm". Positive findings are kept only when
+   they serve calibration.
+2. **Personal-area writes go to the main checkout.** If the output root lives
+   in a gitignored personal area (e.g. a `.personal/` directory) that exists
+   physically only on the main copy of the repo, always write via an absolute
+   path to that main copy — never into a worktree-local clone of it, where
+   the files would vanish with the worktree.
+3. **No references from memory.** Every URL or quotation in the report comes
+   from a note where it was obtained through a verified search/fetch. An
+   expected-but-not-found source is declared not found, never invented.
+4. **Mechanical traceability.** Model propositions carry `P-xx` IDs; note
+   claims carry `C-<unit>-<n>` IDs (e.g. `C-a1-2`); every verdict and every
+   action-plan item references its IDs. Before closing, grep-check that every
+   "nuanced" or "weakened" C-id is referenced or amended in the report.
+5. **Dated, perishable verdicts.** Every verdict carries its date and an
+   expiry date (default: +6 months; +3 months for fast-moving benchmark
+   topics). `--reflect` mode re-investigates only what is expired or
+   contested.
+6. **One finding, one home.** Each finding in the report has ONE owning
+   chapter; other chapters link to it instead of repeating it.
+7. **Cost announced before spending.** Before launching any Workflow,
+   announce the number of agents and the order of magnitude of tokens for
+   the chosen caliber, and get confirmation (unless the caliber was passed
+   explicitly as an argument).
+8. **Dossier language.** Default: the dominant language of the corpus.
+   Override with `lang:`. The verdict palette, section headings *inside*
+   deliverables, interview questions and agent instructions are all rendered
+   in that language — consistently across the whole dossier. Canonical
+   verdict palette (localize as needed, keep one rendering per dossier):
+   `corroborated / nuanced / weakened / refuted / not-found`
+   (French rendering used by the reference execution: corroborée / nuancée /
+   fragilisée / réfutée / introuvable).
 
-## 1. Entrées et cadrage (phase 0)
+## 1. Inputs and framing (phase 0)
 
-Arguments acceptés (tous optionnels, demander ce qui manque) :
+Accepted arguments (all optional, ask for what is missing):
 
-- `corpus:` chemins des textes décrivant la méthode (articles, notes, README).
-- `slug:` nom court du dossier (sinon le dériver du sujet).
-- `calibre:` `leger` | `standard` | `complet` (voir §3).
-- `--overwrite` : désactive le mode incrémental (voir §2).
-- `--reflect` : mode relance/diff (voir §8).
+- `corpus:` paths of the texts describing the method (articles, notes,
+  README).
+- `slug:` short dossier name (otherwise derive it from the subject).
+- `calibre:` `light` | `standard` | `full` (French aliases `leger`,
+  `complet` accepted) — see §3.
+- `lang:` language of all deliverables (default: corpus language).
+- `out:` output root. Default resolution: `.personal/research/` if such a
+  personal research area exists in the repo; otherwise `docs/contre-expertise/`;
+  otherwise ask.
+- `--overwrite`: disables incremental mode (see §2).
+- `--reflect`: re-run/diff mode (see §8).
 
-Cadrage : lire le corpus, reformuler en une phrase ce qui est audité et pour
-quelle décision (publier ? améliorer ? trancher un débat ?). Si le calibre
-manque, le demander via AskUserQuestion avec les coûts en face de chaque
-option. Créer le dossier et initialiser `etat.md` depuis
-`templates/etat.md` : décisions de cadrage, calibre, liste d'unités prévue,
-horodatage.
+Framing: read the corpus, restate in one sentence what is being audited and
+for which decision (publish? improve? settle a debate?). If the caliber is
+missing, ask via AskUserQuestion with the costs alongside each option.
+Create the dossier and initialize `etat.md` from `templates/etat.md`:
+framing decisions, caliber, language, planned unit list, timestamp.
 
-## 2. Mode incrémental (défaut) et `--overwrite`
+## 2. Incremental mode (default) and `--overwrite`
 
-**Le skill reprend là où il s'est arrêté.** La vérité d'avancement est sur le
-disque, pas en mémoire de session :
+**The skill resumes where it stopped.** The truth about progress lives on
+disk, not in session memory:
 
-| Phase | Artefact de complétion |
+| Phase | Completion artifact |
 | --- | --- |
 | 1 Extraction | `notes/00-modele.md` |
 | 2 Interview | `notes/01-interview.md` |
-| 3 Recherche | toutes les fiches listées dans `etat.md` § unités |
-| 4 Vérification | `notes/90-verifications.md` |
+| 3 Research | every note listed in `etat.md` § units |
+| 4 Verification | `notes/90-verifications.md` |
 | 5 Challenger | `notes/95-challenger.md` |
-| 6 Rapport | `rapport.md` ou `rapport.pdf` compilé |
-| 7 Contre-vérification | `notes/98-contre-verification.md` + marqueur « corrections intégrées » dans `etat.md` |
-| 8 Plan d'action | `plan-action.md` |
-| 9 Clôture | marqueur « clos » + hash de commit dans `etat.md` |
+| 6 Report | `rapport.md` or compiled `rapport.pdf` |
+| 7 Counter-verification | `notes/98-contre-verification.md` + "corrections integrated" marker in `etat.md` |
+| 8 Action plan | `plan-action.md` |
+| 9 Closing | "closed" marker + commit hash in `etat.md` |
 
-À l'invocation : si le dossier du slug existe, lister les artefacts présents,
-annoncer le point de reprise (« phases 1-3 faites, je reprends en phase 4 »)
-et continuer. Une phase amont modifiée à la main invalide l'aval : le signaler
-et proposer de re-dérouler. Cas particulier de la phase 3 : si un `runId` de
-Workflow figure dans `etat.md` et que des fiches manquent, relancer avec
-`resumeFromRunId` — les unités terminées reviennent du cache.
+Artifact filenames are **fixed identifiers** — do not translate them, even
+when the dossier language is not French (glossary: `etat` = state journal,
+`modele` = model grid, `verifications` = claim verdicts, `rapport` = report,
+`plan-action` = action plan). Renaming them breaks resume.
 
-**`--overwrite`** : ne JAMAIS supprimer — renommer le dossier existant en
-`<dossier>.bak-<date>` puis repartir de zéro. Mentionner le renommage à
-l'utilisateur.
+On invocation: if the slug's dossier exists, list the artifacts present,
+announce the resume point ("phases 1-3 done, resuming at phase 4") and
+continue. An upstream phase modified by hand invalidates downstream phases:
+flag it and offer to re-run. Phase 3 special case: if a Workflow `runId` is
+recorded in `etat.md` and notes are missing, relaunch with `resumeFromRunId`
+— completed units return from cache.
 
-## 3. Calibres
+**Adopting a pre-existing dossier** (validated on the reference execution):
+when pointed at a dossier created *before* this skill existed, reconstruct
+`etat.md` a posteriori — map existing artifacts to phases in a
+correspondence table (including artifacts under other names, e.g. a compiled
+white paper standing in for `rapport.pdf`), note which conventions are
+missing (e.g. claims without C-ids, and the fallback trace format to use),
+then resume at the first missing phase. Late phases run on a pre-existing
+dossier are *more* adversarial, not less: a fresh interview or
+counter-verification acts as new evidence against the existing report.
 
-| Calibre | Unités de recherche | Vérification | Livrable | Ordre de grandeur |
+**`--overwrite`**: NEVER delete — rename the existing dossier to
+`<dossier>.bak-<date>` then start clean. Tell the user about the rename.
+
+## 3. Calibers
+
+| Caliber | Research units | Verification | Deliverable | Order of magnitude |
 | --- | --- | --- | --- | --- |
-| `leger` | ~5 (1-2 par axe) | 1 claim/fiche, 1 vote | note markdown 3-5 pages + plan | ~15 agents |
-| `standard` | ~10 | 2 claims/fiche, 1 vote | rapport Typst ~15 pages + plan | ~30 agents |
-| `complet` | ~17 | 2 claims/fiche + contre-vérif élargie | livre blanc Typst 30+ pages + plan | ~50 agents, >2,5 M tokens de sous-agents |
+| `light` | ~5 (1-2 per axis) | 1 claim/note, 1 vote | 3-5 page markdown note + plan | ~15 agents |
+| `standard` | ~10 | 2 claims/note, 1 vote | ~15 page Typst report + plan | ~30 agents |
+| `full` | ~17 | 2 claims/note + extended counter-verification | 30+ page Typst white paper + plan | ~50 agents, >2.5M sub-agent tokens |
 
-En `leger` et `standard` : tableaux de divergence plutôt que prose d'état de
-l'art, annexes par référence aux fiches (pas de duplication), bibliographie
-générée. Le mode `complet` reste réservé aux audits fondateurs.
+In `light` and `standard`: divergence tables rather than state-of-the-art
+prose, appendices by reference to the notes (no duplication), generated
+bibliography. `full` is reserved for founding audits.
 
-## 4. Les phases
+**Per-phase sizing.** The caliber may differ per phase — typically when
+resuming a `full` dossier where only late phases remain: run the remaining
+phases `light` (e.g. 3 counter-verification agents instead of 6). Record the
+decision in `etat.md`.
 
-### Phase 1 — Extraction du modèle
+## 4. The phases
 
-Reconstituer la méthode en **propositions falsifiables numérotées** `P-xx`
-(15-30 items : pratiques, croyances, choix de mesure), suivies d'une section
-« points d'auto-incohérence à instruire » (les endroits où le corpus se
-contredit ou s'exempte de ses propres règles). Gabarit :
-`templates/grille-modele.md`. C'est la colonne vertébrale de tout le reste —
-soigner la granularité : une proposition = une chose réfutable.
+### Phase 1 — Model extraction
 
-### Phase 2 — Interview (théorie professée vs théorie en usage)
+Reconstruct the method as **numbered falsifiable propositions** `P-xx`
+(15-30 items: practices, beliefs, measurement choices), followed by a
+section "self-inconsistencies to investigate" (where the corpus contradicts
+itself or exempts itself from its own rules). Template:
+`templates/grille-modele.md`. This is the backbone of everything else — get
+the granularity right: one proposition = one refutable thing.
 
-Le corpus décrit ce que l'auteur *dit* faire. Avant de juger, poser 5-10
-questions ciblées (AskUserQuestion, par lots de 4 max) du type : « la dernière
-fois que tu as sauté P-08, c'était quoi le contexte ? », « P-14 : à quelle
-fréquence réellement ? ». Marquer ensuite chaque P-xx :
-`professée` / `confirmée en usage` / `contredite en usage` — et noter les
-exemples concrets donnés. Les P-xx « contredites en usage » deviennent des
-angles prioritaires d'instruction. Sortie : `notes/01-interview.md`.
+### Phase 2 — Interview (espoused theory vs theory-in-use)
 
-### Phase 3 — Deep research multi-agents
+The corpus describes what the author *says* they do. Before judging, ask
+5-10 targeted questions (AskUserQuestion, batches of 4 max) such as: "the
+last time you skipped P-08, what was the context?", "P-14: how often,
+really?". Then mark each P-xx: `espoused` / `confirmed in use` /
+`contradicted in use` — and record the concrete examples given. The
+"contradicted in use" propositions become priority investigation angles.
+Output: `notes/01-interview.md`.
 
-Lancer un Workflow (l'invocation de ce skill vaut opt-in explicite) construit
-depuis `templates/workflow-recherche.js`. Trois axes d'unités, à dimensionner
-selon le calibre :
+Run this phase even when adopting a dossier whose report already exists —
+the reference execution showed the interview can invert a report's central
+diagnosis (there: which feedback loop was actually the weak one).
 
-- **Axe A — méthodes comparables** : praticiens et institutions ayant publié
-  un flux de travail sur le même sujet.
-- **Axe B — pratiques en détail** : chaque pratique différenciante du modèle,
-  instruite contre la littérature (mécanisme démontré / plausible / contredit).
-- **Axe C — sources du corpus** : chaque source citée par l'auteur,
-  contre-vérifiée (que dit-elle exactement, qui la conteste, l'usage est-il
-  fidèle).
+### Phase 3 — Multi-agent deep research
 
-Consignes communes obligatoires dans chaque prompt d'unité :
+Launch a Workflow (invoking this skill counts as the explicit opt-in) built
+from `templates/workflow-recherche.js`. Three axes of units, sized by
+caliber:
 
-1. À charge ET à décharge — ne pas conforter.
-2. **Chercher activement les cas d'échec** de chaque méthode/pratique, pas
-   seulement ses promoteurs (le biais de visibilité des praticiens célèbres
-   est documenté — première exécution, fiche a3).
-3. **Au moins une recherche en français** (ou autre langue pertinente) par
-   unité quand le sujet s'y prête.
-4. Fiche écrite sur disque (`notes/<unité>.md`, gabarit
-   `templates/fiche-recherche.md`), retour structuré compact (résumé +
+- **Axis A — comparable methods**: practitioners and institutions who have
+  published a workflow on the same subject.
+- **Axis B — practices in detail**: each differentiating practice of the
+  model, investigated against the literature (demonstrated / plausible /
+  contradicted mechanism).
+- **Axis C — corpus sources**: every source the author cites,
+  counter-checked (what does it actually say, who disputes it, is the usage
+  faithful).
+
+Mandatory shared instructions in every unit prompt:
+
+1. For AND against — do not flatter.
+2. **Actively search for failure cases** of each method/practice, not only
+   its promoters (the visibility bias of celebrity practitioners is
+   documented — reference execution, note a3).
+3. **At least one search in a non-English language** relevant to the corpus
+   (or another pertinent language) per unit when the topic lends itself.
+4. Note written to disk (`notes/<unit>.md`, template
+   `templates/fiche-recherche.md`), compact structured return (summary +
    claims).
-5. Claims terminales avec IDs `C-<unité>-<n>` et URL source.
+5. Terminal claims with `C-<unit>-<n>` IDs and source URL.
+6. All note content in the dossier language.
 
-Consigner le `runId` dans `etat.md` dès le lancement (reprise).
+Record the `runId` in `etat.md` as soon as the launch happens (resume).
 
-### Phase 4 — Vérification adversariale des claims
+### Phase 4 — Adversarial claim verification
 
-Pour chaque claim : un agent chargé de la **réfuter** (source primaire
-exigée). Verdicts : `corroborée` / `nuancée` / `fragilisée` / `réfutée` /
-`introuvable`, chacun avec date de péremption. Sortie :
-`notes/90-verifications.md` (généré proprement : titres sans ponctuation
-finale, URLs entre `<>`). Puis **propager** : chaque nuance/correction est
-reportée dans les fiches concernées ou notée comme correctif à appliquer en
-phase 6 — la propagation se vérifie par les C-ids (règle 0.4).
+For each claim: one agent tasked with **refuting** it (primary source
+required). Verdicts from the palette of rule 0.8, each with an expiry date.
+Output: `notes/90-verifications.md` (generated clean: headings without
+trailing punctuation, URLs in `<>`). Then **propagate**: every nuance or
+correction is carried into the affected notes or recorded as a fix to apply
+in phase 6 — propagation is checked via the C-ids (rule 0.4).
 
 ### Phase 5 — Challenger
 
-Construire le **steelman d'une méthode rivale** à partir des fiches : la
-meilleure alternative cohérente (pas un épouvantail), avec ses choix opposés
-aux P-xx les plus structurants. La comparer frontalement au modèle : sur quels
-contextes le challenger gagne-t-il ? Qu'emprunterait-on ? Sortie :
-`notes/95-challenger.md`. C'est l'antidote au confort de la comparaison à un
-champ dispersé.
+Build the **steelman of a rival method** from the notes: the best coherent
+alternative (not a strawman), with choices opposed to the most structuring
+P-xx. Confront it head-on: in which contexts does the challenger win? What
+would you borrow? Output: `notes/95-challenger.md`. This is the antidote to
+the comfort of comparing against a scattered field. If the interview
+(phase 2) exposed propositions contradicted in use, aim the challenger's
+strongest attack exactly there.
 
-### Phase 6 — Rapport
+### Phase 6 — Report
 
-Structure cible (à compresser selon calibre) : résumé exécutif · modèle
-reconstruit · état de l'art (tableaux de divergence) · pratiques en détail ·
-analyse d'écart (socle partagé / en plus / manquant / écart inversé) ·
-critique des points de comparaison (n=1, biais de survie, comparants non
-mesurés, asymétries de contexte) · sources : verdicts par statut ·
-critique des fondamentaux (encadrés verdict : solide / fragile / critique) ·
-**économie de la méthode** (tableau coût/bénéfice par pratique : temps,
-tokens, ce que ça attrape — même grossier, jamais omis) · challenger ·
-plan d'action (renvoi) · bibliographie.
+Target structure (compress by caliber): executive summary · reconstructed
+model · state of the art (divergence tables) · practices in detail · gap
+analysis (shared base / extra / missing / inverted gaps) · critique of the
+comparison points (n=1, survivorship bias, unmeasured comparators, context
+asymmetries) · sources: verdicts by status · critique of the fundamentals
+(verdict boxes: solid / fragile / critical) · **economics of the method**
+(cost/benefit table per practice: time, tokens, what it catches — even
+rough, never omitted) · challenger · action plan (pointer) · bibliography.
 
-Règles d'écriture : verdicts référencés par C-ids ; un constat = un domicile
-(règle 0.6) ; la bibliographie est **générée depuis les fiches** (script ou
-extraction), pas rédigée à la main ; en Typst, réutiliser le gabarit de mise
-en page de la première exécution (`lib.typ` du livre blanc 2026-06-11).
+Writing rules: verdicts referenced by C-ids; one finding = one home (rule
+0.6); the bibliography is **generated from the notes** (script or
+extraction), never written from memory; in Typst, reuse the layout from a
+previous execution when one exists.
 
-### Phase 7 — Contre-vérification du rapport
+### Phase 7 — Counter-verification of the report
 
-L'étage que la première exécution avait manqué : les claims des fiches étaient
-vérifiées, pas les conclusions du document. Lancer 3-6 agents (selon calibre)
-chargés de **réfuter les verdicts et synthèses du rapport lui-même** (chaque
-encadré verdict, le résumé exécutif, l'analyse d'écart), avec accès aux fiches.
-Intégrer les corrections, les tracer dans `notes/98-contre-verification.md`,
-poser le marqueur « corrections intégrées » dans `etat.md`. Un rapport qui
-prêche la non-exemption doit se l'appliquer.
+The stage the first execution had skipped: note claims were verified, the
+document's conclusions were not. Launch 3-6 agents (by caliber) tasked with
+**refuting the report's own verdicts and syntheses** (each verdict box, the
+executive summary, the gap analysis), with access to the notes. Integrate
+the corrections, trace them in `notes/98-contre-verification.md`, set the
+"corrections integrated" marker in `etat.md`. A report that preaches
+non-exemption must apply it to itself.
 
-### Phase 8 — Plan d'action
+Integration pairing (validated on the reference execution): the ideal
+corrector for perimeter X is the agent that counter-verified X (context
+already loaded — continue it if the harness allows); otherwise spawn fresh
+correctors per perimeter, passing them the findings verbatim plus your
+orchestration arbitrations, with disjoint file perimeters so they can run in
+parallel. Recompile/lint after integration; the orchestrator spot-checks the
+most rewritten pages.
 
-Le livrable d'atterrissage — gabarit `templates/plan-action.md` :
+What this stage catches that claim verification cannot: verdicts placed
+from memory in summary tables, prescribed reformulations never propagated
+into the text, source misattributions between notes.
 
-1. **Scoring d'abord** : pour chaque action candidate, commencer par
-   « recoupe quoi d'existant ? » (élimine les doublons avec ce que
-   l'utilisateur fait déjà), puis Impact/Effort.
-2. **Plafond strict** : 3 actions « maintenant » + 3 « ce mois » ; tout le
-   reste en backlog daté. Un inventaire n'est pas un plan.
-3. **Format expérimental obligatoire** pour toute action de type
-   expérimentation : hypothèse · métrique · commande de baseline · durée ·
-   date de revue. **Règle bloquante : pas d'expérimentation émise sans étape
-   de baseline.**
-4. **Routage daily-ops (état actuel de l'outil)** : produire en fin de fichier
-   une section « à router » avec les items préformatés une ligne chacun,
-   préfixés de leur trace `[src: <slug>/C-xx]`, que l'utilisateur route via
-   `/do-add` (bloc du jour ou drop-in) ou colle dans `TODO.md`. Les dates de
-   revue sont listées à part pour un éventuel `/schedule`.
+### Phase 8 — Action plan
+
+The landing deliverable — template `templates/plan-action.md`:
+
+1. **Scoring first**: for each candidate action, start with "what existing
+   thing does this overlap?" (eliminates duplicates with what the user
+   already does — including work the user has explicitly taken on
+   elsewhere), then Impact/Effort.
+2. **Hard cap**: 3 "now" actions + 3 "this month"; everything else goes to a
+   dated backlog. An inventory is not a plan.
+3. **Experimental format mandatory** for any experiment-type action:
+   hypothesis · metric · baseline command · duration · review date.
+   **Blocking rule: no experiment is emitted without a baseline step.**
+4. **Task routing**: end the file with a "to route" section of preformatted
+   one-line items, each prefixed with its trace `[src: <slug>/C-xx]`. The
+   user routes them into their task system; review dates are listed
+   separately for scheduling. Routing adapters, in order of preference:
+   - **daily-ops** (if installed): route via `/do-add` (today's block or
+     drop-in buffer). <!-- See "Future improvements" comment below. -->
+   - **fallback**: paste the checklist into the project's TODO file, or
+     leave it in `plan-action.md` as the canonical copy.
 
 <!--
-AMÉLIORATIONS FUTURES — daily-ops (issues ouvertes le 2026-06-12) :
-- #31 (échéancier --due) : router directement les items « ce mois » et les
-  dates de revue avec leur échéance, au lieu de la liste à part.
-- #32 (plan import + tags de provenance) : remplacer la section « à router »
-  par `daily-ops plan import plan-action.md` — import en lot idempotent,
-  le tag [src: …] devient natif et survit aux reports.
-- #33 (report --json + compteur de reports) : le mode --reflect interroge
-  daily-ops mécaniquement (« quelles actions taguées src:<slug> sont faites /
-  zombies ? ») au lieu de demander à l'utilisateur.
-- #34 (blocs expérimentation à cycle de vie) : émettre les expérimentations
-  comme blocs `experiment` avec métadonnées portées par daily-ops.
-- #35 (cadence par stream) : router les expérimentations vers un stream
-  `experiments` surfacé aux dates de revue.
-- #36 (IDs d'items persistants) : la traçabilité C-id → item survit aux
-  reformulations.
-- #37 (mode headless) : le routage ne dépend plus du /do-sod du jour.
+FUTURE IMPROVEMENTS — daily-ops adapter (issues opened 2026-06-12 on
+bastien-gallay/daily-ops):
+- #31 (--due dates): route "this month" items and review dates with their
+  deadline instead of a separate list.
+- #32 (plan import + provenance tags): replace the "to route" section with
+  `daily-ops plan import plan-action.md` — idempotent bulk import, the
+  [src: …] tag becomes native and survives carry-overs.
+- #33 (report --json + carry counts): --reflect queries daily-ops
+  mechanically ("which actions tagged src:<slug> are done / zombies?")
+  instead of asking the user.
+- #34 (experiment blocks lifecycle): emit experiments as `experiment` blocks
+  with metadata carried by daily-ops.
+- #35 (per-stream cadence): route experiments to an `experiments` stream
+  surfaced at review dates.
+- #36 (persistent item IDs): C-id → item traceability survives rewording.
+- #37 (headless mode): routing no longer depends on the day's /do-sod.
 -->
 
-### Phase 9 — Clôture
+### Phase 9 — Closing
 
-1. `markdownlint` sur toutes les notes (config du site) ; compilation du
-   rapport ; contrôle visuel de quelques pages si Typst.
-2. Récap console en 3 blocs de bullets : *maintenant* / *ensuite* /
-   *décisions ouvertes* — localisé, pas de prose.
-3. Proposer le commit du dossier dans le repo privé `.personal` (demander
-   avant tout commit hors sandbox, sauf autorisation de session).
-4. Proposer un `/schedule` pour la revue J+30 en citant la date inscrite dans
-   `plan-action.md`.
+1. `markdownlint` on all notes (project config); compile the report; visual
+   check of a few pages if Typst.
+2. Console recap in 3 bullet blocks: *now* / *next* / *open decisions* —
+   located (file, §), no prose.
+3. Offer to commit the dossier in its repo (ask before any out-of-sandbox
+   commit, unless a session-wide authorization exists).
+4. Offer to schedule the J+30 review, quoting the date written in
+   `plan-action.md`. If the review is scheduled on a headless/cloud runner,
+   adapt: the runner does the mechanical parts (data harvest, re-instruction
+   of expired/weakened verdicts, verdict diff, draft plan) and leaves the
+   interview questions in the deliverable for the author; it commits on a
+   branch, never on the main branch.
 
-## 8. Mode `--reflect` (relance J+30)
+## 8. `--reflect` mode (J+30 re-run)
 
-Entrée : le dossier d'une contre-expertise close. Déroulé court, sans nouveau
-fan-out complet :
+Input: the dossier of a closed contre-expertise. Short pass, no full
+fan-out:
 
-1. Lire `etat.md`, `plan-action.md`, `notes/90-verifications.md`.
-2. Demander à l'utilisateur le sort de chaque action « maintenant » / « ce
-   mois » (faite / en cours / abandonnée / zombie) et les valeurs des
-   métriques de baseline. <!-- futur : remplacé par daily-ops report #33 -->
-3. Ré-instruire UNIQUEMENT : les verdicts périmés (date de péremption
-   dépassée), les claims `fragilisées`, et les hypothèses d'expérimentations
-   dont les mesures sont arrivées (1 agent par item, pas de fan-out complet).
-4. Produire `reflect-<date>.md` : diff des verdicts (bougé / stable / périmé
-   non re-vérifié), bilan des expérimentations, plan d'action re-priorisé
-   (mêmes plafonds).
+1. Read `etat.md`, `plan-action.md`, `notes/90-verifications.md`.
+2. Ask the user the fate of each "now" / "this month" action (done / in
+   progress / abandoned / zombie) and the baseline metric values.
+   <!-- future: replaced by daily-ops report, issue #33 -->
+3. Re-investigate ONLY: expired verdicts (past expiry date), `weakened`
+   claims, and experiment hypotheses whose measurements have arrived (1
+   agent per item, no full fan-out).
+4. Produce `reflect-<date>.md`: verdict diff (moved / stable / expired
+   not re-checked), experiment results, re-prioritized action plan (same
+   caps).
 
-## 9. Pièges connus (hérités de la première exécution)
+## 9. Known pitfalls (from the reference executions)
 
-- Vérifier les claims des fiches ne vérifie PAS le rapport : ne jamais sauter
-  la phase 7.
-- Les chiffres « emblématiques » des fiches sont souvent des exemples
-  motivants, pas des moyennes — reporter la portée exacte (cf. correctifs
-  MUTGEN 100 %/4 %, Scott Logic 2 067 lignes).
-- Les citations en chaîne cassent (cf. « 2,74× ») : toujours remonter à la
-  source primaire avant de reprendre un chiffre.
-- Générer `90-verifications.md` proprement dès le départ (lint) plutôt que de
-  corriger après coup.
-- Ne pas laisser les listes d'action gonfler : le plafond de la phase 8 est
-  une règle, pas une suggestion.
+- Verifying note claims does NOT verify the report: never skip phase 7. It
+  catches from-memory verdicts in summary tables, unpropagated prescribed
+  reformulations, and cross-note misattributions — none of which the C-id
+  grep can see.
+- "Emblematic" numbers in notes are often motivating examples, not means —
+  report the exact scope (cf. the 100%/4% mutation-score case and the
+  Scott Logic line counts in the reference execution).
+- Citation chains break (cf. the "2.74×" case): always climb back to the
+  primary source before reusing a number.
+- Generate `90-verifications.md` lint-clean from the start rather than
+  fixing it afterwards.
+- Don't let action lists swell: the phase 8 cap is a rule, not a
+  suggestion.
+- A superlative ("the only one", "nobody else") is an existential claim
+  beyond any finite corpus — write "no source in the corpus documents…"
+  instead.
+- When phases run out of nominal order (interview after the report), treat
+  the late phase's findings as new evidence against the existing artifacts
+  and re-derive what they invalidate — don't bolt them on as a footnote.

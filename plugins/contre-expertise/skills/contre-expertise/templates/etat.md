@@ -1,33 +1,44 @@
-# État — contre-expertise <slug>
+# State — contre-expertise <slug>
 
-> Journal d'avancement. La vérité des phases est sur le disque (artefacts) ;
-> ce fichier porte les décisions et les pointeurs de reprise.
+<!-- Template note: instantiate the CONTENT of this file in the dossier
+     language (lang param); the filename `etat.md` and the section roles
+     stay fixed (resume relies on them). -->
 
-## Cadrage
+> Progress journal. The truth about phases lives on disk (artifacts); this
+> file carries decisions and resume pointers.
 
-- Date d'ouverture : <YYYY-MM-DD>
-- Sujet audité : <une phrase>
-- Décision visée : <publier / améliorer / trancher>
-- Corpus : <chemins>
-- Calibre : <leger|standard|complet> (confirmé par l'utilisateur : oui/non)
+## Framing
 
-## Unités de recherche prévues
+- Opened: <YYYY-MM-DD>
+- Audited subject: <one sentence>
+- Target decision: <publish / improve / settle>
+- Corpus: <paths>
+- Caliber: <light|standard|full> (confirmed by the user: yes/no) —
+  per-phase overrides if any
+- Language: <dossier language>
 
-<!-- une ligne par unité ; cocher quand la fiche existe sur disque -->
-- [ ] a1-<slug> — <mission en une ligne>
+## Planned research units
+
+<!-- one line per unit; tick when the note exists on disk -->
+- [ ] a1-<slug> — <one-line mission>
 - [ ] b1-<slug> — …
 - [ ] c1-<slug> — …
 
-## Pointeurs de reprise
+## Resume pointers
 
-- Workflow runId : <wf_…> (relance : resumeFromRunId)
-- Dernière phase complète : <n>
+- Workflow runId: <wf_…> (relaunch: resumeFromRunId)
+- Last complete phase: <n>
 
-## Marqueurs
+## Artifact correspondence (only when adopting a pre-existing dossier)
 
-- [ ] Corrections de contre-vérification intégrées (phase 7)
-- [ ] Clos — commit : <hash>
+<!-- map existing artifacts to phases; note missing conventions
+     (e.g. claims without C-ids + fallback trace format) -->
 
-## Décisions en cours de route
+## Markers
 
-<!-- horodatées, une ligne chacune -->
+- [ ] Counter-verification corrections integrated (phase 7)
+- [ ] Closed — commit: <hash>
+
+## Decisions along the way
+
+<!-- timestamped, one line each -->

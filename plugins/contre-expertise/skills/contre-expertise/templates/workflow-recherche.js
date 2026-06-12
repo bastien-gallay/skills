@@ -1,45 +1,51 @@
-// Gabarit de Workflow — phase 3 (recherche) + phase 4 (vérification).
-// À adapter : DIR, DATE, CONTEXTE (résumé du modèle P-xx), UNITS (selon calibre),
-// MAX_CLAIMS (1 en leger, 2 sinon). Valeurs en dur (pas de Date.now dans les
-// scripts de Workflow ; `args` peut ne pas être transmis — codez les constantes).
-// Consigner le runId retourné dans etat.md (reprise via resumeFromRunId).
+// Workflow template — phase 3 (research) + phase 4 (verification).
+// Adapt: DIR, DATE, LANG, CONTEXT (P-xx model summary), UNITS (by caliber),
+// MAX_CLAIMS (1 in light, 2 otherwise). Hardcode the values (no Date.now in
+// Workflow scripts; `args` may not be transmitted — code the constants).
+// Record the returned runId in etat.md (resume via resumeFromRunId).
+//
+// Language: write the whole instantiated script — CONTEXT, missions,
+// shared instructions, verdict enum labels — in the DOSSIER language, so
+// that sub-agents produce notes and verdicts in that language. The example
+// strings below are English; the reference execution used French
+// (palette: corroborée / nuancée / fragilisée / réfutée / introuvable).
 
 export const meta = {
-  name: 'contre-expertise-recherche',
-  description: 'Fan-out de recherche + vérification adversariale des claims',
+  name: 'contre-expertise-research',
+  description: 'Research fan-out + adversarial verification of claims',
   phases: [
-    { title: 'Recherche', detail: 'unités WebSearch/WebFetch sur 3 axes' },
-    { title: 'Vérification', detail: 'réfutation adversariale des claims' },
+    { title: 'Research', detail: 'WebSearch/WebFetch units across 3 axes' },
+    { title: 'Verification', detail: 'adversarial refutation of claims' },
   ],
 }
 
-const DIR = '/ABSOLU/vers/.personal/research/<date>-contre-expertise-<slug>'
+const DIR = '/ABSOLUTE/path/to/<output-root>/<date>-contre-expertise-<slug>'
 const DATE = '<YYYY-MM-DD>'
 const MAX_CLAIMS = 2
 
-const CONTEXTE = `CONTEXTE — Nous sommes le ${DATE}.
-<Résumé du modèle audité, 10-20 lignes, avec les P-xx structurants
-et les limites avouées par l'auteur.>`
+const CONTEXT = `CONTEXT — Today is ${DATE}.
+<Summary of the audited model, 10-20 lines, with the structuring P-xx
+and the limits the author admits.>`
 
-const CONSIGNES = `CONSIGNES COMMUNES :
-1. Charge d'abord les outils web : ToolSearch query "select:WebSearch,WebFetch".
-2. Croise plusieurs recherches (anglais ET français quand pertinent), puis
-   WebFetch les sources primaires (au moins 4-6 fetches réussis). Une URL ne
-   peut figurer dans ta note QUE si elle provient d'une recherche ou d'un
-   fetch réussi — n'invente JAMAIS une référence de mémoire.
-3. Cherche AUSSI ce qui contredit : ton rôle est d'instruire à charge et à
-   décharge, pas de conforter. CHERCHE ACTIVEMENT les cas d'échec documentés
-   (abandons, critiques publiées, retours négatifs) — pas seulement les
-   promoteurs. Si une source attendue n'existe pas, dis-le explicitement.
-4. Écris ta note complète en MARKDOWN FRANÇAIS dans le fichier indiqué
-   (outil Write, chemin absolu), au format du gabarit fiche-recherche.md :
-   fiches par source (métadonnées, résumé, convergences P-xx, tensions,
-   citations), section « Cas d'échec trouvés », puis « Claims porteuses »
-   avec IDs C-<unité>-<n>.
-5. Markdownlint-propre : pas de ponctuation finale dans les titres, URLs
-   entre <>, lignes vides autour des titres et listes.
-6. Retour structuré : resume = 8-15 lignes denses ; claims_cles = les mêmes
-   claims que dans la note (avec leurs IDs).`
+const SHARED_INSTRUCTIONS = `SHARED INSTRUCTIONS:
+1. Load the web tools first: ToolSearch query "select:WebSearch,WebFetch".
+2. Cross-check several searches (English AND the corpus language when
+   relevant), then WebFetch the primary sources (at least 4-6 successful
+   fetches). A URL may appear in your note ONLY if it came from a search or
+   a successful fetch — NEVER invent a reference from memory.
+3. Also search for what contradicts: your role is to investigate for and
+   against, not to comfort. ACTIVELY SEARCH for documented failure cases
+   (abandonments, published critiques, negative reports) — not only the
+   promoters. If an expected source does not exist, say so explicitly.
+4. Write your full note in MARKDOWN, in the dossier language, to the
+   indicated file (Write tool, absolute path), following the
+   fiche-recherche.md template: per-source entries (metadata, summary,
+   P-xx convergences, tensions, quotations), a "Failure cases found"
+   section, then "Carrying claims" with C-<unit>-<n> IDs.
+5. Markdownlint-clean: no trailing punctuation in headings, URLs in <>,
+   blank lines around headings and lists.
+6. Structured return: resume = 8-15 dense lines; claims_cles = the same
+   claims as in the note (with their IDs).`
 
 const RESEARCH_SCHEMA = {
   type: 'object',
@@ -61,12 +67,14 @@ const RESEARCH_SCHEMA = {
   },
 }
 
+// Localize the enum labels to the dossier language when instantiating —
+// they end up verbatim in 90-verifications.md.
 const VERDICT_SCHEMA = {
   type: 'object',
   required: ['verdict', 'peremption', 'preuves', 'commentaire'],
   properties: {
-    verdict: { type: 'string', enum: ['corroborée', 'nuancée', 'fragilisée', 'réfutée', 'introuvable'] },
-    peremption: { type: 'string', description: 'YYYY-MM-DD — date au-delà de laquelle re-vérifier' },
+    verdict: { type: 'string', enum: ['corroborated', 'nuanced', 'weakened', 'refuted', 'not-found'] },
+    peremption: { type: 'string', description: 'YYYY-MM-DD — date after which to re-verify' },
     preuves: {
       type: 'array',
       items: { type: 'object', required: ['url'], properties: { url: { type: 'string' }, extrait: { type: 'string' } } },
@@ -75,37 +83,38 @@ const VERDICT_SCHEMA = {
   },
 }
 
-// Unités selon calibre — axe A (méthodes comparables), B (pratiques), C (sources du corpus).
+// Units by caliber — axis A (comparable methods), B (practices), C (corpus sources).
 const UNITS = [
-  { id: 'a1-<slug>', mission: `MISSION : <documenter la famille de méthodes X ;
-    points précis à instruire ; divergences attendues avec les P-xx>.` },
+  { id: 'a1-<slug>', mission: `MISSION: <document method family X;
+    precise points to investigate; expected divergences with the P-xx>.` },
   // …
 ]
 
 function researchPrompt(u) {
-  return `${CONTEXTE}\n\n${u.mission}\n\n${CONSIGNES}\n\nFichier de note : ${DIR}/notes/${u.id}.md`
+  return `${CONTEXT}\n\n${u.mission}\n\n${SHARED_INSTRUCTIONS}\n\nNote file: ${DIR}/notes/${u.id}.md`
 }
 
-phase('Recherche')
-log(`${UNITS.length} unités — notes dans ${DIR}/notes/`)
+phase('Research')
+log(`${UNITS.length} units — notes in ${DIR}/notes/`)
 
 const results = await pipeline(
   UNITS,
-  u => agent(researchPrompt(u), { label: `recherche:${u.id}`, phase: 'Recherche', schema: RESEARCH_SCHEMA }),
+  u => agent(researchPrompt(u), { label: `research:${u.id}`, phase: 'Research', schema: RESEARCH_SCHEMA }),
   (res, u) => {
     if (!res || !res.claims_cles || res.claims_cles.length === 0) return { unit: u.id, resume: res ? res.resume : null, claims: [] }
     return parallel(res.claims_cles.map(c => () =>
-      agent(`Nous sommes le ${DATE}. Tu es un vérificateur adversarial. Essaie de RÉFUTER :
+      agent(`Today is ${DATE}. You are an adversarial verifier. Try to REFUTE:
 
-CLAIM ${c.id} : « ${c.claim} »
-Source annoncée : ${c.source_url}
+CLAIM ${c.id}: "${c.claim}"
+Announced source: ${c.source_url}
 
-Charge les outils web (ToolSearch "select:WebSearch,WebFetch"), lis la source
-primaire, vérifie qu'elle dit bien cela (chiffres exacts, portée — attention
-aux exemples motivants présentés comme moyennes), puis cherche des sources
-contraires (1-3 recherches). Fixe une date de péremption du verdict (+3 mois
-si benchmarks mouvants, +6 mois sinon). Commentaire en français, précis.`,
-        { label: `verif:${c.id}`, phase: 'Vérification', schema: VERDICT_SCHEMA })
+Load the web tools (ToolSearch "select:WebSearch,WebFetch"), read the
+primary source, check that it really says this (exact figures, scope —
+beware of motivating examples presented as averages), then search for
+contrary sources (1-3 searches). Set an expiry date for the verdict
+(+3 months for fast-moving benchmark topics, +6 months otherwise).
+Comment in the dossier language, precise.`,
+        { label: `verify:${c.id}`, phase: 'Verification', schema: VERDICT_SCHEMA })
         .then(v => ({ id: c.id, claim: c.claim, source_url: c.source_url, verdict: v }))
     )).then(verdicts => ({ unit: u.id, resume: res.resume, fichier: res.fichier, claims: verdicts.filter(Boolean) }))
   }

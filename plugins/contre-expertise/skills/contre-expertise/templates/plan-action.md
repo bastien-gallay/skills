@@ -1,44 +1,50 @@
-# Plan d'action — contre-expertise <slug>
+# Action plan — contre-expertise <slug>
 
-Date : <YYYY-MM-DD>. Source : `rapport.<md|pdf>` du même dossier.
-Scoring appliqué : recoupement d'existant d'abord (doublons éliminés :
-<liste ou « aucun »>), puis Impact/Effort.
+<!-- Template note: instantiate the content in the dossier language; the
+     filename `plan-action.md`, the [src: …] trace format and the caps
+     stay fixed. -->
 
-<!-- PLAFOND STRICT : 3 + 3. Le reste va au backlog daté. -->
+Date: <YYYY-MM-DD>. Source: `rapport.<md|pdf>` in the same dossier.
+Scoring applied: overlap-with-existing first (duplicates eliminated:
+<list, or "none">), then Impact/Effort.
 
-## Maintenant (≤ 3)
+<!-- HARD CAP: 3 + 3. Everything else goes to the dated backlog. -->
+
+## Now (≤ 3)
 
 ### 1. <Action> `[src: <slug>/C-xx]`
 
-- Impact/Effort : <H/M/L> / <H/M/L>
-- Si expérimentation — hypothèse : <falsifiable> · métrique : <quoi, comment> ·
-  baseline : `<commande>` (à exécuter AVANT tout changement — règle bloquante) ·
-  durée : <n semaines> · revue : <YYYY-MM-DD>
+- Impact/Effort: <H/M/L> / <H/M/L>
+- If experiment — hypothesis: <falsifiable> · metric: <what, how> ·
+  baseline: `<command>` (run BEFORE any change — blocking rule) ·
+  duration: <n weeks> · review: <YYYY-MM-DD>
 
-## Ce mois (≤ 3)
+## This month (≤ 3)
 
 ### 4. <Action> `[src: <slug>/C-xx]`
 
 - …
 
-## Backlog daté
+## Dated backlog
 
-| Action | Trace | Échéance indicative |
+| Action | Trace | Indicative deadline |
 | --- | --- | --- |
 | … | `[src: <slug>/C-xx]` | <YYYY-MM> |
 
-## Dates de revue (pour /schedule)
+## Review dates (for scheduling)
 
-- <YYYY-MM-DD> — revue de l'expérimentation <n>
-- <YYYY-MM-DD+30> — `--reflect` de la contre-expertise
+- <YYYY-MM-DD> — review of experiment <n>
+- <YYYY-MM-DD+30> — `--reflect` of the contre-expertise
 
-## À router (daily-ops, état actuel)
+## To route (task system)
 
-<!-- Items une ligne, préfixés de leur trace, à router via /do-add (bloc du
-     jour ou drop-in) ou à coller dans TODO.md. -->
-<!-- FUTUR daily-ops : #31 --due pour les échéances ; #32 `plan import` rend
-     cette section automatique ; #33 report --json nourrit --reflect ;
-     #34 blocs experiment ; #35 stream experiments ; #36 IDs persistants ;
+<!-- One-line items, prefixed with their trace. Adapters in order of
+     preference: daily-ops via /do-add (today's block or drop-in) if
+     installed; otherwise paste into the project TODO file, or keep this
+     section as the canonical copy. -->
+<!-- FUTURE daily-ops: #31 --due for deadlines; #32 `plan import` makes
+     this section automatic; #33 report --json feeds --reflect;
+     #34 experiment blocks; #35 experiments stream; #36 persistent IDs;
      #37 headless. -->
 
 - [ ] <action 1> `[src: <slug>/C-xx]`

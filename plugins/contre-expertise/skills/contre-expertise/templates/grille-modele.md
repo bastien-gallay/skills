@@ -1,32 +1,35 @@
-# Grille d'analyse — le modèle reconstruit
+# Analysis grid — the reconstructed model
 
-Date : <YYYY-MM-DD>. Corpus : <sources>.
-Chaque proposition est numérotée P-xx pour traçabilité. Une proposition = une
-chose réfutable (pratique, croyance, choix de mesure) — pas un résumé.
+<!-- Template note: instantiate the content in the dossier language; the
+     filename `00-modele.md` and the P-xx ID scheme stay fixed. -->
 
-## A. <Famille de propositions — ex. structure du flux>
+Date: <YYYY-MM-DD>. Corpus: <sources>.
+Each proposition is numbered P-xx for traceability. One proposition = one
+refutable thing (practice, belief, measurement choice) — not a summary.
 
-- **P-01** — <énoncé falsifiable, avec les mots du corpus entre guillemets
-  quand ils portent la charge>.
+## A. <Proposition family — e.g. flow structure>
+
+- **P-01** — <falsifiable statement, quoting the corpus's own words when
+  they carry the weight>.
 - **P-02** — …
 
-## B. <Famille suivante>
+## B. <Next family>
 
 - **P-xx** — …
 
-## Statut d'usage (rempli en phase 2 — interview)
+## Usage status (filled in phase 2 — interview)
 
-<!-- professée = décrite dans le corpus seulement ;
-     confirmée = l'interview donne des exemples concrets ;
-     contredite = l'interview révèle un écart -->
+<!-- espoused = described in the corpus only;
+     confirmed = the interview gives concrete examples;
+     contradicted = the interview reveals a gap -->
 
-| Réf. | Statut | Exemple donné en interview |
+| Ref. | Status | Example given in interview |
 | --- | --- | --- |
-| P-01 | professée / confirmée / contredite | … |
+| P-01 | espoused / confirmed / contradicted | … |
 
-## Points d'auto-incohérence à instruire (pré-analyse)
+## Self-inconsistencies to investigate (pre-analysis)
 
-<!-- les endroits où le corpus se contredit, s'exempte de ses propres règles,
-     ou affirme sans la mesure qu'il exige ailleurs -->
+<!-- where the corpus contradicts itself, exempts itself from its own
+     rules, or asserts without the measurement it demands elsewhere -->
 
 - …
