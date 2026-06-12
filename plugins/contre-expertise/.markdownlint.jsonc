@@ -1,0 +1,10 @@
+{
+  "default": true,
+
+  // Prose en soft-wrap éditeur + missions de workflow sur une ligne.
+  "MD013": false,
+
+  // Les gabarits utilisent <placeholder> comme syntaxe de substitution —
+  // markdownlint les prend pour du HTML inline.
+  "MD033": false
+}
