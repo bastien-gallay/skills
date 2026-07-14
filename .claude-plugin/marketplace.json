@@ -1,0 +1,61 @@
+{
+  "name": "skills",
+  "owner": {
+    "name": "Bastien Gallay"
+  },
+  "metadata": {
+    "description": "Meta-marketplace aggregating Bastien Gallay's Class-A Claude skills. Each plugin is sourced from its own independently-versioned repository.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "bfw",
+      "source": { "source": "github", "repo": "bastien-gallay/bfw" },
+      "description": "Facilitated brainstorming skill with adaptive technique sequencing.",
+      "category": "productivity",
+      "tags": ["brainstorm", "ideation", "facilitation", "decision-making"]
+    },
+    {
+      "name": "contre-expertise",
+      "source": { "source": "github", "repo": "bastien-gallay/contre-expertise" },
+      "description": "Critical, sourced counter-assessment of a working method.",
+      "category": "productivity",
+      "tags": ["method-audit", "critical-review", "deep-research", "epistemology"]
+    },
+    {
+      "name": "feature-torture",
+      "source": { "source": "github", "repo": "bastien-gallay/feature-torture" },
+      "description": "Pressure-test one roadmap feature per session and emit a decision report.",
+      "category": "productivity",
+      "tags": ["roadmap", "decision-making", "ADR", "product-management"]
+    },
+    {
+      "name": "pair-with-me",
+      "source": { "source": "github", "repo": "bastien-gallay/pair-with-me" },
+      "description": "Work one issue as an adversarial pair, not a delegation.",
+      "category": "productivity",
+      "tags": ["pairing", "tdd", "adversarial", "engineering-practice"]
+    },
+    {
+      "name": "redaction",
+      "source": { "source": "github", "repo": "bastien-gallay/redaction" },
+      "description": "Boucle d'édition critique pour écrits longs (articles, billets, essais).",
+      "category": "productivity",
+      "tags": ["writing", "editing", "critique", "french-writing"]
+    },
+    {
+      "name": "rhetorical-analysis",
+      "source": { "source": "github", "repo": "bastien-gallay/rhetorical-analysis-skill" },
+      "description": "Analyse rhétorique et épistémologique d'articles, discours et textes argumentatifs.",
+      "category": "productivity",
+      "tags": ["argumentation", "fallacies", "epistemology", "critical-thinking"]
+    },
+    {
+      "name": "meeting-screenshot-extractor",
+      "source": { "source": "github", "repo": "bastien-gallay/meeting-screenshot-extractor" },
+      "description": "Builds a CLI to extract relevant screenshots from a meeting video using a transcript and topics.",
+      "category": "productivity",
+      "tags": ["video", "ffmpeg", "transcript", "vision"]
+    }
+  ]
+}
