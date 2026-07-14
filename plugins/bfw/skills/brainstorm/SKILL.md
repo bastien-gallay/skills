@@ -3,7 +3,12 @@ name: brainstorm
 description: >
   Facilitate a structured brainstorming session with adaptive technique
   sequencing — MoSCoW, Impact/Effort, Six Hats, SCAMPER, and more from
-  a hot-swappable technique library.
+  a hot-swappable technique library. Use when the user types
+  /brainstorm, or asks to "brainstorm", "facilitate ideation", "run a
+  structured brainstorm", "help me think through options", or wants
+  adaptive technique sequencing for idea generation and
+  decision-making. Trigger: brainstorm, ideation, facilitate a
+  session, structured brainstorm, generate ideas.
 ---
 
 # Brainstorm — Facilitated Ideation Skill
