@@ -1,0 +1,21 @@
+{
+  "name": "SKILL_NAME",
+  "owner": { "name": "Bastien Gallay" },
+  "metadata": {
+    "description": "SKILL_NAME — single-plugin marketplace.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "SKILL_NAME",
+      "source": "./",
+      "description": "<one-line description of what the skill does>",
+      "version": "0.1.0",
+      "license": "MIT",
+      "homepage": "https://github.com/bastien-gallay/REPO_NAME",
+      "repository": "https://github.com/bastien-gallay/REPO_NAME",
+      "category": "productivity",
+      "tags": ["SKILL_NAME"]
+    }
+  ]
+}
