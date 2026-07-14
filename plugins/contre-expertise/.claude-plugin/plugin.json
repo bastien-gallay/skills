@@ -1,0 +1,16 @@
+{
+  "name": "contre-expertise",
+  "version": "0.1.0",
+  "description": "Critical, sourced counter-assessment of a working method: falsifiable propositions, multi-agent deep research, adversarial verification, and a capped action plan.",
+  "author": { "name": "Bastien Gallay" },
+  "homepage": "https://github.com/bastien-gallay/contre-expertise",
+  "repository": "https://github.com/bastien-gallay/contre-expertise",
+  "license": "MIT",
+  "keywords": [
+    "contre-expertise",
+    "method-audit",
+    "critical-review",
+    "deep-research",
+    "epistemology"
+  ]
+}
