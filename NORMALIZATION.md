@@ -11,6 +11,8 @@ Document fondateur du hub `bastien-gallay/skills`. Source : audit du 2026-07-14.
 
 Les repos restent **séparés** (versioning + distribution indépendants). Le hub agrège, il ne fusionne pas.
 
+Le repo hub `bastien-gallay/skills` vit dans son **propre dossier de checkout** (`~/Dev/oss/skills-hub/`), distinct du conteneur de travail local `~/Dev/oss/skills/` où sont clonés les sous-repos. Ils ne sont **plus imbriqués** : cloner le hub ne ramène que les fichiers hub (registre, marketplace, `shared/`, `docs/`), jamais les sous-repos. Les styles Classe B (flair, glance) ont leurs propres repos — le registre pointe vers `bastien-gallay/flair` et `/glance`, pas vers un sous-dossier du hub.
+
 ## 2. Convention canonique — Classe A (Skills)
 
 Référence = **feature-torture** / **redaction** (déjà conformes).
