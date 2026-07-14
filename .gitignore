@@ -1,14 +1,3 @@
-# Sub-repos are versioned & distributed independently — the hub aggregates, it never vendors them.
-bfw/
-contre-expertise/
-feature-torture/
-flair/
-glance/
-meeting-screenshot-extractor/
-pair-with-me/
-redaction/
-rhetorical-analysis-skill/
-
 # OS / tooling noise
 .DS_Store
 .impeccable/
