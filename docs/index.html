@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>skills — a control desk for Claude skills</title>
+<meta name="description" content="A meta-marketplace and registry for Bastien Gallay's Claude skills. Discover every module and copy its install command in one glance.">
+<style>
+  /* ============================================================
+     Tokens — the Control Desk. Derived at the token layer:
+     :root is the warm-paper light theme; the dark theme (deep ink)
+     is applied by prefers-color-scheme AND an explicit data-theme
+     override in both directions. All text pairings verified to WCAG AAA.
+     ============================================================ */
+  :root {
+    /* raw palette */
+    --paper:    #F5F1E8;
+    --plate:    #ECE6D8;
+    --ink:      #17150F;
+    --graphite: #3A362C;
+    --meta:     #494332;
+    --hairline: #8B8474;
+    --signal:   #E8A317;
+    --live:     #4FA88A;
+
+    /* semantic roles (light) */
+    --ground:     var(--paper);
+    --surface:    var(--plate);
+    --surface-2:  #E3DCCB;      /* recessed connector seat on light */
+    --text:       var(--ink);
+    --text-2:     var(--graphite);
+    --text-muted: var(--meta);
+    --line:       var(--hairline);
+    --lamp-stable: var(--live);
+    --lamp-beta:   var(--signal);
+    --glow: rgba(232, 163, 23, 0.55);
+
+    /* type */
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, monospace;
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    /* 4-step scale, ≥1.33 contrast between steps: display / title / body / label */
+    --fs-display: clamp(2.25rem, 1.4rem + 3.4vw, 2.75rem);
+    --fs-title: 1.375rem;
+    --fs-body: 1rem;
+    --fs-label: 0.75rem;
+    --track-label: 0.12em;
+
+    /* spacing (4pt) */
+    --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+    --sp-6: 24px; --sp-8: 32px; --sp-12: 48px; --sp-16: 64px;
+
+    --r-sm: 2px; --r-md: 4px;
+
+    /* motion */
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --dur: 220ms;
+
+    /* z-index scale */
+    --z-board: 1;
+    --z-sticky: 10;
+    --z-toast: 60;
+
+    color-scheme: light;
+  }
+
+  /* Dark theme — deep ink ground. Light-on-dark compensation applied to
+     body: line-height +0.06, letter-spacing +0.01em (see .desc / body). */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:     var(--ink);
+      --surface:    #201D15;
+      --surface-2:  #2A261B;
+      --text:       var(--paper);
+      --text-2:     #D3CCB9;   /* AAA on ink + surface */
+      --text-muted: #BDB6A2;   /* AAA on ink + every raised surface */
+      --line:       #4A453A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:     var(--ink);
+    --surface:    #201D15;
+    --surface-2:  #2A261B;
+    --text:       var(--paper);
+    --text-2:     #D3CCB9;
+    --text-muted: #BDB6A2;
+    --line:       #4A453A;
+    color-scheme: dark;
+  }
+
+  /* ============================================================ Reset */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    line-height: 1.55;
+    font-kerning: normal;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; }
+  code, kbd { font-family: var(--font-mono); }
+  h1, h2, h3, p { margin: 0; }
+  button { font: inherit; color: inherit; }
+
+  /* light-on-dark reading compensation */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) body { line-height: 1.6; letter-spacing: 0.006em; }
+  }
+  :root[data-theme="dark"] body { line-height: 1.6; letter-spacing: 0.006em; }
+
+  /* ============================================================ Skip link */
+  .skip {
+    position: absolute; left: var(--sp-2); top: -3rem;
+    background: var(--surface); color: var(--text);
+    padding: var(--sp-2) var(--sp-4); border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 1px var(--line);
+    z-index: var(--z-toast); transition: top var(--dur) var(--ease);
+  }
+  .skip:focus-visible { top: var(--sp-2); }
+
+  /* ============================================================ Shell */
+  .wrap {
+    width: min(100% - 2 * var(--sp-4), 1120px);
+    margin-inline: auto;
+    padding-block: clamp(var(--sp-8), 6vw, var(--sp-16));
+  }
+
+  /* ============================================================ Focus */
+  :where(a, button, .connector):focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+    border-radius: var(--r-sm);
+  }
+
+  /* ============================================================ Header plate */
+  .plate {
+    position: relative;
+    background: var(--surface);
+    border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 1px var(--line);
+    padding: clamp(var(--sp-6), 4vw, var(--sp-12));
+    display: grid;
+    gap: var(--sp-6);
+  }
+  .plate__topline {
+    display: flex; align-items: baseline; gap: var(--sp-4);
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-family: var(--font-mono);
+    font-size: var(--fs-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+  .brand::before { content: "› "; color: var(--text-muted); font-weight: 600; }
+  .plate__owner {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .theme-toggle {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: var(--sp-2);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--r-sm);
+    box-shadow: inset 0 0 0 1px var(--line);
+    transition: color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  }
+  .theme-toggle:hover { color: var(--text); }
+  .theme-toggle__dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text-muted);
+  }
+  .baseline {
+    font-size: var(--fs-body);
+    color: var(--text-2);
+    max-width: 62ch;
+    text-wrap: pretty;
+  }
+  .plate__hint {
+    font-size: var(--fs-body);
+    color: var(--text-muted);
+  }
+  .plate__hint code {
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ============================================================ Connector
+     The signature affordance. Copy (skills) or link (styles). At rest a
+     graphite mono line with a hollow jack; on hover/focus the jack fills
+     and the amber Patch Glow fires — the one bold moment. */
+  .connector {
+    display: flex; align-items: center; gap: var(--sp-3);
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+    text-decoration: none;
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-body);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    border: none;
+    border-radius: var(--r-md);
+    padding: var(--sp-3) var(--sp-4);
+    box-shadow: inset 0 0 0 1px var(--line);
+    cursor: pointer;
+    transition: color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+                background var(--dur) var(--ease);
+  }
+  .connector__jack {
+    flex: none;
+    width: 11px; height: 11px; border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--line);
+    transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  }
+  .connector__cmd {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;   /* show the full command, never truncate the payload */
+  }
+  .connector__action {
+    flex: none;
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .connector:hover, .connector:focus-visible {
+    color: var(--text);
+    box-shadow: 0 0 0 1px var(--signal), 0 0 22px -4px var(--glow);
+    outline: none;
+  }
+  .connector:hover .connector__jack,
+  .connector:focus-visible .connector__jack,
+  .connector.is-live .connector__jack {
+    background: var(--signal);
+    box-shadow: 0 0 9px 0 var(--glow);
+  }
+  .connector.is-live {
+    color: var(--text);
+    box-shadow: 0 0 0 1px var(--signal), 0 0 22px -4px var(--glow);
+  }
+  .connector.is-live .connector__action { color: var(--signal); }
+
+  /* master connector on the header plate */
+  .connector--master {
+    font-size: clamp(var(--fs-body), 0.7rem + 1.4vw, var(--fs-title));
+    font-weight: 600;
+    padding: var(--sp-4) var(--sp-4);
+  }
+  .connector--master .connector__jack { width: 13px; height: 13px; }
+
+  /* ============================================================ Controls bar */
+  .controls {
+    display: flex; align-items: center; gap: var(--sp-4);
+    flex-wrap: wrap;
+    margin-block: clamp(var(--sp-8), 5vw, var(--sp-12)) var(--sp-6);
+  }
+  .filter {
+    display: inline-flex;
+    background: var(--surface);
+    border-radius: var(--r-sm);
+    padding: 3px;
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .filter__seg {
+    display: inline-flex; align-items: baseline; gap: var(--sp-2);
+    background: transparent; border: none; cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--r-sm);
+    transition: color var(--dur) var(--ease);
+  }
+  .filter__seg[aria-pressed="true"] {
+    color: var(--text);
+    background: var(--ground);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .filter__seg .count {
+    font-size: var(--fs-label);
+    font-weight: 500;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .filter__seg[aria-pressed="true"] .count { color: var(--text-2); }
+  .controls__tally {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ============================================================ Board */
+  .board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr));
+    gap: var(--sp-4);
+    z-index: var(--z-board);
+  }
+
+  /* ============================================================ Module */
+  .module {
+    position: relative;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    background: var(--surface);
+    border-radius: var(--r-md);
+    padding: var(--sp-6);
+    /* Inset Seat: machined edge + 1px full leading rail on top */
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  /* class=style: Living-Green leading seat on the top edge (full, not a side stripe) */
+  .module[data-class="style"] {
+    box-shadow: inset 0 2px 0 0 var(--lamp-stable), inset 0 0 0 1px var(--line);
+  }
+  .module__head {
+    display: flex; align-items: center; gap: var(--sp-3);
+  }
+  .lamp {
+    flex: none;
+    width: 11px; height: 11px; border-radius: 50%;
+  }
+  .lamp--stable {
+    background: var(--lamp-stable);
+    box-shadow: 0 0 7px -1px var(--lamp-stable);
+  }
+  .lamp--beta {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px var(--lamp-beta);
+  }
+  .module__name {
+    font-family: var(--font-mono);
+    font-size: var(--fs-title);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.005em;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .module__name a { text-decoration: none; }
+  .module__name a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
+  .module__status {
+    margin-left: auto;
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: var(--track-label);
+    color: var(--text-muted);
+  }
+  .module__meta {
+    display: flex; align-items: center; gap: var(--sp-2);
+    flex-wrap: wrap;
+  }
+  .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--ground);
+    border-radius: var(--r-sm);
+    padding: var(--sp-1) var(--sp-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .ver {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .desc {
+    font-size: var(--fs-body);
+    line-height: 1.55;
+    color: var(--text-2);
+    max-width: 60ch;
+    text-wrap: pretty;
+  }
+  .module__foot { display: grid; gap: var(--sp-2); margin-top: auto; padding-top: var(--sp-2); }
+  .module__note {
+    font-size: var(--fs-body);
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+
+  .board:empty::after,
+  .board__empty {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--fs-body);
+    padding: var(--sp-8);
+    text-align: center;
+  }
+
+  /* ============================================================ Footer */
+  .foot {
+    margin-top: clamp(var(--sp-12), 8vw, var(--sp-16));
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: var(--sp-3);
+    font-size: var(--fs-body);
+    color: var(--text-muted);
+  }
+  .foot a {
+    color: var(--text-2);
+    text-decoration: none;
+    box-shadow: inset 0 -1px 0 0 var(--line);
+  }
+  .foot a:hover { color: var(--text); box-shadow: inset 0 -1px 0 0 var(--signal); }
+  .foot__links { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); }
+  .foot code { color: var(--text-2); }
+
+  /* ============================================================ a11y helpers */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* ============================================================ Reduced motion:
+     the lit state still applies — it just arrives instantly. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <a class="skip" href="#board">Skip to modules</a>
+
+  <div class="wrap">
+    <header class="plate" aria-labelledby="brand">
+      <div class="plate__topline">
+        <h1 class="brand" id="brand" data-hub>skills</h1>
+        <span class="plate__owner" data-owner>Bastien Gallay</span>
+        <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+          <span class="theme-toggle__dot" aria-hidden="true"></span>
+          <span data-theme-label>Theme</span>
+        </button>
+      </div>
+
+      <p class="baseline">
+        A control desk for the Claude skills I maintain — a meta-marketplace and
+        registry. Each module lives in its own repository, versioned and released
+        independently. Add the whole board in one command, then patch in any module below.
+      </p>
+
+      <button class="connector connector--master" type="button"
+              data-copy="/plugin marketplace add bastien-gallay/skills"
+              aria-label="Copy command: /plugin marketplace add bastien-gallay/skills">
+        <span class="connector__jack" aria-hidden="true"></span>
+        <code class="connector__cmd">/plugin marketplace add bastien-gallay/skills</code>
+        <span class="connector__action" data-action>Copy</span>
+      </button>
+
+      <p class="plate__hint">
+        Then <code>/plugin install &lt;name&gt;@skills</code> for any Class-A module.
+        Class-B styles install from their own repo.
+      </p>
+    </header>
+
+    <nav class="controls" aria-label="Filter modules by class">
+      <div class="filter" role="group" aria-label="Module class">
+        <button class="filter__seg" type="button" data-filter="all" aria-pressed="true">
+          All <span class="count" data-count-all>0</span>
+        </button>
+        <button class="filter__seg" type="button" data-filter="skill" aria-pressed="false">
+          Skills <span class="count" data-count-skill>0</span>
+        </button>
+        <button class="filter__seg" type="button" data-filter="style" aria-pressed="false">
+          Styles <span class="count" data-count-style>0</span>
+        </button>
+      </div>
+      <span class="controls__tally" data-tally aria-hidden="true"></span>
+    </nav>
+
+    <main id="board" class="board" tabindex="-1" aria-label="Skill modules"></main>
+
+    <footer class="foot">
+      <p class="foot__note">
+        <code>registry.json</code> is the single source of truth — this board
+        renders from it and never redefines a module by hand.
+      </p>
+      <div class="foot__links">
+        <a href="https://github.com/bastien-gallay/skills/blob/main/registry.json">registry.json</a>
+        <a href="https://github.com/bastien-gallay/skills/blob/main/NORMALIZATION.md">NORMALIZATION.md</a>
+        <a href="https://github.com/bastien-gallay/skills/tree/main/shared">shared/ socle</a>
+        <a href="https://github.com/bastien-gallay/skills">repository</a>
+      </div>
+      <p class="foot__meta" data-updated></p>
+    </footer>
+  </div>
+
+  <div class="sr-only" role="status" aria-live="polite" data-live-region></div>
+
+  <!-- Registry data island. Injected at build time by docs/build.mjs from the
+       root registry.json — do not edit by hand. -->
+  <script id="registry" type="application/json" data-registry>
+{"$schema":"https://json-schema.org/draft/2020-12/schema","hub":"bastien-gallay/skills","updated":"2026-07-14","classes":{"skill":"Plugin-distributable Claude Code skill (skills/\u003cname>/SKILL.md + manifests).","style":"Behavior toggle, dual-target (claude-code + claude-ai), built from a canonical prompt.md."},"skills":[{"name":"brainstorm","repo":"bfw","class":"skill","domain":"facilitation","description":"Facilitated brainstorming skill with adaptive technique sequencing.","repository":"https://github.com/bastien-gallay/bfw","plugin":"bfw","install":"/plugin install bfw@skills","status":"stable","version":"0.2.0"},{"name":"contre-expertise","repo":"contre-expertise","class":"skill","domain":"method-audit","description":"Critical, sourced counter-assessment of a working method: falsifiable propositions, multi-agent deep research, adversarial verification, and a capped action plan.","repository":"https://github.com/bastien-gallay/contre-expertise","install":"/plugin install contre-expertise@skills","status":"beta","version":"0.1.0"},{"name":"feature-torture","repo":"feature-torture","class":"skill","domain":"product","description":"Pressure-test one roadmap feature per session and emit a 500-900-word decision report (verdict + ADR + adjacency + spec stub).","repository":"https://github.com/bastien-gallay/feature-torture","install":"/plugin install feature-torture@skills","status":"stable","version":"0.2.0"},{"name":"pair-with-me","repo":"pair-with-me","class":"skill","domain":"engineering","description":"Work one issue as an adversarial pair, not a delegation — reduce the triple debt (technical, cognitive, intent) and keep the human the author of their own system.","repository":"https://github.com/bastien-gallay/pair-with-me","install":"/plugin install pair-with-me@skills","status":"beta","version":"0.1.0"},{"name":"redaction","repo":"redaction","class":"skill","domain":"writing","description":"Boucle d'édition critique pour écrits longs (articles, billets, essais).","repository":"https://github.com/bastien-gallay/redaction","install":"/plugin install redaction@skills","status":"stable","version":"0.2.0"},{"name":"rhetorical-analysis","repo":"rhetorical-analysis-skill","class":"skill","domain":"critical-thinking","description":"Analyse rhétorique et épistémologique d'articles, discours et textes argumentatifs.","repository":"https://github.com/bastien-gallay/rhetorical-analysis-skill","install":"/plugin install rhetorical-analysis@skills","status":"beta","version":"0.1.0"},{"name":"meeting-screenshot-extractor","repo":"meeting-screenshot-extractor","class":"skill","domain":"tooling","description":"Builds a CLI Python tool to automatically extract relevant screenshots from a meeting video, using a transcript and user-defined topics.","repository":"https://github.com/bastien-gallay/meeting-screenshot-extractor","install":"/plugin install meeting-screenshot-extractor@skills","status":"beta","version":"0.1.0"},{"name":"flair","repo":"flair","class":"style","domain":"response-style","description":"End substantive answers with a short learning-flavored anecdote stack just above the TL;DR.","repository":"https://github.com/bastien-gallay/flair","install":"clone the repo, then ./install.sh (Claude Code) or paste claude-ai/ into a claude.ai custom style","status":"stable","version":null},{"name":"glance","repo":"glance","class":"style","domain":"response-style","description":"Optimize answers for at-a-glance readability — scannable shape first, prose only as fallback.","repository":"https://github.com/bastien-gallay/glance","install":"clone the repo, then ./install.sh (Claude Code) or paste claude-ai/ into a claude.ai custom style","status":"stable","version":null}]}
+  </script>
+
+  <script>
+  (() => {
+    "use strict";
+
+    // ---- Theme -------------------------------------------------------------
+    const root = document.documentElement;
+    const KEY = "vitrine-theme";
+    const toggle = document.querySelector(".theme-toggle");
+    const themeLabel = document.querySelector("[data-theme-label]");
+
+    const systemDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const currentDark = () => {
+      const t = root.getAttribute("data-theme");
+      return t ? t === "dark" : systemDark();
+    };
+    function paintToggle() {
+      const dark = currentDark();
+      themeLabel.textContent = dark ? "Dark" : "Light";
+      toggle.setAttribute("aria-label", `Switch to ${dark ? "light" : "dark"} theme`);
+    }
+    try {
+      const saved = localStorage.getItem(KEY);
+      if (saved === "dark" || saved === "light") root.setAttribute("data-theme", saved);
+    } catch (_) {}
+    paintToggle();
+    toggle.addEventListener("click", () => {
+      const next = currentDark() ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem(KEY, next); } catch (_) {}
+      paintToggle();
+    });
+
+    // ---- Data --------------------------------------------------------------
+    let data = { skills: [], hub: "", updated: null };
+    try {
+      data = JSON.parse(document.querySelector("[data-registry]").textContent);
+    } catch (e) {
+      console.error("Registry island failed to parse", e);
+    }
+    const modules = Array.isArray(data.skills) ? data.skills.slice() : [];
+
+    // stable before beta, then alphabetical
+    const rank = { stable: 0, beta: 1 };
+    modules.sort((a, b) =>
+      (rank[a.status] ?? 9) - (rank[b.status] ?? 9) ||
+      a.name.localeCompare(b.name)
+    );
+
+    // ---- Header meta -------------------------------------------------------
+    if (data.hub) document.querySelector("[data-hub]").textContent = data.hub.split("/").pop();
+    if (data.updated) {
+      document.querySelector("[data-updated]").textContent = `Registry updated ${data.updated}.`;
+    }
+
+    // ---- Copy --------------------------------------------------------------
+    const liveRegion = document.querySelector("[data-live-region]");
+    let liveTimer = null;
+    function announce(msg) {
+      liveRegion.textContent = "";
+      // rAF so identical repeat messages still re-announce
+      requestAnimationFrame(() => { liveRegion.textContent = msg; });
+    }
+    async function copy(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch (_) {}
+      // Fallback for file:// and older browsers
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text; ta.setAttribute("readonly", "");
+        ta.style.position = "absolute"; ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch (_) { return false; }
+    }
+    function wireCopy(btn, cmd) {
+      const action = btn.querySelector("[data-action]");
+      const rest = action ? action.textContent : "Copy";
+      let timer = null;
+      btn.addEventListener("click", async () => {
+        const ok = await copy(cmd);
+        btn.classList.add("is-live");
+        if (action) action.textContent = ok ? "Copied" : "Copy failed";
+        announce(ok ? `Copied: ${cmd}` : `Copy failed. Command: ${cmd}`);
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          btn.classList.remove("is-live");
+          if (action) action.textContent = rest;
+        }, 1800);
+      });
+    }
+    document.querySelectorAll("[data-copy]").forEach((b) => wireCopy(b, b.dataset.copy));
+
+    // ---- Render board ------------------------------------------------------
+    const board = document.getElementById("board");
+    const repoShort = (url) => (url || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+    function moduleEl(m) {
+      const isStyle = m.class === "style";
+      const el = document.createElement("article");
+      el.className = "module";
+      el.dataset.class = m.class;
+      el.dataset.status = m.status;
+
+      const statusLabel = (m.status || "").toUpperCase();
+      const lampMod = m.status === "stable" ? "lamp--stable" : "lamp--beta";
+
+      el.innerHTML = `
+        <div class="module__head">
+          <span class="lamp ${lampMod}" role="img" aria-label="${m.status} status"></span>
+          <h3 class="module__name"><a href="${m.repository}">${m.name}</a></h3>
+          <span class="module__status">${statusLabel}</span>
+        </div>
+        <div class="module__meta">
+          <span class="tag">${m.domain}</span>
+          ${m.version ? `<span class="ver">v${m.version}</span>` : ""}
+        </div>
+        <p class="desc">${m.description}</p>
+        <div class="module__foot"></div>
+      `;
+
+      const foot = el.querySelector(".module__foot");
+      if (m.install && m.install.startsWith("/plugin")) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "connector";
+        btn.setAttribute("aria-label", `Copy install command: ${m.install}`);
+        btn.innerHTML = `
+          <span class="connector__jack" aria-hidden="true"></span>
+          <code class="connector__cmd">${m.install}</code>
+          <span class="connector__action" data-action>Copy</span>`;
+        wireCopy(btn, m.install);
+        foot.appendChild(btn);
+      } else {
+        // Class-B style: no one-line command — link to the repo, keep the amber patch.
+        const a = document.createElement("a");
+        a.className = "connector";
+        a.href = m.repository;
+        a.setAttribute("aria-label", `Open ${m.name} repository to install`);
+        a.innerHTML = `
+          <span class="connector__jack" aria-hidden="true"></span>
+          <code class="connector__cmd">${repoShort(m.repository)}</code>
+          <span class="connector__action">Repo &#8599;</span>`;
+        foot.appendChild(a);
+        if (m.install) {
+          const note = document.createElement("p");
+          note.className = "module__note";
+          note.textContent = m.install;
+          foot.appendChild(note);
+        }
+      }
+      return el;
+    }
+
+    function render(filter) {
+      const list = filter === "all" ? modules : modules.filter((m) => m.class === filter);
+      board.replaceChildren();
+      if (!list.length) {
+        const empty = document.createElement("p");
+        empty.className = "board__empty";
+        empty.textContent = "No modules in this class yet.";
+        board.appendChild(empty);
+      } else {
+        const frag = document.createDocumentFragment();
+        list.forEach((m) => frag.appendChild(moduleEl(m)));
+        board.appendChild(frag);
+      }
+      const tally = document.querySelector("[data-tally]");
+      tally.textContent = `${list.length} module${list.length === 1 ? "" : "s"}`;
+    }
+
+    // ---- Counts + filter ---------------------------------------------------
+    const nSkill = modules.filter((m) => m.class === "skill").length;
+    const nStyle = modules.filter((m) => m.class === "style").length;
+    document.querySelector("[data-count-all]").textContent = modules.length;
+    document.querySelector("[data-count-skill]").textContent = nSkill;
+    document.querySelector("[data-count-style]").textContent = nStyle;
+
+    const segs = [...document.querySelectorAll(".filter__seg")];
+    segs.forEach((seg) => {
+      seg.addEventListener("click", () => {
+        segs.forEach((s) => s.setAttribute("aria-pressed", String(s === seg)));
+        render(seg.dataset.filter);
+      });
+    });
+
+    render("all");
+  })();
+  </script>
+</body>
+</html>
