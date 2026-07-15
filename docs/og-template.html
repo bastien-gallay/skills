@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!--
+  Source for the 1200x630 Open Graph card (docs/og.png).
+  Data-driven from registry.json via the island below (injected by build.mjs).
+  Rasterized to og.png by build.mjs using a system headless Chrome.
+  Not meant to be viewed directly as a page; it exists to be screenshotted.
+-->
+<style>
+  :root {
+    --ground: #17150F; --surface: #201D15; --surface-2: #2A261B;
+    --text: #F5F1E8; --text-2: #D3CCB9; --muted: #BDB6A2;
+    --signal: #E8A317; --live: #4FA88A; --line: #4A453A;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; }
+  body {
+    background:
+      radial-gradient(1100px 700px at 82% -10%, rgba(232,163,23,0.10), transparent 60%),
+      var(--ground);
+    color: var(--text);
+    font-family: var(--sans);
+    padding: 76px 88px;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+  }
+  /* faint machined grid */
+  body::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    opacity: 0.05; pointer-events: none;
+  }
+  .kicker {
+    font-family: var(--mono); font-size: 22px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);
+  }
+  .title {
+    font-family: var(--mono); font-weight: 700; font-size: 120px;
+    letter-spacing: -0.02em; line-height: 1; margin-top: 18px;
+    display: flex; align-items: center; gap: 22px;
+  }
+  .title .chev { color: var(--muted); font-weight: 600; }
+  .baseline {
+    font-size: 32px; line-height: 1.45; color: var(--text-2);
+    max-width: 34ch; margin-top: 26px;
+  }
+  .spacer { flex: 1 1 auto; }
+  .connector {
+    display: flex; align-items: center; gap: 22px;
+    background: var(--surface-2); border-radius: 8px;
+    padding: 26px 32px;
+    box-shadow: 0 0 0 1.5px var(--signal), 0 0 60px -10px rgba(232,163,23,0.6);
+  }
+  .jack {
+    width: 26px; height: 26px; border-radius: 50%; flex: none;
+    background: var(--signal); box-shadow: 0 0 22px 2px rgba(232,163,23,0.75);
+  }
+  .connector code {
+    font-family: var(--mono); font-size: 28px; font-weight: 600;
+    color: var(--text); letter-spacing: -0.01em; white-space: nowrap;
+  }
+  .connector .copy {
+    margin-left: auto; font-family: var(--mono); font-size: 20px; font-weight: 600;
+    letter-spacing: 0.18em; color: var(--signal); flex: none;
+  }
+  .meta {
+    display: flex; align-items: center; gap: 20px; margin-top: 30px;
+    font-family: var(--mono); font-size: 22px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .lamp { width: 16px; height: 16px; border-radius: 50%; flex: none; }
+  .lamp--stable { background: var(--live); box-shadow: 0 0 10px -1px var(--live); }
+  .lamp--beta { background: transparent; box-shadow: inset 0 0 0 3px var(--signal); }
+  .dot { color: var(--line); }
+</style>
+</head>
+<body>
+  <div class="kicker">Meta-marketplace · Claude skills</div>
+  <div class="title"><span class="chev">›</span><span data-name>skills</span></div>
+  <p class="baseline">A control desk for the Claude skills I maintain — discoverable and installable in one glance.</p>
+
+  <div class="spacer"></div>
+
+  <div class="connector">
+    <span class="jack"></span>
+    <code data-command>/plugin marketplace add bastien-gallay/skills</code>
+    <span class="copy">COPY</span>
+  </div>
+
+  <div class="meta">
+    <span class="lamp lamp--stable"></span><span>Stable</span>
+    <span class="dot">·</span>
+    <span class="lamp lamp--beta"></span><span>Beta</span>
+    <span class="dot">·</span>
+    <span data-tally>9 Modules — 7 Skills / 2 Styles</span>
+  </div>
+
+  <!-- Registry data island. Injected at build time by docs/build.mjs. -->
+  <script id="registry" type="application/json" data-registry>
+{"$schema":"https://json-schema.org/draft/2020-12/schema","hub":"bastien-gallay/skills","updated":"2026-07-14","classes":{"skill":"Plugin-distributable Claude Code skill (skills/\u003cname>/SKILL.md + manifests).","style":"Behavior toggle, dual-target (claude-code + claude-ai), built from a canonical prompt.md."},"skills":[{"name":"brainstorm","repo":"bfw","class":"skill","domain":"facilitation","description":"Facilitated brainstorming skill with adaptive technique sequencing.","repository":"https://github.com/bastien-gallay/bfw","plugin":"bfw","install":"/plugin install bfw@skills","status":"stable","version":"0.2.0"},{"name":"contre-expertise","repo":"contre-expertise","class":"skill","domain":"method-audit","description":"Critical, sourced counter-assessment of a working method: falsifiable propositions, multi-agent deep research, adversarial verification, and a capped action plan.","repository":"https://github.com/bastien-gallay/contre-expertise","install":"/plugin install contre-expertise@skills","status":"beta","version":"0.1.0"},{"name":"feature-torture","repo":"feature-torture","class":"skill","domain":"product","description":"Pressure-test one roadmap feature per session and emit a 500-900-word decision report (verdict + ADR + adjacency + spec stub).","repository":"https://github.com/bastien-gallay/feature-torture","install":"/plugin install feature-torture@skills","status":"stable","version":"0.2.0"},{"name":"pair-with-me","repo":"pair-with-me","class":"skill","domain":"engineering","description":"Work one issue as an adversarial pair, not a delegation — reduce the triple debt (technical, cognitive, intent) and keep the human the author of their own system.","repository":"https://github.com/bastien-gallay/pair-with-me","install":"/plugin install pair-with-me@skills","status":"beta","version":"0.1.0"},{"name":"redaction","repo":"redaction","class":"skill","domain":"writing","description":"Boucle d'édition critique pour écrits longs (articles, billets, essais).","repository":"https://github.com/bastien-gallay/redaction","install":"/plugin install redaction@skills","status":"stable","version":"0.2.0"},{"name":"rhetorical-analysis","repo":"rhetorical-analysis-skill","class":"skill","domain":"critical-thinking","description":"Analyse rhétorique et épistémologique d'articles, discours et textes argumentatifs.","repository":"https://github.com/bastien-gallay/rhetorical-analysis-skill","install":"/plugin install rhetorical-analysis@skills","status":"beta","version":"0.1.0"},{"name":"meeting-screenshot-extractor","repo":"meeting-screenshot-extractor","class":"skill","domain":"tooling","description":"Builds a CLI Python tool to automatically extract relevant screenshots from a meeting video, using a transcript and user-defined topics.","repository":"https://github.com/bastien-gallay/meeting-screenshot-extractor","install":"/plugin install meeting-screenshot-extractor@skills","status":"beta","version":"0.1.0"},{"name":"flair","repo":"flair","class":"style","domain":"response-style","description":"End substantive answers with a short learning-flavored anecdote stack just above the TL;DR.","repository":"https://github.com/bastien-gallay/flair","install":"clone the repo, then ./install.sh (Claude Code) or paste claude-ai/ into a claude.ai custom style","status":"stable","version":null},{"name":"glance","repo":"glance","class":"style","domain":"response-style","description":"Optimize answers for at-a-glance readability — scannable shape first, prose only as fallback.","repository":"https://github.com/bastien-gallay/glance","install":"clone the repo, then ./install.sh (Claude Code) or paste claude-ai/ into a claude.ai custom style","status":"stable","version":null}]}
+  </script>
+
+  <script>
+  (() => {
+    "use strict";
+    let data = { hub: "", skills: [] };
+    try { data = JSON.parse(document.querySelector("[data-registry]").textContent); } catch (_) {}
+    const skills = Array.isArray(data.skills) ? data.skills : [];
+    const nSkill = skills.filter((m) => m.class === "skill").length;
+    const nStyle = skills.filter((m) => m.class === "style").length;
+    if (data.hub) {
+      document.querySelector("[data-name]").textContent = data.hub.split("/").pop();
+      document.querySelector("[data-command]").textContent = `/plugin marketplace add ${data.hub}`;
+    }
+    document.querySelector("[data-tally]").textContent =
+      `${skills.length} Modules — ${nSkill} Skills / ${nStyle} Styles`;
+  })();
+  </script>
+</body>
+</html>
