@@ -11,6 +11,8 @@ Document fondateur du hub `bastien-gallay/skills`. Source : audit du 2026-07-14.
 
 Les repos restent **séparés** (versioning + distribution indépendants). Le hub agrège, il ne fusionne pas.
 
+Le repo hub `bastien-gallay/skills` vit dans son **propre dossier de checkout** (`~/Dev/oss/skills-hub/`), distinct du conteneur de travail local `~/Dev/oss/skills/` où sont clonés les sous-repos. Ils ne sont **plus imbriqués** : cloner le hub ne ramène que les fichiers hub (registre, marketplace, `shared/`, `docs/`), jamais les sous-repos. Les styles Classe B (flair, glance) ont leurs propres repos — le registre pointe vers `bastien-gallay/flair` et `/glance`, pas vers un sous-dossier du hub.
+
 ## 2. Convention canonique — Classe A (Skills)
 
 Référence = **feature-torture** / **redaction** (déjà conformes).
@@ -77,12 +79,24 @@ Alignement fait par workflow multi-agents (1 agent/repo), commits **signés GPG,
 | rhetorical-analysis | `Promote rhetorical-analysis to a Class-A…` | ✅ signé |
 | meeting-screenshot | `Normalize meeting-screenshot-extractor…` | ✅ signé (repo neuf) |
 
-### Suivis à trancher (non bloquants)
+### Suivis — résolus (2026-07-14)
 
-1. **pair-with-me / `install.sh`** : symlink tout le repo dans `~/.claude/skills/pair-with-me` → après le déplacement de SKILL.md, la découverte casse. Décision : pointer `install.sh` sur `skills/pair-with-me/` **ou** l'abandonner au profit de l'install marketplace (ce que font feature-torture/redaction).
-2. **bfw / doublon `.claude/skills/brainstorm/SKILL.md`** : gitignoré (pattern `brainstorm/` trop large) **et** dérivé du canonique (durée/table/phases différentes). Décision : resync, suppression, ou correction du pattern gitignore.
-3. **rhetorical / copie `skills/`** : la racine `SKILL.md` reste la source de build (pyproject `readme`, `package_skill.py`) ; une copie a été ajoutée sous `skills/`. Les chemins relatifs (`references/`, `scripts/`, `assets/`) de la copie résolvent un niveau trop haut si le plugin tourne en standalone. Description racine laissée en littéral (pas `>`) car le parseur YAML maison est fragile.
-4. **meeting-screenshot** : repo GitHub `bastien-gallay/meeting-screenshot-extractor` **n'existe pas encore** — `homepage`/`repository` pointent vers un repo à créer + pousser.
+1. ✅ **pair-with-me / `install.sh`** : repointé sur `$REPO_DIR/skills/pair-with-me` (+ garde-fou sur `SKILL.md`). Commit signé sur `chore/normalize-hub`.
+2. ✅ **bfw / doublon + gitignore** : pattern `brainstorm/`/`wip/` **ancrés** à la racine (`/brainstorm/`, `/wip/`) — il masquait `skills/brainstorm/` ; `.claude/skills/` explicitement ignoré. La copie locale dérivée (`.claude/skills/brainstorm/SKILL.md`, 11742 o vs 19292 o) est **conservée sur disque** (suppression refusée par le classifier, non nommée) mais neutralisée par le gitignore — à supprimer manuellement si voulu.
+3. ✅ **rhetorical / copie `skills/`** : rendue **auto-portante** (option A) — `references/` + `assets/` vendorisés sous `skills/rhetorical-analysis/`, l'étape script bascule sur la console `generate-analysis`. La racine reste la source de build (`pyproject readme`, `package_skill.py`) ; `scripts/` reste le package Python racine.
+4. ✅ **meeting-screenshot** : repo public `bastien-gallay/meeting-screenshot-extractor` **créé + `main` poussé**.
+
+### État des PR
+
+| Repo | Branche | PR |
+| --- | --- | --- |
+| bfw | `chore/normalize-hub` | #1 (normalisation + suivi gitignore) |
+| contre-expertise | `chore/normalize-hub` | #1 |
+| pair-with-me | `chore/normalize-hub` | #1 (+ suivi install.sh) |
+| rhetorical-analysis-skill | `chore/normalize-hub` | #1 (+ suivi auto-portance) |
+| skills (hub) | `feat/hub-socle` | #1 (registry + méta-marketplace + `shared/`) |
+
+meeting-screenshot : poussé directement sur `main` (repo neuf, pas de PR).
 
 ## 7. Ordre d'exécution recommandé
 
