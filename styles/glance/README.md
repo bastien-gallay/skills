@@ -44,8 +44,21 @@ Use `--copy` instead of symlink if you prefer:
 
 ### Claude.ai
 
-See [`claude-ai/glance-style.md`](./claude-ai/glance-style.md) for the
-exact text to paste into Settings → Custom styles → Create.
+In the prompt input (web or desktop app):
+
+1. Click the **+** icon → **Use style** → **Create & edit styles**
+2. Click the **Create custom style** button
+3. Click the **Describe style instead** link (lower-right of the modal)
+4. Select **Use custom instructions (advanced)**
+5. Paste the contents of [`claude-ai/glance-style.md`](./claude-ai/glance-style.md)
+   into the text area
+6. Click **Create style**
+
+To use it afterwards: **+** → **Use style** → **Glance**.
+
+> ⚠️ Anthropic is migrating Custom styles to Skills (rollout started
+> 2026-05-20). The menu path above may change; Glance's Claude.ai
+> surface will likely move to a Skill.
 
 ## Iterate
 
