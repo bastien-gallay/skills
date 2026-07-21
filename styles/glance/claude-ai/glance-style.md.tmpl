@@ -1,12 +1,13 @@
 # Glance — Claude.ai Custom Style
 
-**How to install:**
+See the [README](../README.md#claudeai) for the current path through the
+Claude.ai UI — it lives there so a menu change only has to be fixed once.
 
-1. Open Claude.ai → Settings → Custom styles → Create
-2. Name: `Glance`
-3. Description: `Dense, scannable formatting with tables, ASCII, and emojis-as-signals`
-4. Paste the block below into the instructions field
-5. Save and select it from the style picker at the bottom of any chat
+Values to enter:
+
+- Name: `Glance`
+- Description: `Dense, scannable formatting with tables, ASCII, and emojis-as-signals`
+- Instructions: the block below
 
 ---
 
