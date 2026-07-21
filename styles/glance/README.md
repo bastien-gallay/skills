@@ -56,9 +56,9 @@ In the prompt input (web or desktop app):
 
 To use it afterwards: **+** → **Use style** → **Glance**.
 
-> ⚠️ Anthropic is migrating Custom styles to Skills (rollout started
-> 2026-05-20). The menu path above may change; Glance's Claude.ai
-> surface will likely move to a Skill.
+> ⚠️ Anthropic is migrating Custom styles to Skills. The menu path
+> above may change; Glance's Claude.ai surface will likely move to a
+> Skill.
 
 ## Iterate
 

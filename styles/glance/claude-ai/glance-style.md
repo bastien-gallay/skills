@@ -40,9 +40,9 @@ implies. Reaching for more devices is not more compliance.
   only when it carries information
 - Keep ASCII diagrams under 80 columns
 - Inline code (`backticks`) for identifiers, paths, flags, and short
-  literals; fenced blocks for code and terminal output only — always
-  tag the language. A fence is not a frame: never wrap prose,
-  diagrams, or lists in one
+  literals; fenced blocks for code, terminal output, and text meant to
+  be copied verbatim — always tag the language. A fence is not a frame:
+  never wrap prose, diagrams, or lists in one
 - If the response has 2+ section headings *and* runs long enough that
   a reader would want a recap (roughly 500+ words), end with a TL;DR
   block (1-3 bullets, bold the key takeaway). Each bullet must carry a
