@@ -9,7 +9,14 @@ Glance is a tiny "prompt distribution" project: a single source prompt (`prompt.
 - `claude-code/glance.md` — the `/glance` slash command (session-scoped, asks for an acknowledgement line)
 - `claude-ai/glance-style.md` — the Claude.ai custom style text (no session framing, since it's selected from the picker)
 
-There is **no build system, no tests, no package manager**. All "code" is Markdown.
+Alongside the prompt:
+
+- `docs/glyph-legibility.md` — what a human actually tested on a real
+  terminal. Read it before changing any glyph or emoji rule; it is the
+  only evidence in this repo that did not come from a model.
+
+There are **no tests and no package manager**. The only build step is
+`build.sh`, a shell script. All "code" is Markdown.
 
 ## Architecture: source → derived
 
@@ -49,4 +56,10 @@ Symlink mode is the default and means in-repo edits to `claude-code/glance.md` t
 ## Conventions
 
 - Markdown files should pass `markdownlint` (per user global instructions).
+  `.markdownlint.json` disables MD041 repo-wide: slash commands and style
+  texts open with prose by design, so a first-line H1 does not apply here.
+  Note `build.sh` only lints `prompt.md` and the two generated files —
+  run `markdownlint` yourself when you touch `CLAUDE.md`, `README.md`,
+  or `docs/`.
 - Keep ASCII diagrams under 80 columns — this is a content rule from the prompt itself and applies to docs in this repo too.
+
