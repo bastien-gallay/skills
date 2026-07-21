@@ -63,10 +63,15 @@ Symlink mode is the default and means in-repo edits to `claude-code/glance.md` t
 
 ## Traps
 
-- **`build.sh` failing on `mktemp`** ("Operation not permitted",
-  `/var/folders/…`) is a sandbox artifact, not a repo bug. BSD `mktemp`
-  with no template ignores `TMPDIR`. The script is fine outside the
-  sandbox — do not "fix" it.
+- **`$TMPDIR` does not hold the same value on both sides of the sandbox
+  boundary.** Two symptoms seen so far. `build.sh` failing on `mktemp`
+  ("Operation not permitted", `/var/folders/…`) is a sandbox artifact,
+  not a repo bug — BSD `mktemp` with no template ignores `TMPDIR`, and
+  the script is fine outside the sandbox, so do not "fix" it. And a file
+  written to `$TMPDIR` in one mode is not there in the other: a backup
+  saved under `/tmp/claude-501` vanished when read back from
+  `/var/folders/…`. Pass absolute paths across that boundary, never
+  `$TMPDIR`.
 - **The prompt's rules apply to this repo's own files.** When a rule in
   `prompt.md` seems to condemn something a repo file does deliberately,
   suspect the rule before the file: that is how "fenced blocks for code
