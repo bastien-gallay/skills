@@ -63,3 +63,14 @@ Symlink mode is the default and means in-repo edits to `claude-code/glance.md` t
   or `docs/`.
 - Keep ASCII diagrams under 80 columns — this is a content rule from the prompt itself and applies to docs in this repo too.
 
+## Traps
+
+- **`build.sh` failing on `mktemp`** ("Operation not permitted",
+  `/var/folders/…`) is a sandbox artifact, not a repo bug. BSD `mktemp`
+  with no template ignores `TMPDIR`. The script is fine outside the
+  sandbox — do not "fix" it.
+- **The prompt's rules apply to this repo's own files.** When a rule in
+  `prompt.md` seems to condemn something a repo file does deliberately,
+  suspect the rule before the file: that is how "fenced blocks for code
+  and terminal output only" was found too narrow — the Claude.ai
+  template fences its style text for copy-paste, correctly.
