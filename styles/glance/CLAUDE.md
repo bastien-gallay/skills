@@ -20,12 +20,10 @@ There are **no tests and no package manager**. The only build step is
 
 ## Architecture: source → derived
 
-```
-prompt.md  (canonical; shared body between <!-- glance:body:start/end --> markers)
-   │
-   ├── claude-code/glance.md.tmpl  ──build.sh──▶ claude-code/glance.md
-   └── claude-ai/glance-style.md.tmpl ──build.sh──▶ claude-ai/glance-style.md
-```
+    prompt.md — canonical; body between glance:body:start/end markers
+    │
+    ├── claude-code/glance.md.tmpl     ──build.sh──▶ claude-code/glance.md
+    └── claude-ai/glance-style.md.tmpl ──build.sh──▶ claude-ai/glance-style.md
 
 Each `*.md.tmpl` is a per-surface wrapper containing a `{{BODY}}`
 placeholder that `build.sh` replaces with the marked region of
