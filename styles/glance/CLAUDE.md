@@ -72,6 +72,12 @@ Symlink mode is the default and means in-repo edits to `claude-code/glance.md` t
   saved under `/tmp/claude-501` vanished when read back from
   `/var/folders/…`. Pass absolute paths across that boundary, never
   `$TMPDIR`.
+- **Commit each idea before opening the next edit.** Batching several
+  edits into one file and splitting them afterwards does not work: the
+  first `git add <file>` sweeps up everything written so far, producing
+  one commit whose subject describes half its diff. Splitting after the
+  fact then costs a history rewrite. This happened here, in the pass
+  that had just restated "one commit is one idea".
 - **The prompt's rules apply to this repo's own files.** When a rule in
   `prompt.md` seems to condemn something a repo file does deliberately,
   suspect the rule before the file: that is how "fenced blocks for code
