@@ -31,6 +31,22 @@ Each `*.md.tmpl` is a per-surface wrapper containing a `{{BODY}}`
 placeholder that `build.sh` replaces with the marked region of
 `prompt.md`.
 
+The body has two sections, and a new rule belongs to exactly one:
+
+- **`## Always`** — hard constraints, unconditional. Emoji set and the
+  used-twice-or-not-at-all rule, no enclosed alphanumerics, bold
+  discipline, code vs fences, 80-column diagrams, no hedging. These
+  hold in a two-line conversational reply as much as in a long report.
+- **`## When the content has a shape`** — device *choices*, gated on the
+  content having the shape the device implies. This is the only section
+  the "prose is the default" hedge governs.
+
+The split exists because a single flat list let the opening hedge
+excuse a hard rule: "prose is the default" was read as permission to
+skip the emoji rule on a conversational turn. If a new rule can be
+skipped when the answer is short prose, it goes in the second section;
+otherwise the first.
+
 When editing the prompt:
 
 1. Edit the body inside the markers in `prompt.md`.
