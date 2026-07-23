@@ -12,6 +12,7 @@ END="<!-- glance:body:end -->"
 
 TARGETS=(
   "claude-code/glance.md.tmpl:claude-code/glance.md"
+  "claude-code/glance-style.md.tmpl:claude-code/glance-style.md"
   "claude-ai/glance-style.md.tmpl:claude-ai/glance-style.md"
 )
 
