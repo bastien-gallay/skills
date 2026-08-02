@@ -30,6 +30,13 @@
       "tags": ["roadmap", "decision-making", "ADR", "product-management"]
     },
     {
+      "name": "market-strategist",
+      "source": { "source": "github", "repo": "bastien-gallay/market-strategist" },
+      "description": "Strategic advisor for market analysis, positioning, traction, pitch and project communication.",
+      "category": "productivity",
+      "tags": ["strategy", "positioning", "traction", "marketing"]
+    },
+    {
       "name": "pair-with-me",
       "source": { "source": "github", "repo": "bastien-gallay/pair-with-me" },
       "description": "Work one issue as an adversarial pair, not a delegation.",
