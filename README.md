@@ -37,6 +37,7 @@ Then `/plugin install <name>@skills` for any skill below.
 | --- | --- | --- |
 | flair | [flair](https://github.com/bastien-gallay/flair) | End answers with a short learning-flavored anecdote stack |
 | glance | [glance](https://github.com/bastien-gallay/glance) | Optimize answers for at-a-glance readability |
+| transpeak | [transpeak](https://github.com/bastien-gallay/transpeak) | Answer in code rather than prose where the content has a shape |
 
 Install a style from its own repo (e.g. `./install.sh` for the `/flair`
 slash command, or paste its `claude-ai/` build into a claude.ai custom style).
