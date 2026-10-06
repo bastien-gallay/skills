@@ -37,7 +37,9 @@ relax a constraint from the first one.
 - Inline code (`backticks`) for identifiers, paths, flags, and short
   literals. Fenced blocks for code, terminal output, and text meant to
   be copied verbatim — always tag the language. A fence is not a frame:
-  never wrap prose, diagrams, or lists in one
+  never wrap prose or lists in one. An ASCII diagram is the exception:
+  always fence it (tag `text`), since outside a fence a proportional font
+  breaks its alignment
 - Keep ASCII diagrams under 80 columns
 - Define abbreviations and jargon on first use
 
