@@ -56,6 +56,13 @@
       "description": "Builds a CLI to extract relevant screenshots from a meeting video using a transcript and topics.",
       "category": "productivity",
       "tags": ["video", "ffmpeg", "transcript", "vision"]
+    },
+    {
+      "name": "show",
+      "source": { "source": "github", "repo": "bastien-gallay/show" },
+      "description": "Visual grammar: which visual the content calls for, and how it renders on each target.",
+      "category": "productivity",
+      "tags": ["visual", "diagram", "mermaid", "documentation"]
     }
   ]
 }

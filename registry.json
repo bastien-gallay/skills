@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "hub": "bastien-gallay/skills",
-  "updated": "2026-08-28",
+  "updated": "2026-10-06",
   "classes": {
     "skill": "Plugin-distributable Claude Code skill (skills/<name>/SKILL.md + manifests).",
     "style": "Behavior toggle, dual-target (claude-code + claude-ai), built from a canonical prompt.md."
@@ -84,6 +84,17 @@
       "install": "/plugin install meeting-screenshot-extractor@skills",
       "status": "beta",
       "version": "0.1.0"
+    },
+    {
+      "name": "show",
+      "repo": "show",
+      "class": "skill",
+      "domain": "documentation",
+      "description": "Visual grammar for anything written for a reader: which visual the content calls for, how it renders or falls back on each target, and the page rules that make it scannable.",
+      "repository": "https://github.com/bastien-gallay/show",
+      "install": "/plugin install show@skills",
+      "status": "beta",
+      "version": "0.3.2"
     },
     {
       "name": "flair",

@@ -30,6 +30,7 @@ Then `/plugin install <name>@skills` for any skill below.
 | redaction | [redaction](https://github.com/bastien-gallay/redaction) | writing | Boucle d'édition critique pour écrits longs |
 | rhetorical-analysis | [rhetorical-analysis-skill](https://github.com/bastien-gallay/rhetorical-analysis-skill) | critical-thinking | Analyse rhétorique et épistémologique d'un texte |
 | meeting-screenshot-extractor | [meeting-screenshot-extractor](https://github.com/bastien-gallay/meeting-screenshot-extractor) | tooling | Build a CLI to extract relevant screenshots from a meeting video |
+| show | [show](https://github.com/bastien-gallay/show) | documentation | Pick the visual the content calls for, and how it renders on each target |
 
 ## Styles (Class B)
 
