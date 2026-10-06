@@ -116,5 +116,11 @@ try {
     console.warn(`build: could not render og.png (${reason}). Existing og.png unchanged.`);
   }
 } finally {
-  rmSync(profile, { recursive: true, force: true });
+  // Chrome can still be writing into its profile when it exits: retry, and
+  // never fail a build that already wrote og.png over a leftover temp dir.
+  try {
+    rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  } catch (err) {
+    console.warn(`build: could not remove ${profile} (${err.code}); remove it by hand.`);
+  }
 }
