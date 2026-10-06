@@ -94,7 +94,7 @@
       "repository": "https://github.com/bastien-gallay/show",
       "install": "/plugin install show@skills",
       "status": "beta",
-      "version": "0.3.2"
+      "version": "0.3.3"
     },
     {
       "name": "flair",
