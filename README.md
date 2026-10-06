@@ -31,6 +31,7 @@ Then `/plugin install <name>@skills` for any skill below.
 | redaction | [redaction](https://github.com/bastien-gallay/redaction) | writing | Boucle d'édition critique pour écrits longs |
 | rhetorical-analysis | [rhetorical-analysis-skill](https://github.com/bastien-gallay/rhetorical-analysis-skill) | critical-thinking | Analyse rhétorique et épistémologique d'un texte |
 | meeting-screenshot-extractor | [meeting-screenshot-extractor](https://github.com/bastien-gallay/meeting-screenshot-extractor) | tooling | Build a CLI to extract relevant screenshots from a meeting video |
+| show | [show](https://github.com/bastien-gallay/show) | documentation | Pick the visual the content calls for, and how it renders on each target |
 
 ## Styles (Class B)
 
@@ -38,6 +39,7 @@ Then `/plugin install <name>@skills` for any skill below.
 | --- | --- | --- |
 | flair | [flair](https://github.com/bastien-gallay/flair) | End answers with a short learning-flavored anecdote stack |
 | glance | [glance](https://github.com/bastien-gallay/glance) | Optimize answers for at-a-glance readability |
+| transpeak | [transpeak](https://github.com/bastien-gallay/transpeak) | Answer in code rather than prose where the content has a shape |
 
 Install a style from its own repo (e.g. `./install.sh` for the `/flair`
 slash command, or paste its `claude-ai/` build into a claude.ai custom style).

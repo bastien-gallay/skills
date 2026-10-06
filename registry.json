@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "hub": "bastien-gallay/skills",
-  "updated": "2026-08-02",
+  "updated": "2026-10-06",
   "classes": {
     "skill": "Plugin-distributable Claude Code skill (skills/<name>/SKILL.md + manifests).",
     "style": "Behavior toggle, dual-target (claude-code + claude-ai), built from a canonical prompt.md."
@@ -97,6 +97,17 @@
       "version": "0.1.0"
     },
     {
+      "name": "show",
+      "repo": "show",
+      "class": "skill",
+      "domain": "documentation",
+      "description": "Visual grammar for anything written for a reader: which visual the content calls for, how it renders or falls back on each target, and the page rules that make it scannable.",
+      "repository": "https://github.com/bastien-gallay/show",
+      "install": "/plugin install show@skills",
+      "status": "beta",
+      "version": "0.3.3"
+    },
+    {
       "name": "flair",
       "repo": "flair",
       "class": "style",
@@ -116,6 +127,17 @@
       "repository": "https://github.com/bastien-gallay/glance",
       "install": "clone the repo, then ./install.sh (Claude Code) or paste claude-ai/ into a claude.ai custom style",
       "status": "stable",
+      "version": null
+    },
+    {
+      "name": "transpeak",
+      "repo": "transpeak",
+      "class": "style",
+      "domain": "response-style",
+      "description": "Answer in code rather than prose wherever the content has a shape — types and expressions instead of paragraphs.",
+      "repository": "https://github.com/bastien-gallay/transpeak",
+      "install": "clone the repo, then ./install.sh (Claude Code) or paste claude-ai/ into a claude.ai custom style",
+      "status": "beta",
       "version": null
     }
   ]
