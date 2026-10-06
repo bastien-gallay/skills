@@ -26,6 +26,7 @@ Then `/plugin install <name>@skills` for any skill below.
 | brainstorm | [bfw](https://github.com/bastien-gallay/bfw) | facilitation | Facilitated brainstorming with adaptive technique sequencing |
 | contre-expertise | [contre-expertise](https://github.com/bastien-gallay/contre-expertise) | method-audit | Critical, sourced counter-assessment of a working method |
 | feature-torture | [feature-torture](https://github.com/bastien-gallay/feature-torture) | product | Pressure-test one roadmap feature → a decision report |
+| market-strategist | [market-strategist](https://github.com/bastien-gallay/market-strategist) | strategy | Market analysis, positioning, traction, pitch — it fills the framework, you react |
 | pair-with-me | [pair-with-me](https://github.com/bastien-gallay/pair-with-me) | engineering | Work an issue as an adversarial pair, not a delegation |
 | redaction | [redaction](https://github.com/bastien-gallay/redaction) | writing | Boucle d'édition critique pour écrits longs |
 | rhetorical-analysis | [rhetorical-analysis-skill](https://github.com/bastien-gallay/rhetorical-analysis-skill) | critical-thinking | Analyse rhétorique et épistémologique d'un texte |
