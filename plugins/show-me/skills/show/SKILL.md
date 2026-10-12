@@ -9,8 +9,10 @@ description: >
   one-line verdict, source under each visual, unverified flagged in place).
   Reference skill, no workflow. Load before choosing a visual for a doc,
   ticket, MR, slide, page or Slack message, and before turning prose into a
-  figure. Also: « montrer plutôt que dire », « mets-le en diagramme », « plus
-  d'images que de mots », « rouge/vert pour l'ancien et le nouveau ».
+  figure, including a terminal answer the user asks to see visually. Also:
+  « montre-moi », « de manière visuelle », « visualise », « montrer plutôt
+  que dire », « mets-le en diagramme », « plus d'images que de mots »,
+  « rouge/vert pour l'ancien et le nouveau », "show me", "visually".
 user-invocable: false
 ---
 

@@ -30,21 +30,29 @@ a reflex in `CLAUDE.md`, load it by name before choosing a visual.
 
 ## Install
 
-```sh
-ln -s "$PWD/skills/show" ~/.claude/skills/show
+```text
+/plugin marketplace add bastien-gallay/skills
+/plugin install show@skills
 ```
+
+The plugin ships a `UserPromptSubmit` hook (`hooks/show-reflex.sh`): a prompt
+that asks for a visual answer (« montre-moi », « de manière visuelle »,
+« visualise », "show me", "visually") gets a reminder to load `show`, since a
+skill's description alone does not always trigger it. A symlink install
+(`ln -s "$PWD/skills/show" ~/.claude/skills/show`) gets the skill without the
+hook.
 
 ## Suggested `CLAUDE.md` reflex
 
 ```markdown
 - Show rather than tell, for anything a reader will read: pick the visual from the content. Data touched → table; structure that changes → class or ER diagram; multi-component process → sequence diagram; branching algorithm → flowchart; old vs new → red/green, always with a −/+ sign.
 - Several decisions → overview matrix first, handles D1…Dn; a one-line verdict per block; the source under each visual; unverified flagged where it sits; a status marker (✅ ⚠️ ❓) opens its line or cell.
-- Rendering depends on the target (fenced ASCII, mermaid, SVG, interactive): load the `show` skill before writing outside the terminal, for the render matrix and the declared fallbacks.
+- Rendering depends on the target (fenced ASCII, mermaid, SVG, interactive): load the `show` skill before writing outside the terminal, or as soon as the user asks for a visual answer, for the render matrix and the declared fallbacks.
 ```
 
 ## Status
 
-0.3.5, 2026-10-06. Every ✅ in the render matrix points to a numbered source
+0.3.6, 2026-10-12. Every ✅ in the render matrix points to a numbered source
 under it: a dated probe or capture, daily use, an indirect or private
 observation, or `shape`'s own matrix; a ✓? or ❓ is a probe still to run.
 The worked example retells a real decision page on a fictional product
