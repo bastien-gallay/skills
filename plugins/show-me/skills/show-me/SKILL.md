@@ -1,5 +1,5 @@
 ---
-name: show
+name: show-me
 description: >
   Visual grammar for anything written for a reader: which visual a piece of
   content calls for (data table, class or ER diagram, sequence diagram,
@@ -16,7 +16,7 @@ description: >
 user-invocable: false
 ---
 
-# show
+# show-me
 
 > **The one idea.** Pick the visual from what the content says, never from
 > where it goes. The target decides two things only: how the visual renders,

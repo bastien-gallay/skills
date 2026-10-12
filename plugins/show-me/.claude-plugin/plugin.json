@@ -1,15 +1,15 @@
 {
-  "name": "show",
-  "version": "0.3.6",
+  "name": "show-me",
+  "version": "0.4.0",
   "description": "Visual grammar for anything written for a reader: which visual the content calls for, how it renders or falls back on each target, and the page rules that make it scannable.",
   "author": {
     "name": "Bastien Gallay"
   },
-  "homepage": "https://github.com/bastien-gallay/show",
-  "repository": "https://github.com/bastien-gallay/show",
+  "homepage": "https://github.com/bastien-gallay/show-me",
+  "repository": "https://github.com/bastien-gallay/show-me",
   "license": "MIT",
   "keywords": [
-    "show",
+    "show-me",
     "visual",
     "diagram",
     "mermaid",
