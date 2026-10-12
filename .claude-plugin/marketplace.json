@@ -65,8 +65,8 @@
       "tags": ["video", "ffmpeg", "transcript", "vision"]
     },
     {
-      "name": "show",
-      "source": { "source": "github", "repo": "bastien-gallay/show" },
+      "name": "show-me",
+      "source": { "source": "github", "repo": "bastien-gallay/show-me" },
       "description": "Visual grammar: which visual the content calls for, and how it renders on each target.",
       "category": "productivity",
       "tags": ["visual", "diagram", "mermaid", "documentation"]
