@@ -113,7 +113,7 @@ class Examples(unittest.TestCase):
         self.assertEqual((n, exported[1]), (3, 3))
         self.assertTrue(source.startswith("code of HEAD @ "))
         self.assertEqual(exported[0].read_text(encoding="utf-8"), (src / "cases.json").read_text(encoding="utf-8"))
-        replay = subprocess.run(["node", "src/oracle.js"], cwd=work, capture_output=True, text=True)
+        replay = subprocess.run(["node", "src/oracle.js"], cwd=work, check=False, capture_output=True, text=True)
         self.assertEqual((replay.returncode, replay.stdout.strip()), (0, "3 cases hold"), replay.stderr)
 
 
@@ -231,7 +231,7 @@ class Contract(Case):
     def test_the_checks_are_the_ones_skill_md_documents(self):
         import re
         skill = (ROOT / "skills/truepath/SKILL.md").read_text(encoding="utf-8")
-        documented = re.findall(r"^\| (C\d+) \|", skill, flags=re.M)
+        documented = re.findall(r"^\| (C\d+) \|", skill, flags=re.MULTILINE)
         self.assertEqual(documented, [cid for cid, _ in build.CHECKS])
 
     def page(self, out):
@@ -348,7 +348,7 @@ class Page(Case):
 
     def play(self, out, *mode):
         """Every tab and step of a built page, on a stand-in DOM (see play_page.js)."""
-        run = subprocess.run(["node", str(ROOT / "tests/play_page.js"), str(out), *mode], capture_output=True, text=True)
+        run = subprocess.run(["node", str(ROOT / "tests/play_page.js"), str(out), *mode], check=False, capture_output=True, text=True)
         self.assertEqual(run.returncode, 0, run.stderr[-2000:])
         return json.loads(run.stdout)
 
@@ -438,7 +438,7 @@ class Oracle(Case):
 
     def test_verdicts_come_from_the_ref_not_the_checkout(self):
         (self.repo / "src/rule.js").write_text("module.exports=d=>d<30;", encoding="utf-8")  # uncommitted
-        out, n, logic, _ = self.build(self.spec(self.oracle))
+        out, _, logic, _ = self.build(self.spec(self.oracle))
         self.assertTrue(logic.startswith("code of HEAD @ "))
         out.unlink()
         self.commit("regression")

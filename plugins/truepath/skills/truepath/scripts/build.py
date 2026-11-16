@@ -202,7 +202,7 @@ def validate_grid(g, p):
 # ---- where verdicts come from
 
 def git(repo, *args, text=True):
-    run = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=text)
+    run = subprocess.run(["git", "-C", str(repo), *args], check=False, capture_output=True, text=text)
     if run.returncode:
         err = run.stderr if text else run.stderr.decode(errors="replace")
         raise UnreadableSpec(f"oracle: git {args[0]} failed in {repo}:\n{err.strip()}")
@@ -220,7 +220,7 @@ def snapshot(o, workdir, specdir):
     if not snap.exists():
         archive = git(repo, "archive", sha, *o["paths"], text=False)
         snap.mkdir(parents=True)
-        untar = subprocess.run(["tar", "-x", "-C", str(snap)], input=archive, capture_output=True)
+        untar = subprocess.run(["tar", "-x", "-C", str(snap)], check=False, input=archive, capture_output=True)
         if untar.returncode:
             shutil.rmtree(snap, ignore_errors=True)
             raise UnreadableSpec("oracle: cannot unpack the snapshot:\n" + untar.stderr.decode(errors="replace").strip())
@@ -241,7 +241,7 @@ def run_oracle(spec, scenarios, specdir):
     io_in.write_text(json.dumps([s["inputs"] for s in scenarios]), encoding="utf-8")
     io_out.unlink(missing_ok=True)
     try:
-        run = subprocess.run(o["cmd"], cwd=snap / o["cwd"], capture_output=True, text=True,
+        run = subprocess.run(o["cmd"], cwd=snap / o["cwd"], check=False, capture_output=True, text=True,
                              env={**os.environ, "TRUEPATH_ORACLE_IN": str(io_in), "TRUEPATH_ORACLE_OUT": str(io_out)})
     except OSError as e:
         raise UnreadableSpec(f"oracle: cannot run {o['cmd']!r}: {e}") from e
@@ -259,7 +259,7 @@ def run_port(spec, scenarios, specdir):
               "process.stdout.write(JSON.stringify(s.map(x=>decide(x))))")
     run = subprocess.run(["node", "-e", script, str(specdir / spec["port"])],
                          input=json.dumps([s["inputs"] for s in scenarios]),
-                         capture_output=True, text=True)
+                         check=False, capture_output=True, text=True)
     if run.returncode:
         raise UnreadableSpec(f"port: {spec['port']} failed:\n{run.stderr.strip()[-3000:]}")
     label = f"port {spec['port']}" if spec.get("lang", "en") == "en" else f"portage {spec['port']}"

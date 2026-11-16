@@ -34,6 +34,11 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: false
+      - name: Python
+        run: uvx ruff@0.17.5 check skills tests
       - name: Markdown
         run: npx --yes markdownlint-cli2@0.24.0 README.md CHANGELOG.md .wrap.md "docs/*.md" "skills/truepath/**/*.md"
       - name: Plugin manifest

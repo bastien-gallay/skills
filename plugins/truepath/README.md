@@ -97,7 +97,8 @@ python3 -m unittest discover -s tests
 
 The tests break each check's input once and expect the build to refuse, then
 play the built pages step by step under Node.js, without a browser. CI runs
-them on Python 3.9 and 3.13, with `markdownlint-cli2` on the docs.
+them on Python 3.9 and 3.13, with `ruff check` on the code and
+`markdownlint-cli2` on the docs.
 
 ## Related skills
 
