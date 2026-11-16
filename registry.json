@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "hub": "bastien-gallay/skills",
-  "updated": "2026-10-12",
+  "updated": "2026-11-16",
   "classes": {
     "skill": "Plugin-distributable Claude Code skill (skills/<name>/SKILL.md + manifests).",
     "style": "Behavior toggle, dual-target (claude-code + claude-ai), built from a canonical prompt.md."
@@ -106,6 +106,17 @@
       "install": "/plugin install show-me@skills",
       "status": "beta",
       "version": "0.4.0"
+    },
+    {
+      "name": "truepath",
+      "repo": "truepath",
+      "class": "skill",
+      "domain": "documentation",
+      "description": "Self-contained HTML simulations of a process or a bug path: a dot walks the real path, before and after play side by side, and the build refuses any scenario the repository's own code contradicts.",
+      "repository": "https://github.com/bastien-gallay/truepath",
+      "install": "/plugin install truepath@skills",
+      "status": "beta",
+      "version": "0.1.0"
     },
     {
       "name": "flair",
