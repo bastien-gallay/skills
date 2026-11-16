@@ -32,6 +32,7 @@ Then `/plugin install <name>@skills` for any skill below.
 | rhetorical-analysis | [rhetorical-analysis-skill](https://github.com/bastien-gallay/rhetorical-analysis-skill) | critical-thinking | Analyse rhétorique et épistémologique d'un texte |
 | meeting-screenshot-extractor | [meeting-screenshot-extractor](https://github.com/bastien-gallay/meeting-screenshot-extractor) | tooling | Build a CLI to extract relevant screenshots from a meeting video |
 | show-me | [show-me](https://github.com/bastien-gallay/show-me) | documentation | Pick the visual the content calls for, and how it renders on each target |
+| truepath | [truepath](https://github.com/bastien-gallay/truepath) | documentation | Simulate a process or a bug path in one HTML page, checked against the code |
 
 ## Styles (Class B)
 
