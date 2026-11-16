@@ -35,6 +35,11 @@ jobs:
         with:
           node-version: 24
       - name: Markdown
-        run: npx --yes markdownlint-cli2@0.24.0 README.md CHANGELOG.md .wrap.md "skills/truepath/**/*.md"
+        run: npx --yes markdownlint-cli2@0.24.0 README.md CHANGELOG.md .wrap.md "docs/*.md" "skills/truepath/**/*.md"
       - name: Plugin manifest
         run: jq -e . .claude-plugin/plugin.json .claude-plugin/marketplace.json
+      - name: One version everywhere
+        run: |
+          v=$(jq -r .version .claude-plugin/plugin.json)
+          jq -e --arg v "$v" '.metadata.version == $v and .plugins[0].version == $v' .claude-plugin/marketplace.json
+          test "$(grep -m1 '^## ' CHANGELOG.md)" = "## $v"
