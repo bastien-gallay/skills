@@ -1,5 +1,7 @@
 # truepath
 
+[![ci](https://github.com/bastien-gallay/truepath/actions/workflows/ci.yml/badge.svg)](https://github.com/bastien-gallay/truepath/actions/workflows/ci.yml)
+
 An agent skill that turns a process, a bug path or a rule under discussion
 into one self-contained HTML page: a dot walks the real path through the
 graph, a data panel shows what changes at each step, and two scenarios play
@@ -30,9 +32,28 @@ Known limits are listed under *Limits* in
 
 ## Install
 
-Copy `skills/truepath/` into a skills folder your agent reads
-(`~/.claude/skills/` for Claude Code), or install the repository as a Claude
-Code plugin.
+In Claude Code, as a plugin from this repository:
+
+```text
+/plugin marketplace add bastien-gallay/truepath
+/plugin install truepath@truepath
+```
+
+Or from the [skills hub](https://github.com/bastien-gallay/skills), with the
+other skills I maintain:
+
+```text
+/plugin marketplace add bastien-gallay/skills
+/plugin install truepath@skills
+```
+
+For another agent, clone the repository and copy `skills/truepath/` into the
+skills folder it reads:
+
+```sh
+git clone https://github.com/bastien-gallay/truepath.git
+cp -R truepath/skills/truepath ~/.claude/skills/
+```
 
 Needs Python 3.9 or later (standard library only) and, for a JavaScript port
 or a JavaScript oracle, Node.js. The page works offline: no web font, no CDN.
@@ -73,6 +94,17 @@ python3 -m unittest discover -s tests
 The tests break each check's input once and expect the build to refuse, then
 play the built pages step by step under Node.js, without a browser. CI runs
 them on Python 3.9 and 3.13, with `markdownlint-cli2` on the docs.
+
+## Related skills
+
+truepath is listed in [bastien-gallay/skills](https://github.com/bastien-gallay/skills),
+the registry of the skills I maintain. Two of them meet it often:
+
+- [`show-me`](https://github.com/bastien-gallay/show-me) picks the visual a
+  piece of content calls for; truepath builds one of them, the path through
+  a process, and checks it against the code.
+- [`wrap`](https://github.com/bastien-gallay/wrap) closes a milestone; its
+  configuration for this repository is [`.wrap.md`](.wrap.md).
 
 ## Influences
 

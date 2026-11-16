@@ -16,23 +16,23 @@ jobs:
       matrix:
         python: ["3.9", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # uv brings its own Python builds: the runner image no longer ships 3.9
-      - uses: astral-sh/setup-uv@v5
-      - uses: actions/setup-node@v4
+      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
       - name: Tests
         run: uv run --no-project --python ${{ matrix.python }} python -m unittest discover -s tests
 
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
       - name: Markdown
         run: npx --yes markdownlint-cli2@0.24.0 README.md CHANGELOG.md .wrap.md "skills/truepath/**/*.md"
       - name: Plugin manifest
-        run: jq -e . .claude-plugin/plugin.json
+        run: jq -e . .claude-plugin/plugin.json .claude-plugin/marketplace.json
