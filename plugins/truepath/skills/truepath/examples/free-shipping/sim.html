@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free shipping threshold</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--ink:#0f172a;--muted:#64748b;--line:#d5dbe3;--dim:#cbd5e1;--accent:#2563eb;--accent-soft:#dbe7fd;--hl:#fef3c7;
+ --plus:#15803d;--minus:#b91c1c;--diverge:#b45309;
+ --mono:ui-monospace,'SF Mono','Cascadia Code',Menlo,Consolas,monospace;--sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1020;--surface:#121a2e;--ink:#e5e9f0;--muted:#8b97ab;--line:#26324a;--dim:#334155;--accent:#60a5fa;--accent-soft:#1e3a5f;--hl:#3b3416;--plus:#4ade80;--minus:#f87171;--diverge:#f59e0b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 var(--sans)}
+header{padding:16px 20px 8px}
+h1{font-size:22px;margin:0 0 4px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0;max-width:80ch}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:8px 20px;border-bottom:1px solid var(--line)}
+.grp{display:flex;gap:4px;flex-wrap:wrap}
+button,select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.sep{width:1px;height:22px;background:var(--line)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;padding:16px 20px}
+main.overview{grid-template-columns:minmax(0,1fr) 34px}
+main.overview #detail{display:none}
+#detail{display:flex;flex-direction:column;gap:12px}
+#fold{align-self:flex-end;color:var(--muted)}
+main.overview #fold{writing-mode:vertical-rl;padding:12px 6px;align-self:stretch;max-height:220px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+svg{width:100%;height:auto;display:block;max-height:calc(100vh - 210px)}
+.summary{margin:0 0 8px;font-size:16px;font-weight:500}
+.origin{display:block;font:11px var(--sans);font-weight:400;color:var(--muted);margin-top:4px}.origin.real{color:var(--accent)}
+.summary .warn{color:var(--diverge);font-weight:600}
+aside{display:flex;flex-direction:column;gap:12px}
+.caption{font-size:16px;min-height:4.4em}
+.msg{font-family:var(--mono);font-size:13px;color:var(--accent);margin-top:6px}
+table{width:100%;border-collapse:collapse}
+td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td:first-child{color:var(--muted);width:46%}
+td.v{font-family:var(--mono)}
+.basis{display:block;font:11px var(--sans);margin-top:2px}.basis.code{color:var(--plus)}.basis.port{color:var(--diverge)}.basis.def{color:var(--muted)}
+tr.new td{background:var(--hl)}
+tr.hidden td.v{color:var(--dim)}
+ol.steps{margin:0;padding-left:20px;color:var(--muted)}
+ol.steps li{cursor:pointer;padding:2px 0}
+ol.steps li.cur{color:var(--ink);font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1.5px solid}
+footer{padding:0 20px 16px;font-size:11px;color:var(--muted)}
+.node rect{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+.node.dec rect{stroke-dasharray:4 3}
+.node text{font:13px var(--mono);fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.node.off{opacity:.38}
+.node.cur rect{stroke:var(--accent);stroke-width:2.2}
+.edge{fill:none;stroke:var(--dim);stroke-width:1;stroke-dasharray:3 4}
+.edge.on{stroke:var(--accent);stroke-width:2;stroke-dasharray:none}
+.edge.todo{stroke:var(--accent);stroke-width:1.4;stroke-dasharray:5 4;opacity:.55}
+.elabel{font:11px var(--sans);fill:var(--muted)}
+.dot{fill:var(--accent)}
+.panes{display:grid;grid-template-columns:1fr;gap:12px}
+.panes.two{grid-template-columns:1fr 1fr}
+.pane{min-width:0}
+.phead{font-weight:600;margin:0 0 4px;display:none}
+.panes.two .phead{display:block}
+.phead.minus{color:var(--minus)}.phead.plus{color:var(--plus)}
+.panes.two svg{max-height:calc(100vh - 250px)}
+.node.diverge rect{stroke:var(--diverge);stroke-width:2.6}
+.divmark{font:600 12px var(--sans);fill:var(--diverge)}
+th{font:600 11px var(--sans);color:var(--muted);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+tr.diff td.v{font-weight:600}
+.sign{color:var(--muted);margin-right:4px}
+.cap2{display:block;margin-top:4px}
+#tabs .pair{border-style:dashed}
+#variants:empty{display:none}
+#variants .lbl{align-self:center;color:var(--muted);font-size:11px;margin-right:4px}
+main.matrix{grid-template-columns:minmax(0,1fr)}
+main.matrix aside,main.matrix .legend{display:none}
+table.mx{border-collapse:collapse;width:100%}
+table.mx th,table.mx td{border:1px solid var(--line);padding:6px 8px;vertical-align:top}
+table.mx td{font-family:var(--mono);cursor:pointer}
+table.mx td:hover{outline:2px solid var(--accent);outline-offset:-2px}
+table.mx .chg{background:var(--hl);font-weight:600}
+table.mx .note{display:block;font:11px var(--sans);color:var(--muted)}
+table.mx+table.mx{margin-top:20px}
+table.mx .q{display:block;font:600 13px var(--sans);color:inherit;max-width:46ch}
+#tabs:empty{display:none}
+body.onmatrix #motion,body.onmatrix .bar{display:none}
+#variants .home{margin-right:10px}
+.vnote{display:block;font:12px var(--sans);color:var(--muted);margin-top:4px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.dot{display:none}}
+</style></head><body>
+<header><h1 id="title"></h1><p class="sub" id="sub"></p></header>
+<div class="bar">
+ <div class="grp" id="tabs" role="tablist"></div>
+ <div class="grp" id="variants"></div>
+ <span class="sep"></span>
+ <div class="grp" id="motion"><button id="back">◀</button><button id="play">⏸</button><button id="fwd">▶</button><button id="restart">↺</button>
+ <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div>
+</div>
+<main id="main">
+ <section class="card"><p class="summary" id="summary"></p><div class="panes" id="panes"></div><div class="legend" id="legend"></div></section>
+ <aside>
+  <button id="fold" aria-controls="detail"></button>
+  <div id="detail">
+   <div class="card"><div class="caption" id="caption" aria-live="polite"></div><div class="msg" id="msg"></div></div>
+   <div class="card"><table id="data"></table></div>
+   <div class="card"><ol class="steps" id="steps"></ol></div>
+  </div>
+ </aside>
+</main>
+<footer id="foot"></footer>
+<script>
+const DATA={"page": {"title": "Free shipping threshold", "subtitle": "Example: two open questions, each decided on the cases it changes", "source": "truepath example, self-contained", "lang": "en", "verdictSource": "port decide.js", "kinds": {"free": {"label": "free shipping", "color": "#15803d"}, "paid": {"label": "shipping charged", "color": "#b45309"}}, "nodes": {"BASKET": {"kind": null, "role": "start"}, "TESTED": {"kind": null, "role": null}, "D": {"kind": null, "role": "decision"}, "FREE": {"kind": "free", "role": null}, "PAID": {"kind": "paid", "role": null}}, "scenarios": [{"id": "exact/today", "tab": "basket of 50, no coupon", "summary": "Exactly on the threshold: the only case Q1 changes.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "exact", "variant": "today", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 50, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 50", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "50"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "50", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "exact/1A+2A", "tab": "basket of 50, no coupon", "summary": "Exactly on the threshold: the only case Q1 changes.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "exact", "variant": "1A+2A", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 50, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 50", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "FREE"], "message": "shipping: free", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "50"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "50", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "free", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "exact/1A+2B", "tab": "basket of 50, no coupon", "summary": "Exactly on the threshold: the only case Q1 changes.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "exact", "variant": "1A+2B", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 50, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 50", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "FREE"], "message": "shipping: free", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "50"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "50", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "free", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "exact/1B+2A", "tab": "basket of 50, no coupon", "summary": "Exactly on the threshold: the only case Q1 changes.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "exact", "variant": "1B+2A", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 50, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 50", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "50"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "50", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "exact/1B+2B", "tab": "basket of 50, no coupon", "summary": "Exactly on the threshold: the only case Q1 changes.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "exact", "variant": "1B+2B", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 50, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 50", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "50"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "50", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "under/today", "tab": "basket of 49, no coupon", "summary": "Under the threshold whatever the answer: a control.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "under", "variant": "today", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 49, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 49", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "49"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "49", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "under/1A+2A", "tab": "basket of 49, no coupon", "summary": "Under the threshold whatever the answer: a control.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "under", "variant": "1A+2A", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 49, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 49", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "49"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "49", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "under/1A+2B", "tab": "basket of 49, no coupon", "summary": "Under the threshold whatever the answer: a control.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "under", "variant": "1A+2B", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 49, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 49", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "49"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "49", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "under/1B+2A", "tab": "basket of 49, no coupon", "summary": "Under the threshold whatever the answer: a control.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "under", "variant": "1B+2A", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 49, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 49", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "49"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "49", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "under/1B+2B", "tab": "basket of 49, no coupon", "summary": "Under the threshold whatever the answer: a control.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "under", "variant": "1B+2B", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 49, coupon none", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 49", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "49"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "none"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "49", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "coupon/today", "tab": "basket of 60, coupon of 15", "summary": "60 before the coupon, 45 after: the case Q2 decides.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "coupon", "variant": "today", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 60, coupon 15", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 45", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "60"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "15"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "45", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "coupon/1A+2A", "tab": "basket of 60, coupon of 15", "summary": "60 before the coupon, 45 after: the case Q2 decides.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "coupon", "variant": "1A+2A", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 60, coupon 15", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 60", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "FREE"], "message": "shipping: free", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "60"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "15"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "60", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "free", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "coupon/1A+2B", "tab": "basket of 60, coupon of 15", "summary": "60 before the coupon, 45 after: the case Q2 decides.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "coupon", "variant": "1A+2B", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 60, coupon 15", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 45", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "60"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "15"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "45", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "coupon/1B+2A", "tab": "basket of 60, coupon of 15", "summary": "60 before the coupon, 45 after: the case Q2 decides.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "coupon", "variant": "1B+2A", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 60, coupon 15", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 60", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "FREE"], "message": "shipping: free", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "60"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "15"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "60", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "free", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "coupon/1B+2B", "tab": "basket of 60, coupon of 15", "summary": "60 before the coupon, 45 after: the case Q2 decides.", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": "coupon", "variant": "1B+2B", "steps": [{"hop": ["BASKET", "TESTED"], "message": "basket 60, coupon 15", "caption": "The order arrives with its basket and its coupon."}, {"hop": ["TESTED", "D"], "message": "tested: 45", "caption": "The rule picks the amount it compares to 50."}, {"hop": ["D", "PAID"], "message": "shipping: 4.90", "caption": "The threshold decides the shipping."}], "rows": [{"label": "Answer", "at": 0, "compared": true, "answer": true}, {"label": "Basket", "at": 0, "compared": false, "shown": "60"}, {"label": "Coupon", "at": 0, "compared": false, "shown": "15"}, {"label": "Amount tested", "at": 1, "compared": false, "shown": "45", "provenance": {"kind": "port", "text": "port: decide.js"}}, {"label": "Shipping", "at": 2, "compared": false, "shown": "4.90", "provenance": {"kind": "port", "text": "port: decide.js"}}]}], "pairs": [], "grid": {"baseline": "today", "show": "Shipping", "hover": ["Amount tested"], "summary": "Today the threshold is strict and tested after the coupon. Each table shows what one answer changes.", "variants": [{"id": "today", "label": "today", "short": "today", "note": null}, {"id": "1A+2A", "label": "1A yes, 50 counts · 2A before the coupon", "short": "1A · 2A", "note": null}, {"id": "1A+2B", "label": "1A yes, 50 counts · 2B after the coupon", "short": "1A · 2B", "note": null}, {"id": "1B+2A", "label": "1B no, above 50 only · 2A before the coupon", "short": "1B · 2A", "note": null}, {"id": "1B+2B", "label": "1B no, above 50 only · 2B after the coupon", "short": "1B · 2B", "note": null}], "sections": [{"text": "Q1 · Does a basket of exactly 50 ship free?", "cases": ["exact", "under"], "columns": [{"variant": "today", "head": "today", "short": "today", "note": null}, {"variant": "1A+2A", "head": "1A · yes, 50 counts", "short": "1A", "note": null}, {"variant": "1B+2A", "head": "1B · no, above 50 only", "short": "1B", "note": null}]}, {"text": "Q2 · Is the threshold tested before or after the coupon?", "cases": ["coupon"], "columns": [{"variant": "today", "head": "today", "short": "today", "note": null}, {"variant": "1A+2A", "head": "2A · before the coupon", "short": "2A", "note": null}, {"variant": "1A+2B", "head": "2B · after the coupon", "short": "2B", "note": null}]}], "cases": [{"id": "exact", "label": "basket of 50, no coupon", "summary": "Exactly on the threshold: the only case Q1 changes.", "origin": {"kind": "illustrative", "text": "skill example"}}, {"id": "under", "label": "basket of 49, no coupon", "summary": "Under the threshold whatever the answer: a control.", "origin": {"kind": "illustrative", "text": "skill example"}}, {"id": "coupon", "label": "basket of 60, coupon of 15", "summary": "60 before the coupon, 45 after: the case Q2 decides.", "origin": {"kind": "illustrative", "text": "skill example"}}]}}, "geo": {"width": 382, "height": 448, "lineHeight": 16, "nodes": {"BASKET": {"w": 174, "h": 44, "labelLines": ["basket and coupon"], "y": 32.0, "x": 104.0}, "TESTED": {"w": 143, "h": 44, "labelLines": ["amount tested"], "y": 140.0, "x": 119.5}, "D": {"w": 127, "h": 44, "labelLines": ["reaches 50?"], "y": 248.0, "x": 127.5}, "FREE": {"w": 143, "h": 44, "labelLines": ["free shipping"], "y": 356.0, "x": 32.0}, "PAID": {"w": 143, "h": 44, "labelLines": ["shipping 4.90"], "y": 356.0, "x": 207.0}}, "edges": [{"from": "BASKET", "to": "TESTED", "d": "M191 76 V136", "label": null, "labelPos": null}, {"from": "TESTED", "to": "D", "d": "M191 184 V244", "label": null, "labelPos": null}, {"from": "D", "to": "FREE", "d": "M191 292 V324 H104 V352", "label": "yes", "labelPos": [138.2, 320]}, {"from": "D", "to": "PAID", "d": "M191 292 V324 H278 V352", "label": "no", "labelPos": [228.3, 320]}]}};
+const {page,geo}=DATA, grid=page.grid, NS="http://www.w3.org/2000/svg";
+const PX_PER_S=170;       // the dot's speed along a hop
+const DWELL=1100;         // ms a step stays before the next one, in the detail view
+const OVERVIEW_PAUSE=150; // ms between two hops when the dot loops on the whole path
+const DIVERGE="var(--diverge)", TINT="10%"; // an outcome box is tinted with its kind's colour
+const $=id=>document.getElementById(id);
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e;};
+/** Spec text is data, never markup: everything a spec says goes through esc() before innerHTML. */
+const esc=x=>String(x??"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+/** Reduced motion: nothing advances by itself; Play, Restart and the step buttons still answer. */
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** The page's own words; the spec's text is written in the spec's language. */
+const words={
+ fr:{tabs:"Scénarios",variants:"Réponse comparée",back:"Étape précédente",fwd:"Étape suivante",restart:"Recommencer",speed:"Vitesse",
+  home:"← matrice",source:"Source : ",logic:" · logique exécutée : ",
+  path:"chemin du scénario",diverge:"≠ premier écart entre avant et après",caseCol:"Cas",cell:"Cellule : ",hover:" · au survol : ",
+  differs:b=>`. ≠ : diffère de « ${b} ». ● cas réel, ○ illustratif. Un clic ouvre le cas pas à pas.`,code:"✓ code",port:"⚠ portage",definition:"◇ définition",
+  real:"● cas réel",illus:"○ illustratif",undecided:"⚠️ règle non décidée · ",field:"Champ",before:"avant",after:"après",
+  hide:"Masquer le détail ›",show:"‹ Détail pas à pas",pause:"Pause",play:"Lecture",side:"côte à côte",sep:" : ",half:"0,5×"},
+ en:{tabs:"Scenarios",variants:"Compared answer",back:"Previous step",fwd:"Next step",restart:"Restart",speed:"Speed",
+  home:"← matrix",source:"Source: ",logic:" · logic run: ",
+  path:"scenario path",diverge:"≠ first difference between before and after",caseCol:"Case",cell:"Cell: ",hover:" · on hover: ",
+  differs:b=>`. ≠: differs from “${b}”. ● real case, ○ illustrative. Click a cell to play the case step by step.`,code:"✓ code",port:"⚠ ported",definition:"◇ definition",
+  real:"● real case",illus:"○ illustrative",undecided:"⚠️ rule not decided · ",field:"Field",before:"before",after:"after",
+  hide:"Hide detail ›",show:"‹ Step-by-step detail",pause:"Pause",play:"Play",side:"side by side",sep:": ",half:"0.5×"}}[page.lang];
+for(const id of ["tabs","variants","back","fwd","restart","speed"])$(id).setAttribute("aria-label",words[id]);
+$("speed").options[0].textContent=words.half;
+
+// ---- what the page shows: a matrix then one tab per case (grid), or one tab per scenario and per pair
+const originBullet=o=>o.kind==="real"?"● ":"○ ";
+const scenario=id=>page.scenarios.find(s=>s.id===id);
+const cellOf=(caseId,variantId)=>scenario(caseId+"/"+variantId);
+const variantOf=id=>grid.variants.find(v=>v.id===id);
+const TABS=grid
+ ? [{matrix:true},...grid.cases.map(c=>({case:c}))]
+ : [...page.scenarios.map(s=>({sides:[s],label:(s.undecided?"⚠️ ":"")+originBullet(s.origin)+s.tab,title:s.origin.text})),
+    ...page.pairs.map(p=>({sides:[scenario(p.before),scenario(p.after)],label:"⇄ "+p.tab,title:words.side,pair:p}))];
+/** view: "detail" plays step by step beside the panel, "overview" draws the whole path. minus/plus: the two variants a grid case compares. */
+const st={tab:0,step:0,view:"detail",playing:!REDUCED,speed:1,raf:0,timer:0,section:0,
+ minus:grid?grid.baseline:null,plus:grid?(grid.variants[1]||grid.variants[0]).id:null};
+/** The scenarios a tab plays: one, or two side by side. */
+function sidesOf(tab){if(!tab.case)return tab.sides||[];
+ return st.plus===st.minus?[cellOf(tab.case.id,st.minus)]:[cellOf(tab.case.id,st.minus),cellOf(tab.case.id,st.plus)];}
+/** A variant as the open section names it: under Q1, "1A", not the answer set "1A · 2A" it runs. */
+const columnOf=v=>grid.sections[st.section].columns.find(c=>c.variant===v);
+const shortOf=v=>(columnOf(v)||variantOf(v)).short;
+const headOf=v=>{const c=columnOf(v);return c?c.head:variantOf(v).label;};
+/** The panel rows of a scenario, as build.py filled them; only the row naming a grid answer is named here. */
+const rowsOf=s=>s.rows.map(r=>r.answer?{...r,shown:shortOf(s.variant)}:r);
+/** Where a value comes from: real code, a ported behaviour, or a definition the simulation makes. */
+const provenanceTag=r=>{const p=r.provenance;if(!p)return "";
+ const cls=p.kind==="code"?"code":p.kind==="port"?"port":"def";
+ return `<span class="basis ${cls}" title="${esc(p.text)}">${words[p.kind]}</span>`;};
+/** First step at which the two scenarios' data differ, and the node that produces it. */
+function divergence(a,b){const ra=rowsOf(a),rb=rowsOf(b);let at=Infinity;
+ ra.forEach((r,i)=>{if(!r.compared&&r.shown!==rb[i].shown)at=Math.min(at,r.at);}); // a compared row names what differs, it is not an effect
+ return at===Infinity?null:{step:at,node:a.steps[at].hop[0]};}
+
+$("title").textContent=page.title;$("sub").textContent=page.subtitle;$("foot").textContent=words.source+page.source+words.logic+page.verdictSource;
+const swatch=(style,text)=>{const s=document.createElement("span");s.innerHTML=`<span class="sw" style="${style}"></span>${text}`;$("legend").appendChild(s);};
+for(const k of Object.values(page.kinds))swatch(`border-color:${esc(k.color)};background:color-mix(in srgb, ${esc(k.color)} ${TINT}, transparent)`,esc(k.label));
+swatch("border-color:var(--accent);background:var(--accent);border-radius:50%",words.path);
+swatch(`border-color:${DIVERGE}`,words.diverge);
+
+// ---- one diagram per side
+function draw(pane,k,side){
+ const svg=el("svg",{viewBox:`0 0 ${geo.width} ${geo.height}`,role:"img"},pane);
+ const defs=el("defs",{},svg);
+ for(const [id,col] of [["on","var(--accent)"],["off","var(--dim)"]]){
+  const m=el("marker",{id:`a-${id}-${k}`,viewBox:"0 0 10 10",refX:8,refY:5,markerWidth:6,markerHeight:6,orient:"auto-start-reverse"},defs);
+  el("path",{d:"M2 1L8 5L2 9",fill:"none",stroke:col,"stroke-width":1.6,"stroke-linecap":"round"},m);}
+ const edgeEls={},nodeEls={},taken=new Set(side.steps.map(x=>x.hop.join(">")));
+ const isTaken=e=>taken.has(e.from+">"+e.to);
+ for(const e of [...geo.edges].sort((x,y)=>isTaken(x)-isTaken(y))){ // the path last: it is drawn over the stubs it shares with other edges
+  edgeEls[e.from+">"+e.to]=el("path",{d:e.d,class:"edge"},svg);
+  if(e.label&&e.labelPos){el("text",{x:e.labelPos[0],y:e.labelPos[1],class:"elabel"},svg).textContent=e.label;}}
+ for(const [id,box] of Object.entries(geo.nodes)){
+  const n=page.nodes[id],g=el("g",{class:"node"+(n.role==="decision"?" dec":"")},svg);
+  const r=el("rect",{x:box.x,y:box.y,width:box.w,height:box.h,rx:n.role==="start"?box.h/2:8},g); // where a path starts is round
+  if(n.kind){const c=page.kinds[n.kind].color;r.style.stroke=c;r.style.fill=`color-mix(in srgb, ${c} ${TINT}, var(--surface))`;}
+  box.labelLines.forEach((l,i)=>{el("text",{x:box.x+box.w/2,y:box.y+box.h/2+(i-(box.labelLines.length-1)/2)*geo.lineHeight},g).textContent=l;});
+  el("text",{x:box.x+box.w+6,y:box.y+12,class:"divmark",visibility:"hidden"},g).textContent="≠";
+  nodeEls[id]=g;}
+ return {svg,edgeEls,nodeEls,k,side,dot:el("circle",{r:5,class:"dot",cx:-20,cy:-20},svg)};
+}
+let diagrams=[];
+function buildPanes(){const tab=TABS[st.tab],box=$("panes");box.innerHTML="";diagrams=[];
+ if(tab.matrix){box.className="panes";box.appendChild(matrix());return;}
+ const sides=sidesOf(tab);box.className="panes"+(sides.length>1?" two":"");
+ diagrams=sides.map((s,k)=>{const pane=document.createElement("div");pane.className="pane";
+  const h=document.createElement("p");h.className="phead "+(k?"plus":"minus");
+  h.textContent=(k?"+ ":"− ")+(grid?headOf(s.variant):originBullet(s.origin)+s.tab);pane.appendChild(h);box.appendChild(pane);
+  return draw(pane,k,s);});}
+/** One section per question: its cases against today and each answer; one field per cell, the others on hover; a click opens the case. */
+function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filter(l=>l!==grid.show);
+ const val=(s,label)=>rowsOf(s).find(r=>r.label===label).shown;
+ wrap.innerHTML=grid.sections.map((sec,si)=>{
+  const head=`<tr><th>${sec.text?`<span class="q">${esc(sec.text)}</span>`:words.caseCol}</th>${sec.columns.map(c=>
+   `<th>${esc(c.head)}${c.note?`<span class="note">${esc(c.note)}</span>`:""}</th>`).join("")}</tr>`;
+  const body=sec.cases.map(cid=>{const ci=grid.cases.findIndex(c=>c.id===cid),c=grid.cases[ci],base=cellOf(cid,grid.baseline);
+   return `<tr><th title="${esc(c.origin.text)}">${originBullet(c.origin)}${esc(c.label)}</th>${sec.columns.map(col=>{const s=cellOf(cid,col.variant),x=val(s,grid.show);
+    const changed=col.variant!==grid.baseline&&x!==val(base,grid.show),tip=hover.map(l=>l+words.sep+val(s,l)).join("\n");
+    return `<td data-case="${ci}" data-variant="${esc(col.variant)}" data-section="${si}" title="${esc(tip)}">${changed?`<span class="chg">≠ ${esc(x)}</span>`:esc(x)}</td>`;}).join("")}</tr>`;}).join("");
+  return `<table class="mx">${head}${body}</table>`;}).join("")
+  +`<p class="vnote">${words.cell}${esc(grid.show)}${hover.length?words.hover+esc(hover.join(", ")):""}${esc(words.differs(variantOf(grid.baseline).short))}</p>`;
+ wrap.onclick=e=>{const td=e.target.closest("td[data-case]");if(!td)return;
+  st.plus=td.dataset.variant;st.minus=grid.baseline;st.section=+td.dataset.section;openTab(+td.dataset.case+1);};
+ return wrap;}
+
+function paint(d,step,detail,div){const s=d.side,keys=s.steps.map(x=>x.hop.join(">"));
+ for(const [k,p] of Object.entries(d.edgeEls)){const idx=keys.indexOf(k);let c="edge";
+  if(idx>=0)c+=(!detail||idx<=step)?" on":" todo";p.setAttribute("class",c);p.setAttribute("marker-end",`url(#a-${idx>=0?"on":"off"}-${d.k})`);}
+ const onPath=new Set(s.steps.flatMap(x=>x.hop));
+ for(const [id,g] of Object.entries(d.nodeEls)){let c=g.getAttribute("class").replace(/ (off|cur|diverge)/g,"");
+  if(!onPath.has(id))c+=" off";if(detail&&id===s.steps[step].hop[1])c+=" cur";
+  const diverges=div&&id===div.node&&(!detail||step>=div.step);if(diverges)c+=" diverge";
+  g.querySelector(".divmark").setAttribute("visibility",diverges?"visible":"hidden");g.setAttribute("class",c);}}
+
+/** In a grid case: back to the matrix, then which variant plays on each side, among the open section's columns. */
+function renderVariants(){const box=$("variants");box.innerHTML="";const tab=TABS[st.tab];if(!grid||tab.matrix)return;
+ const home=document.createElement("button");home.className="home";home.textContent=words.home;home.onclick=()=>openTab(0);box.appendChild(home);
+ for(const side of ["minus","plus"]){const lbl=document.createElement("span");lbl.className="lbl";lbl.textContent=side==="minus"?"−":"+";box.appendChild(lbl);
+  grid.sections[st.section].columns.forEach(col=>{const b=document.createElement("button");b.textContent=col.short;b.title=col.head;
+   b.setAttribute("aria-pressed",col.variant===st[side]);b.onclick=()=>{st[side]=col.variant;openTab(st.tab);};box.appendChild(b);});}}
+const originLine=o=>`<span class="origin ${o.kind==="real"?"real":"illustrative"}">${o.kind==="real"?words.real:words.illus} · ${esc(o.text)}</span>`;
+function renderSummary(tab,sides){
+ if(grid){const notes=sides.map((s,k)=>{const v=variantOf(s.variant);return v.note?`<span class="vnote">${k?"+":"−"} ${esc(headOf(v.id))}${words.sep}${esc(v.note)}</span>`:"";}).join("");
+  $("summary").innerHTML=esc(tab.case.summary)+originLine(tab.case.origin)+notes;}
+ else if(sides.length>1)$("summary").innerHTML=esc(tab.pair.summary);
+ else $("summary").innerHTML=(sides[0].undecided?`<span class="warn">${words.undecided}</span>`:"")+esc(sides[0].summary)+originLine(sides[0].origin);}
+/** One scenario: its caption, its data so far, its steps. */
+function renderOne(s){const step=s.steps[st.step];$("caption").textContent=step.caption;$("msg").textContent=step.message;
+ $("data").innerHTML=rowsOf(s).map(r=>`<tr class="${r.at>st.step?"hidden":r.at===st.step?"new":""}"><td>${esc(r.label)}</td><td class="v">${r.at>st.step?"…":esc(r.shown)+provenanceTag(r)}</td></tr>`).join("");
+ $("steps").innerHTML=s.steps.map((x,i)=>`<li class="${i===st.step?"cur":""}" data-i="${i}">${esc(x.message)}</li>`).join("");}
+/** Two scenarios side by side: what they share is said once, what differs is said − then +. */
+function renderTwo(a,b){const sa=a.steps[st.step],sb=b.steps[st.step];
+ $("caption").innerHTML=sa.caption===sb.caption?esc(sa.caption):`<span class="cap2"><span class="sign">−</span>${esc(sa.caption)}</span><span class="cap2"><span class="sign">+</span>${esc(sb.caption)}</span>`;
+ $("msg").innerHTML=sa.message===sb.message?esc(sa.message):`− ${esc(sa.message)}<br>+ ${esc(sb.message)}`;
+ const ra=rowsOf(a),rb=rowsOf(b),cols=grid?[shortOf(a.variant),shortOf(b.variant)]:[words.before,words.after];
+ $("data").innerHTML=`<tr><th>${words.field}</th><th>− ${esc(cols[0])}</th><th>+ ${esc(cols[1])}</th></tr>`+ra.map((r,i)=>{const hid=r.at>st.step,diff=!hid&&r.shown!==rb[i].shown;
+  return `<tr class="${hid?"hidden":diff?"new diff":""}"><td>${diff?"≠ ":""}${esc(r.label)}</td><td class="v">${hid?"…":esc(r.shown)+provenanceTag(r)}</td><td class="v">${hid?"…":esc(rb[i].shown)+provenanceTag(rb[i])}</td></tr>`;}).join("");
+ $("steps").innerHTML=b.steps.map((x,i)=>{const m=a.steps[i].message;return `<li class="${i===st.step?"cur":""}" data-i="${i}">${m===x.message?esc(x.message):"− "+esc(m)+"<br>+ "+esc(x.message)}</li>`;}).join("");}
+function render(){
+ const tab=TABS[st.tab],detail=st.view==="detail";
+ renderVariants();[...document.querySelectorAll("#tabs button")].forEach((b,i)=>b.setAttribute("aria-pressed",i===st.tab));
+ document.body.classList.toggle("onmatrix",!!tab.matrix);
+ if(tab.matrix){$("main").className="matrix";$("summary").textContent=grid.summary||"";return;}
+ const sides=sidesOf(tab),div=sides.length>1?divergence(sides[0],sides[1]):null;
+ $("main").className=detail?"":"overview";
+ renderSummary(tab,sides);
+ diagrams.forEach(d=>paint(d,st.step,detail,div));
+ if(sides.length>1)renderTwo(sides[0],sides[1]);else renderOne(sides[0]);
+ $("fold").textContent=detail?words.hide:words.show;$("fold").setAttribute("aria-expanded",detail);
+ $("play").textContent=st.playing?"⏸":"⏵";$("play").setAttribute("aria-label",st.playing?words.pause:words.play);
+}
+// ---- motion: one dot per diagram, same hop index, constant speed
+const nSteps=()=>{const s=sidesOf(TABS[st.tab]);return s.length?s[0].steps.length:1;};
+function runHop(){cancelAnimationFrame(st.raf);clearTimeout(st.timer);if(!diagrams.length)return;
+ const hops=diagrams.map(d=>{const p=d.edgeEls[d.side.steps[st.step].hop.join(">")];return {d,p,len:p.getTotalLength()};});
+ const dur=Math.max(...hops.map(h=>h.len))/PX_PER_S*1000/st.speed;let t0=null;
+ const place=f=>hops.forEach(h=>{const q=h.p.getPointAtLength(f*h.len);h.d.dot.setAttribute("cx",q.x);h.d.dot.setAttribute("cy",q.y);});
+ const tick=ts=>{if(!st.playing){place(1);return;}
+  t0??=ts;const f=Math.min(1,(ts-t0)/dur);place(f);
+  if(f<1){st.raf=requestAnimationFrame(tick);return;}
+  st.timer=setTimeout(()=>{if(!st.playing)return;const last=st.step===nSteps()-1;
+   if(last&&st.view==="detail"){st.playing=false;render();return;}
+   st.step=last?0:st.step+1;render();runHop();},st.view==="detail"?DWELL/st.speed:OVERVIEW_PAUSE);};
+ st.raf=requestAnimationFrame(tick);}
+function go(i){st.step=Math.max(0,Math.min(nSteps()-1,i));render();runHop();}
+function openTab(i){st.tab=i;st.playing=!REDUCED;st.step=0;buildPanes();go(0);}
+// ---- controls
+if(!grid)TABS.forEach((t,i)=>{const b=document.createElement("button");b.setAttribute("role","tab");b.textContent=t.label;b.title=t.title;if(t.pair)b.className="pair";b.onclick=()=>openTab(i);$("tabs").appendChild(b);});
+$("fold").onclick=()=>{st.view=st.view==="detail"?"overview":"detail";try{localStorage.setItem("truepath-view",st.view);}catch(e){}st.playing=!REDUCED;go(0);};
+try{const v=localStorage.getItem("truepath-view");if(v==="overview"||v==="detail")st.view=v;}catch(e){}
+$("play").onclick=()=>{st.playing=!st.playing;if(st.playing&&st.view==="detail"&&st.step===nSteps()-1)st.step=0;render();runHop();};
+$("fwd").onclick=()=>{st.playing=false;go(st.step+1);};$("back").onclick=()=>{st.playing=false;go(st.step-1);};
+$("restart").onclick=()=>{st.playing=true;go(0);};$("speed").onchange=e=>{st.speed=+e.target.value;};
+$("steps").onclick=e=>{const li=e.target.closest("li");if(li){st.playing=false;go(+li.dataset.i);}};
+document.addEventListener("keydown",e=>{if(e.target.tagName==="SELECT")return;
+ if(e.key==="ArrowRight")$("fwd").click();else if(e.key==="ArrowLeft")$("back").click();
+ else if(e.key===" "&&e.target.tagName!=="BUTTON"){e.preventDefault();$("play").click();}}); // on a button, Space presses that button
+openTab(0);
+</script></body></html>

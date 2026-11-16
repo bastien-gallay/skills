@@ -1,0 +1,17 @@
+{
+  "name": "truepath",
+  "version": "0.1.0",
+  "description": "Self-contained HTML simulations of a process or a bug path, whose verdicts come from the repository's own code; the build refuses any scenario that contradicts them.",
+  "author": {
+    "name": "Bastien Gallay"
+  },
+  "license": "MIT",
+  "keywords": [
+    "truepath",
+    "simulation",
+    "process",
+    "diagram",
+    "before-after",
+    "documentation"
+  ]
+}

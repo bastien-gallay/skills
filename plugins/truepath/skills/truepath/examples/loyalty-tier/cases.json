@@ -1,0 +1,31 @@
+{
+  "cases": [
+    {
+      "name": "threshold",
+      "inputs": {
+        "points": 1000
+      },
+      "expected": {
+        "tier": "gold"
+      }
+    },
+    {
+      "name": "one-short",
+      "inputs": {
+        "points": 999
+      },
+      "expected": {
+        "tier": "silver"
+      }
+    },
+    {
+      "name": "new-account",
+      "inputs": {
+        "points": 120
+      },
+      "expected": {
+        "tier": "bronze"
+      }
+    }
+  ]
+}
