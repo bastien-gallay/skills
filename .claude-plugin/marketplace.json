@@ -70,6 +70,13 @@
       "description": "Visual grammar: which visual the content calls for, and how it renders on each target.",
       "category": "productivity",
       "tags": ["visual", "diagram", "mermaid", "documentation"]
+    },
+    {
+      "name": "truepath",
+      "source": { "source": "github", "repo": "bastien-gallay/truepath" },
+      "description": "HTML simulations of a process or a bug path, checked against the repository's own code.",
+      "category": "productivity",
+      "tags": ["simulation", "process", "diagram", "before-after"]
     }
   ]
 }
