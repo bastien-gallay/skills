@@ -83,6 +83,10 @@ clone of this repository, not from a bare copy of the folder.
 - a grid of cases against the answers to one or more open questions, the
   matrix first, each cell opening the case.
 
+![The free-shipping grid: the matrix of cases against answers, then a click
+on a cell that differs plays that case, today next to the answer
+](docs/free-shipping.gif)
+
 The full contract is in [`skills/truepath/SKILL.md`](skills/truepath/SKILL.md).
 
 ## Develop
