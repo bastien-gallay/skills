@@ -24,3 +24,5 @@
   no longer shows an empty toolbar.
 - A `basis` is read by the word before its colon; a failed export writes
   no page; reduced motion stops the steps from advancing by themselves.
+- After the tag `v0.1.0`, on `main`: the README shows the grid in motion and
+  CI runs `ruff check`. The skill behaves the same.

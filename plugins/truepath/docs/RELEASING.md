@@ -10,10 +10,10 @@ bundle; a release is a commit on `main`, a tag on it, and a line in the hub.
 | `.claude-plugin/plugin.json` | `version` |
 | `.claude-plugin/marketplace.json` | `metadata.version` and `plugins[0].version` |
 | `CHANGELOG.md` | a `## X.Y.Z` section, first in the file |
-| `README.md` | the first line of `## Status` |
+| `README.md` | the first line of `## Status`: version, tag and date (CI does not read it) |
 | git | an annotated, signed tag `vX.Y.Z` on the commit that carries the above |
 | GitHub | a release on that tag, its notes taken from the changelog section |
-| [bastien-gallay/skills](https://github.com/bastien-gallay/skills) | `version` and `updated` of the `truepath` entry in `registry.json` |
+| [bastien-gallay/skills](https://github.com/bastien-gallay/skills) | `version` of the `truepath` entry in `registry.json`, and the file's `updated` |
 
 The three manifest versions and the changelog heading must agree: CI
 refuses a push where they do not. Claude Code reads `plugin.json` to decide
