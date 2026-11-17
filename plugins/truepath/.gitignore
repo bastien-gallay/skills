@@ -1,4 +1,5 @@
 .truepath/
 .claude/
 __pycache__/
+.ruff_cache/
 skills/truepath/examples/loyalty-tier/sim.html
