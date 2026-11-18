@@ -172,19 +172,9 @@ class Checks(Case):
     def test_c7_origin_missing(self):
         self.refused(lambda s: s["scenarios"][0].pop("origin"), "C7")
 
-    def test_c8_pair_out_of_step(self):
-        def change(s):
-            s["edges"].append(["REFUND", "DONE", ""])
-            s["nodes"][3].pop("kind")
-            s["nodes"].append({"id": "DONE", "label": "done", "kind": "ok"})
-            s["scenarios"][1]["steps"].append({"hop": ["REFUND", "DONE"], "message": "m", "caption": "c"})
-            s["scenarios"][1]["expect"] = {}
-        (self.dir / "decide.js").write_text(
-            "module.exports={decide:({fix})=>({inWindow:fix,outcome:fix?'DONE':'CREDIT'})};", encoding="utf-8")
-        self.refused(change, "C8")
-
     def test_c8_pair_names_unknown_scenario(self):
         self.refused(lambda s: s["pairs"][0].update(after="nope"), "C8")
+        self.refused(lambda s: s["pairs"][0].update(before="nope"), "C8")
 
     def test_c9_panel_reads_missing_field(self):
         self.refused(lambda s: s["panel"][2].update(value="verdict.nope"), "C9")
@@ -357,9 +347,26 @@ class Page(Case):
         self.assertEqual(played["tabs"], 3)
         self.assertTrue(any("30 &lt; 30" in h for h in played["html"]))
 
-    def test_reduced_motion_does_not_autoplay(self):
-        self.assertTrue(self.play(EXAMPLE / "sim.html")["playingOnLoad"])
-        self.assertFalse(self.play(EXAMPLE / "sim.html", "reduced")["playingOnLoad"])
+    def test_the_page_opens_paused_with_play_marked(self):
+        for mode in ((), ("reduced",)):
+            played = self.play(EXAMPLE / "sim.html", *mode)
+            self.assertEqual((played["playingOnLoad"], played["playMarkedOnLoad"]), (False, True), mode)
+
+    def test_a_pair_of_unequal_length_builds_and_plays_through(self):
+        """The shorter side stays on its outcome while the longer one goes on."""
+        def change(s):
+            s["edges"].append(["REFUND", "DONE", ""])
+            s["nodes"][3].pop("kind")
+            s["nodes"].append({"id": "DONE", "label": "done", "kind": "ok"})
+            s["scenarios"][1]["steps"].append({"hop": ["REFUND", "DONE"], "message": "paid out", "caption": "c"})
+            s["scenarios"][1]["expect"] = {}
+        (self.dir / "decide.js").write_text(
+            "module.exports={decide:({fix})=>({inWindow:fix,outcome:fix?'DONE':'CREDIT'})};", encoding="utf-8")
+        out, n, *_ = self.build(self.spec(change))
+        self.assertEqual(n, 2)
+        played = self.play(out)
+        self.assertEqual(played["pairSteps"], 4)  # the longer side's count
+        self.assertTrue(any('data-i="3">+ paid out</li>' in h for h in played["html"]))  # the arrived side says nothing
 
     def test_hostile_spec_text_stays_text(self):
         tag = "<img src=x onerror=alert(1)>"

@@ -81,7 +81,11 @@ table.mx .note{display:block;font:11px var(--sans);color:var(--muted)}
 table.mx+table.mx{margin-top:20px}
 table.mx .q{display:block;font:600 13px var(--sans);color:inherit;max-width:46ch}
 #tabs:empty{display:none}
-body.onmatrix #motion,body.onmatrix .bar{display:none}
+body.onmatrix #motion,body.onmatrix #zoom,body.onmatrix .bar{display:none}
+#play.go{background:var(--plus);border-color:var(--plus);color:var(--surface);font-weight:600}
+.pane svg{touch-action:pan-x pan-y}
+.panes.zoomed svg{cursor:grab;touch-action:none}
+.panes.zoomed svg.drag{cursor:grabbing}
 #variants .home{margin-right:10px}
 .vnote{display:block;font:12px var(--sans);color:var(--muted);margin-top:4px}
 @media (max-width:900px){main{grid-template-columns:1fr}}
@@ -94,6 +98,7 @@ body.onmatrix #motion,body.onmatrix .bar{display:none}
  <span class="sep"></span>
  <div class="grp" id="motion"><button id="back">◀</button><button id="play">⏸</button><button id="fwd">▶</button><button id="restart">↺</button>
  <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div>
+ <div class="grp" id="zoom"><button id="zout">−</button><button id="zin">+</button><button id="fit"></button></div>
 </div>
 <main id="main">
  <section class="card"><p class="summary" id="summary"></p><div class="panes" id="panes"></div><div class="legend" id="legend"></div></section>
@@ -127,15 +132,18 @@ const words={
   path:"chemin du scénario",diverge:"≠ premier écart entre avant et après",caseCol:"Cas",cell:"Cellule : ",hover:" · au survol : ",
   differs:b=>`. ≠ : diffère de « ${b} ». ● cas réel, ○ illustratif. Un clic ouvre le cas pas à pas.`,code:"✓ code",port:"⚠ portage",definition:"◇ définition",
   real:"● cas réel",illus:"○ illustratif",undecided:"⚠️ règle non décidée · ",field:"Champ",before:"avant",after:"après",
-  hide:"Masquer le détail ›",show:"‹ Détail pas à pas",pause:"Pause",play:"Lecture",side:"côte à côte",sep:" : ",half:"0,5×"},
+  hide:"Masquer le détail ›",show:"‹ Détail pas à pas",pause:"Pause",play:"Lecture",side:"côte à côte",sep:" : ",half:"0,5×",
+  zoom:"Zoom",zin:"Zoomer",zout:"Dézoomer",fit:"Voir tout le diagramme",fitText:"Ajuster"},
  en:{tabs:"Scenarios",variants:"Compared answer",back:"Previous step",fwd:"Next step",restart:"Restart",speed:"Speed",
   home:"← matrix",source:"Source: ",logic:" · logic run: ",
   path:"scenario path",diverge:"≠ first difference between before and after",caseCol:"Case",cell:"Cell: ",hover:" · on hover: ",
   differs:b=>`. ≠: differs from “${b}”. ● real case, ○ illustrative. Click a cell to play the case step by step.`,code:"✓ code",port:"⚠ ported",definition:"◇ definition",
   real:"● real case",illus:"○ illustrative",undecided:"⚠️ rule not decided · ",field:"Field",before:"before",after:"after",
-  hide:"Hide detail ›",show:"‹ Step-by-step detail",pause:"Pause",play:"Play",side:"side by side",sep:": ",half:"0.5×"}}[page.lang];
-for(const id of ["tabs","variants","back","fwd","restart","speed"])$(id).setAttribute("aria-label",words[id]);
-$("speed").options[0].textContent=words.half;
+  hide:"Hide detail ›",show:"‹ Step-by-step detail",pause:"Pause",play:"Play",side:"side by side",sep:": ",half:"0.5×",
+  zoom:"Zoom",zin:"Zoom in",zout:"Zoom out",fit:"Show the whole diagram",fitText:"Fit"}}[page.lang];
+for(const id of ["tabs","variants","back","fwd","restart","speed","zoom","zin","zout","fit"])$(id).setAttribute("aria-label",words[id]);
+for(const id of ["zin","zout","fit"])$(id).title=words[id];
+$("speed").options[0].textContent=words.half;$("fit").textContent=words.fitText;
 
 // ---- what the page shows: a matrix then one tab per case (grid), or one tab per scenario and per pair
 const originBullet=o=>o.kind==="real"?"● ":"○ ";
@@ -146,8 +154,9 @@ const TABS=grid
  ? [{matrix:true},...grid.cases.map(c=>({case:c}))]
  : [...page.scenarios.map(s=>({sides:[s],label:(s.undecided?"⚠️ ":"")+originBullet(s.origin)+s.tab,title:s.origin.text})),
     ...page.pairs.map(p=>({sides:[scenario(p.before),scenario(p.after)],label:"⇄ "+p.tab,title:words.side,pair:p}))];
-/** view: "detail" plays step by step beside the panel, "overview" draws the whole path. minus/plus: the two variants a grid case compares. */
-const st={tab:0,step:0,view:"detail",playing:!REDUCED,speed:1,raf:0,timer:0,section:0,
+/** view: "detail" plays step by step beside the panel, "overview" draws the whole path. minus/plus: the two variants a grid case compares.
+ * The page opens paused: the reader starts it. follow: a zoomed view keeps the moving dot in sight until the reader pans. */
+const st={tab:0,step:0,view:"detail",playing:false,follow:true,speed:1,raf:0,timer:0,section:0,
  minus:grid?grid.baseline:null,plus:grid?(grid.variants[1]||grid.variants[0]).id:null};
 /** The scenarios a tab plays: one, or two side by side. */
 function sidesOf(tab){if(!tab.case)return tab.sides||[];
@@ -173,6 +182,66 @@ for(const k of Object.values(page.kinds))swatch(`border-color:${esc(k.color)};ba
 swatch("border-color:var(--accent);background:var(--accent);border-radius:50%",words.path);
 swatch(`border-color:${DIVERGE}`,words.diverge);
 
+// ---- zoom: one view, in diagram units, shared by every diagram of the tab (a pair zooms as one)
+const ZOOM_MAX=6,ZOOM_STEP=1.25;
+const FOLLOW_MARGIN=.2; // the dot is kept out of this share of the view on each side
+const FOLLOW_EASE=.12;  // share of the remaining distance the view covers per frame: it glides, it does not jump
+const view={k:1,x:0,y:0},aim={x:0,y:0};let glideRaf=0,lastDots=[];
+const viewW=()=>geo.width/view.k,viewH=()=>geo.height/view.k;
+const within=(v,max)=>Math.max(0,Math.min(max,v));
+const clampView=p=>({x:within(p.x,geo.width-viewW()),y:within(p.y,geo.height-viewH())});
+function applyView(){const box=`${view.x} ${view.y} ${viewW()} ${viewH()}`;diagrams.forEach(d=>d.svg.setAttribute("viewBox",box));
+ $("panes").classList.toggle("zoomed",view.k>1);}
+/** Put the view there at once: a reader's gesture is answered without delay. */
+function setView(p){const c=clampView(p);view.x=aim.x=c.x;view.y=aim.y=c.y;applyView();}
+/** Zoom by a factor around a diagram point, which stays where it is on screen. */
+function zoomAt(f,cx,cy){const k=Math.max(1,Math.min(ZOOM_MAX,view.k*f));if(k===view.k)return;
+ const rx=(cx-view.x)/viewW(),ry=(cy-view.y)/viewH();view.k=k;setView({x:cx-rx*viewW(),y:cy-ry*viewH()});}
+/** Where a button zooms: on the dot while the view follows it, else on the middle of the view. */
+function focus(){if(st.follow&&lastDots.length){const n=lastDots.length;
+  return [lastDots.reduce((s,q)=>s+q.x,0)/n,lastDots.reduce((s,q)=>s+q.y,0)/n];}
+ return [view.x+viewW()/2,view.y+viewH()/2];}
+function zoomBy(f){zoomAt(f,...focus());}
+function fit(){view.k=1;st.follow=true;setView({x:0,y:0});}
+/** The smallest move of one axis that keeps [lo, hi] inside the view less its margins; centred when it cannot fit. */
+function keepIn(lo,hi,start,size){const m=size*FOLLOW_MARGIN;
+ return hi-lo>size-2*m?(lo+hi-size)/2:Math.min(Math.max(start,hi+m-size),lo-m);}
+/** Zoomed in and following: aim the view at the moving dots, then glide there. */
+function follow(dots){if(!st.follow||view.k===1||!dots.length)return;
+ const xs=dots.map(q=>q.x),ys=dots.map(q=>q.y);
+ const c=clampView({x:keepIn(Math.min(...xs),Math.max(...xs),aim.x,viewW()),y:keepIn(Math.min(...ys),Math.max(...ys),aim.y,viewH())});
+ aim.x=c.x;aim.y=c.y;
+ if(REDUCED){setView(aim);return;}
+ if(!glideRaf)glideRaf=requestAnimationFrame(glide);}
+function glide(){const dx=aim.x-view.x,dy=aim.y-view.y;
+ if(Math.abs(dx)<.5&&Math.abs(dy)<.5){glideRaf=0;setView(aim);return;}
+ view.x+=dx*FOLLOW_EASE;view.y+=dy*FOLLOW_EASE;applyView();glideRaf=requestAnimationFrame(glide);}
+/** Diagram units per screen pixel; the drawing is centred in its element (preserveAspectRatio meet). */
+function unitsPerPx(svg){const r=svg.getBoundingClientRect();return Math.max(viewW()/r.width,viewH()/r.height);}
+function toDiagram(svg,px,py){const r=svg.getBoundingClientRect(),u=unitsPerPx(svg);
+ return [view.x+(px-r.left-(r.width-viewW()/u)/2)*u,view.y+(py-r.top-(r.height-viewH()/u)/2)*u];}
+/** A pan is the reader taking the view: it stops following the dot until Play or Fit. */
+function panBy(svg,dx,dy){st.follow=false;const u=unitsPerPx(svg);setView({x:view.x-dx*u,y:view.y-dy*u});}
+/** Ctrl/Cmd + wheel (a trackpad pinch arrives so) zooms at the pointer; the wheel and a drag pan once zoomed; two fingers pinch. */
+function listenZoom(svg){const pts=new Map();let pinch=null,gesture=1;
+ const spread=()=>{const [a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1;};
+ const middle=()=>{const [a,b]=[...pts.values()];return [(a.x+b.x)/2,(a.y+b.y)/2];};
+ svg.addEventListener("wheel",e=>{const px=e.deltaMode===1?16:1;
+  if(e.ctrlKey||e.metaKey){e.preventDefault();zoomAt(Math.exp(-e.deltaY*px*.0025),...toDiagram(svg,e.clientX,e.clientY));return;}
+  if(view.k===1)return; // not zoomed: the wheel scrolls the page
+  e.preventDefault();panBy(svg,-e.deltaX*px,-e.deltaY*px);},{passive:false});
+ svg.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse"&&e.button!==0)return;
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(svg.setPointerCapture)svg.setPointerCapture(e.pointerId);
+  if(pts.size===2)pinch={d:spread(),k:view.k};if(view.k>1||pinch)svg.classList.add("drag");});
+ svg.addEventListener("pointermove",e=>{const last=pts.get(e.pointerId);if(!last)return;
+  const now={x:e.clientX,y:e.clientY};pts.set(e.pointerId,now);
+  if(pinch&&pts.size===2){zoomAt(pinch.k*spread()/pinch.d/view.k,...toDiagram(svg,...middle()));return;}
+  if(view.k>1)panBy(svg,now.x-last.x,now.y-last.y);});
+ const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)svg.classList.remove("drag");};
+ svg.addEventListener("pointerup",up);svg.addEventListener("pointercancel",up);
+ svg.addEventListener("gesturestart",e=>{e.preventDefault();gesture=1;}); // Safari's own pinch
+ svg.addEventListener("gesturechange",e=>{e.preventDefault();zoomAt(e.scale/gesture,...toDiagram(svg,e.clientX,e.clientY));gesture=e.scale;});}
+
 // ---- one diagram per side
 function draw(pane,k,side){
  const svg=el("svg",{viewBox:`0 0 ${geo.width} ${geo.height}`,role:"img"},pane);
@@ -192,6 +261,7 @@ function draw(pane,k,side){
   box.labelLines.forEach((l,i)=>{el("text",{x:box.x+box.w/2,y:box.y+box.h/2+(i-(box.labelLines.length-1)/2)*geo.lineHeight},g).textContent=l;});
   el("text",{x:box.x+box.w+6,y:box.y+12,class:"divmark",visibility:"hidden"},g).textContent="≠";
   nodeEls[id]=g;}
+ listenZoom(svg);
  return {svg,edgeEls,nodeEls,k,side,dot:el("circle",{r:5,class:"dot",cx:-20,cy:-20},svg)};
 }
 let diagrams=[];
@@ -218,12 +288,14 @@ function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filt
   st.plus=td.dataset.variant;st.minus=grid.baseline;st.section=+td.dataset.section;openTab(+td.dataset.case+1);};
  return wrap;}
 
+/** A side's own step at the page's step: in a pair of unequal length, the side that has arrived stays on its outcome. */
+const stepOf=(side,i)=>Math.min(i,side.steps.length-1);
 function paint(d,step,detail,div){const s=d.side,keys=s.steps.map(x=>x.hop.join(">"));
  for(const [k,p] of Object.entries(d.edgeEls)){const idx=keys.indexOf(k);let c="edge";
   if(idx>=0)c+=(!detail||idx<=step)?" on":" todo";p.setAttribute("class",c);p.setAttribute("marker-end",`url(#a-${idx>=0?"on":"off"}-${d.k})`);}
  const onPath=new Set(s.steps.flatMap(x=>x.hop));
  for(const [id,g] of Object.entries(d.nodeEls)){let c=g.getAttribute("class").replace(/ (off|cur|diverge)/g,"");
-  if(!onPath.has(id))c+=" off";if(detail&&id===s.steps[step].hop[1])c+=" cur";
+  if(!onPath.has(id))c+=" off";if(detail&&id===s.steps[stepOf(s,step)].hop[1])c+=" cur";
   const diverges=div&&id===div.node&&(!detail||step>=div.step);if(diverges)c+=" diverge";
   g.querySelector(".divmark").setAttribute("visibility",diverges?"visible":"hidden");g.setAttribute("class",c);}}
 
@@ -244,13 +316,16 @@ function renderOne(s){const step=s.steps[st.step];$("caption").textContent=step.
  $("data").innerHTML=rowsOf(s).map(r=>`<tr class="${r.at>st.step?"hidden":r.at===st.step?"new":""}"><td>${esc(r.label)}</td><td class="v">${r.at>st.step?"…":esc(r.shown)+provenanceTag(r)}</td></tr>`).join("");
  $("steps").innerHTML=s.steps.map((x,i)=>`<li class="${i===st.step?"cur":""}" data-i="${i}">${esc(x.message)}</li>`).join("");}
 /** Two scenarios side by side: what they share is said once, what differs is said − then +. */
-function renderTwo(a,b){const sa=a.steps[st.step],sb=b.steps[st.step];
+function renderTwo(a,b){const sa=a.steps[stepOf(a,st.step)],sb=b.steps[stepOf(b,st.step)];
  $("caption").innerHTML=sa.caption===sb.caption?esc(sa.caption):`<span class="cap2"><span class="sign">−</span>${esc(sa.caption)}</span><span class="cap2"><span class="sign">+</span>${esc(sb.caption)}</span>`;
  $("msg").innerHTML=sa.message===sb.message?esc(sa.message):`− ${esc(sa.message)}<br>+ ${esc(sb.message)}`;
  const ra=rowsOf(a),rb=rowsOf(b),cols=grid?[shortOf(a.variant),shortOf(b.variant)]:[words.before,words.after];
  $("data").innerHTML=`<tr><th>${words.field}</th><th>− ${esc(cols[0])}</th><th>+ ${esc(cols[1])}</th></tr>`+ra.map((r,i)=>{const hid=r.at>st.step,diff=!hid&&r.shown!==rb[i].shown;
   return `<tr class="${hid?"hidden":diff?"new diff":""}"><td>${diff?"≠ ":""}${esc(r.label)}</td><td class="v">${hid?"…":esc(r.shown)+provenanceTag(r)}</td><td class="v">${hid?"…":esc(rb[i].shown)+provenanceTag(rb[i])}</td></tr>`;}).join("");
- $("steps").innerHTML=b.steps.map((x,i)=>{const m=a.steps[i].message;return `<li class="${i===st.step?"cur":""}" data-i="${i}">${m===x.message?esc(x.message):"− "+esc(m)+"<br>+ "+esc(x.message)}</li>`;}).join("");}
+ $("steps").innerHTML=Array.from({length:Math.max(a.steps.length,b.steps.length)},(_,i)=>`<li class="${i===st.step?"cur":""}" data-i="${i}">${stepLine(a.steps[i],b.steps[i])}</li>`).join("");}
+/** One line of a pair's step list: said once when both sides say it, − then + otherwise; a side that has arrived says nothing. */
+function stepLine(x,y){if(x&&y&&x.message===y.message)return esc(x.message);
+ return [x&&"− "+esc(x.message),y&&"+ "+esc(y.message)].filter(Boolean).join("<br>");}
 function render(){
  const tab=TABS[st.tab],detail=st.view==="detail";
  renderVariants();[...document.querySelectorAll("#tabs button")].forEach((b,i)=>b.setAttribute("aria-pressed",i===st.tab));
@@ -263,13 +338,15 @@ function render(){
  if(sides.length>1)renderTwo(sides[0],sides[1]);else renderOne(sides[0]);
  $("fold").textContent=detail?words.hide:words.show;$("fold").setAttribute("aria-expanded",detail);
  $("play").textContent=st.playing?"⏸":"⏵";$("play").setAttribute("aria-label",st.playing?words.pause:words.play);
+ $("play").classList.toggle("go",!st.playing); // paused, Play is the obvious next click
 }
-// ---- motion: one dot per diagram, same hop index, constant speed
-const nSteps=()=>{const s=sidesOf(TABS[st.tab]);return s.length?s[0].steps.length:1;};
+// ---- motion: one dot per diagram, same hop index, constant speed; a side that has arrived waits on its outcome
+const nSteps=()=>{const s=sidesOf(TABS[st.tab]);return s.length?Math.max(...s.map(x=>x.steps.length)):1;};
 function runHop(){cancelAnimationFrame(st.raf);clearTimeout(st.timer);if(!diagrams.length)return;
- const hops=diagrams.map(d=>{const p=d.edgeEls[d.side.steps[st.step].hop.join(">")];return {d,p,len:p.getTotalLength()};});
- const dur=Math.max(...hops.map(h=>h.len))/PX_PER_S*1000/st.speed;let t0=null;
- const place=f=>hops.forEach(h=>{const q=h.p.getPointAtLength(f*h.len);h.d.dot.setAttribute("cx",q.x);h.d.dot.setAttribute("cy",q.y);});
+ const hops=diagrams.map(d=>{const i=stepOf(d.side,st.step),p=d.edgeEls[d.side.steps[i].hop.join(">")];return {d,p,len:p.getTotalLength(),arrived:i<st.step};});
+ const dur=Math.max(...hops.filter(h=>!h.arrived).map(h=>h.len))/PX_PER_S*1000/st.speed;let t0=null;
+ const place=f=>{lastDots=hops.map(h=>{const q=h.p.getPointAtLength((h.arrived?1:f)*h.len);
+   h.d.dot.setAttribute("cx",q.x);h.d.dot.setAttribute("cy",q.y);return h.arrived?null:q;}).filter(Boolean);follow(lastDots);};
  const tick=ts=>{if(!st.playing){place(1);return;}
   t0??=ts;const f=Math.min(1,(ts-t0)/dur);place(f);
   if(f<1){st.raf=requestAnimationFrame(tick);return;}
@@ -278,17 +355,19 @@ function runHop(){cancelAnimationFrame(st.raf);clearTimeout(st.timer);if(!diagra
    st.step=last?0:st.step+1;render();runHop();},st.view==="detail"?DWELL/st.speed:OVERVIEW_PAUSE);};
  st.raf=requestAnimationFrame(tick);}
 function go(i){st.step=Math.max(0,Math.min(nSteps()-1,i));render();runHop();}
-function openTab(i){st.tab=i;st.playing=!REDUCED;st.step=0;buildPanes();go(0);}
+function openTab(i){st.tab=i;st.playing=false;st.step=0;buildPanes();fit();go(0);}
 // ---- controls
 if(!grid)TABS.forEach((t,i)=>{const b=document.createElement("button");b.setAttribute("role","tab");b.textContent=t.label;b.title=t.title;if(t.pair)b.className="pair";b.onclick=()=>openTab(i);$("tabs").appendChild(b);});
 $("fold").onclick=()=>{st.view=st.view==="detail"?"overview":"detail";try{localStorage.setItem("truepath-view",st.view);}catch(e){}st.playing=!REDUCED;go(0);};
 try{const v=localStorage.getItem("truepath-view");if(v==="overview"||v==="detail")st.view=v;}catch(e){}
-$("play").onclick=()=>{st.playing=!st.playing;if(st.playing&&st.view==="detail"&&st.step===nSteps()-1)st.step=0;render();runHop();};
+$("play").onclick=()=>{st.playing=!st.playing;if(st.playing)st.follow=true;if(st.playing&&st.view==="detail"&&st.step===nSteps()-1)st.step=0;render();runHop();};
 $("fwd").onclick=()=>{st.playing=false;go(st.step+1);};$("back").onclick=()=>{st.playing=false;go(st.step-1);};
-$("restart").onclick=()=>{st.playing=true;go(0);};$("speed").onchange=e=>{st.speed=+e.target.value;};
+$("restart").onclick=()=>{st.playing=true;st.follow=true;go(0);};
+$("zin").onclick=()=>zoomBy(ZOOM_STEP);$("zout").onclick=()=>zoomBy(1/ZOOM_STEP);$("fit").onclick=fit;$("speed").onchange=e=>{st.speed=+e.target.value;};
 $("steps").onclick=e=>{const li=e.target.closest("li");if(li){st.playing=false;go(+li.dataset.i);}};
 document.addEventListener("keydown",e=>{if(e.target.tagName==="SELECT")return;
  if(e.key==="ArrowRight")$("fwd").click();else if(e.key==="ArrowLeft")$("back").click();
- else if(e.key===" "&&e.target.tagName!=="BUTTON"){e.preventDefault();$("play").click();}}); // on a button, Space presses that button
+ else if(e.key===" "&&e.target.tagName!=="BUTTON"){e.preventDefault();$("play").click();} // on a button, Space presses that button
+ else if(e.key==="+"||e.key==="=")$("zin").click();else if(e.key==="-")$("zout").click();else if(e.key==="0")$("fit").click();});
 openTab(0);
 </script></body></html>

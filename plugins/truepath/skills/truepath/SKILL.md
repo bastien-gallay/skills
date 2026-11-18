@@ -37,8 +37,15 @@ layout.py ──┘                                └► fixture.json (--export
 `spec.json` builds `sim.html`, `<subject>.spec.json` builds
 `<subject>.sim.html`; `-o` names another file.
 
-The page opens on the first tab with the detail panel open. Folding the panel
-switches to the overview: the whole path drawn, one dot looping on it.
+The page opens paused on the first tab, with the detail panel open; the green
+play button starts it. Folding the panel switches to the overview: the whole
+path drawn, one dot looping on it.
+
+The diagram zooms with `−`, `+`, Ctrl/Cmd + wheel, a trackpad or two-finger
+pinch, and the keys `+`, `-`, `0`; *Fit* (or `0`) shows it whole again. Once
+zoomed, a drag or the wheel pans, and the view glides after the moving dot so
+the current hop stays in sight. A pan stops that following; Play, Restart and
+*Fit* resume it. The two diagrams of a pair zoom and pan as one.
 
 ## Where verdicts come from
 
@@ -88,7 +95,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `edges` | `[[from, to, label]]` | label `""` for none |
 | `panel` | `[{label, value, at, labels?, digits?, compared?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search |
 | `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`; `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
-| `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played side by side as `−` and `+`; same number of steps |
+| `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played side by side as `−` and `+`; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
 | `oracle` | `{repo, ref, paths, link?, files?, cwd, cmd}` | see above |
 | `port` | path to a CommonJS file exporting `decide(inputs)` | used when there is no oracle |
@@ -140,7 +147,7 @@ serve every rule.
 | C5 | an outcome without a kind, a kind without a legend, more than 4 kinds |
 | C6 | a label wider than its box (13px monospace) |
 | C7 | a scenario without an origin saying real or illustrative, and where from |
-| C8 | a pair whose scenarios cannot advance together, or are unknown |
+| C8 | a pair naming a scenario that does not exist |
 | C9 | a panel row that reads a field a scenario lacks |
 | C10 | a matrix cell naming a panel row that does not exist |
 | C11 | a case shown under a question whose cell still depends on another question |
@@ -160,7 +167,8 @@ the checks run.
 ## Design rules
 
 - One moving element per diagram: a single dot, constant speed, one hop at a
-  time. Two diagrams side by side move in step.
+  time. Two diagrams side by side move in step; when one has fewer steps, its
+  dot waits on its outcome while the other goes on.
 - Taken edges are solid, untaken ones dashed and grey; nodes off the path fade.
 - Colour encodes the outcome kind only. In a pair, the first divergence (the
   first step where a panel value differs) is outlined amber and marked `≠` on
