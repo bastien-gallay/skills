@@ -86,6 +86,9 @@ clone of this repository, not from a bare copy of the folder.
 - a grid of cases against the answers to one or more open questions, the
   matrix first, each cell opening the case.
 
+The page opens paused, the play button green; the diagram zooms and pans,
+and once zoomed the view follows the dot.
+
 ![The free-shipping grid: the matrix of cases against answers, then a click
 on a cell that differs plays that case, today next to the answer
 ](docs/free-shipping.gif)

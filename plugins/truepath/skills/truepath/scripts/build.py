@@ -510,13 +510,12 @@ def c7_scenarios_say_where_they_come_from(b):
             yield f"{s['id']}: origin must say real or illustrative, and where it comes from"
 
 
-def c8_pairs_advance_together(b):
+def c8_pairs_name_known_scenarios(b):
+    """A pair may differ in length: the page keeps the side that has arrived on its outcome."""
     for p in b.spec.get("pairs", []):
-        before, after = b.by_id.get(p["before"]), b.by_id.get(p["after"])
-        if not before or not after:
-            yield f"pair {p['tab']}: unknown scenario"
-        elif len(before["steps"]) != len(after["steps"]):
-            yield f"pair {p['tab']}: {len(before['steps'])} vs {len(after['steps'])} steps, they cannot advance together"
+        for side in ("before", "after"):
+            if p[side] not in b.by_id:
+                yield f"pair {p['tab']}: {side} names unknown scenario {p[side]}"
 
 
 def c9_panel_rows_resolve(b):
@@ -574,7 +573,7 @@ def c13_panel_rows_appear_at_a_real_step(b):
 CHECKS = [
     ("C1", c1_hops_are_edges), ("C2", c2_path_is_unbroken_from_a_source), ("C3", c3_expect_is_what_the_logic_gives),
     ("C4", c4_path_ends_at_the_outcome), ("C5", c5_colour_means_an_outcome_kind), ("C6", c6_labels_fit_their_box),
-    ("C7", c7_scenarios_say_where_they_come_from), ("C8", c8_pairs_advance_together), ("C9", c9_panel_rows_resolve),
+    ("C7", c7_scenarios_say_where_they_come_from), ("C8", c8_pairs_name_known_scenarios), ("C9", c9_panel_rows_resolve),
     ("C10", c10_matrix_shows_panel_rows), ("C11", c11_a_section_depends_on_its_question_only),
     ("C12", c12_every_case_is_in_the_matrix), ("C13", c13_panel_rows_appear_at_a_real_step),
 ]

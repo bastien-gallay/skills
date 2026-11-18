@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.1
+
+- The page opens paused; the play button is green until it is pressed, so
+  the first click is obvious.
+- The diagram zooms (`−`, `+`, *Fit*, Ctrl/Cmd + wheel, pinch, keys `+`,
+  `-`, `0`) and pans by drag or wheel once zoomed; a pair zooms as one.
+  Zoomed in, the view glides after the moving dot; a pan stops that, Play
+  or *Fit* resumes it.
+- A pair may have two scenarios of different lengths: the shorter stays on
+  its outcome while the other goes on. C8 now refuses only a pair naming an
+  unknown scenario. Every spec that built still builds.
+
 ## 0.1.0
 
 - First version: scenarios, before/after pairs, the questions grid, oracle
