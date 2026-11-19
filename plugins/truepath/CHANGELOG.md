@@ -29,6 +29,7 @@
     the same path is a table, not a page.
   - What `oracle.files` brings is named in the footer after the ref, so code
     from the spec is no longer shown as the ref's code.
+  - The README opens on the grid in motion; both pictures are retaken.
 
 ## 0.1.0
 

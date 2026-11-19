@@ -2,6 +2,10 @@
 
 [![ci](https://github.com/bastien-gallay/truepath/actions/workflows/ci.yml/badge.svg)](https://github.com/bastien-gallay/truepath/actions/workflows/ci.yml)
 
+![The free-shipping grid: the matrix of cases against answers, then a click
+on a cell that differs plays that case, today next to the answer
+](docs/free-shipping.gif)
+
 An agent skill that turns a process, a bug path or a rule under discussion
 into one self-contained HTML page: a dot walks the real path through the
 graph, a data panel shows what changes at each step, and two scenarios play
@@ -11,10 +15,6 @@ What makes it more than an animation: the verdicts come from your
 repository's own code, run on a frozen `git archive` of a ref, or from a
 declared port of it. The build checks every scenario against them and
 writes nothing if one disagrees.
-
-![A before/after pair: the same refund request refused on the left, granted
-on the right, the decision where they part outlined
-](docs/refund-window.png)
 
 ```text
 spec.json ──┐
@@ -89,9 +89,9 @@ clone of this repository, not from a bare copy of the folder.
 The page opens paused, the play button green; the diagram zooms and pans,
 and once zoomed the view follows the dot.
 
-![The free-shipping grid: the matrix of cases against answers, then a click
-on a cell that differs plays that case, today next to the answer
-](docs/free-shipping.gif)
+![A before/after pair: the same refund request refused on the left, granted
+on the right, the decision where they part outlined
+](docs/refund-window.png)
 
 The full contract is in [`skills/truepath/SKILL.md`](skills/truepath/SKILL.md).
 
