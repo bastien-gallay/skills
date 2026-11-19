@@ -231,7 +231,7 @@ class Contract(Case):
 
     def test_the_page_receives_what_it_shows_and_nothing_else(self):
         page = self.page(self.build(self.spec())[0])
-        self.assertEqual(sorted(page), ["grid", "kinds", "lang", "nodes", "pairs", "scenarios", "source",
+        self.assertEqual(sorted(page), ["credit", "grid", "kinds", "lang", "nodes", "pairs", "scenarios", "source",
                                         "subtitle", "title", "verdictSource"])
         self.assertEqual(sorted(page["scenarios"][0]),
                          ["case", "id", "origin", "rows", "steps", "summary", "tab", "undecided", "variant"])
@@ -306,6 +306,7 @@ class Unreadable(Case):
         self.unreadable(lambda s: s["scenarios"][0]["steps"][0].update(hop=["REQ", 3]), "two node ids")
         self.unreadable(lambda s: s["nodes"][0].update(label=3), "id and label must be text")
         self.unreadable(lambda s: s["nodes"][0].update(role="pill"), "the only role to declare")
+        self.unreadable(lambda s: s.update(credit="no"), "`credit` must be true or false")
 
     def test_a_grid_page_takes_no_plain_scenario(self):
         self.unreadable(lambda s: s.update(grid=copy.deepcopy(GRID)), "a grid page shows only its cells")
@@ -388,6 +389,25 @@ class Page(Case):
         for h in played["html"]:
             self.assertNotIn("<img", h)
 
+    def test_the_credit_is_shown_unless_the_spec_turns_it_off(self):
+        link = '<a href="https://github.com/bastien-gallay/truepath" target="_blank" rel="noopener">'
+        on = self.play(self.build(self.spec())[0])["html"]
+        self.assertTrue(any(link + "made with truepath</a>" in h for h in on))
+        off = self.play(self.build(self.spec(lambda s: s.update(credit=False)))[0])["html"]
+        self.assertFalse(any("truepath</a>" in h for h in off))
+
+    def test_backticks_are_code_in_text_and_dropped_in_tooltips(self):
+        def change(s):
+            s["title"] = "uses `chardet`"
+            s["scenarios"][0]["summary"] = "`<b>` and \\`tick\\` and `open"
+            s["scenarios"][0]["origin"]["text"] = "from `ticket`"
+        out, *_ = self.build(self.spec(change))
+        self.assertIn("<title>uses chardet</title>", out.read_text(encoding="utf-8"))
+        html = self.play(out)["html"]
+        self.assertIn("<code>&lt;b&gt;</code> and `tick` and `open", "".join(html))
+        self.assertTrue(any("from <code>ticket</code>" in h for h in html))
+        self.assertFalse(any("<b>" in h for h in html))
+
     def test_a_grid_plays_through_in_french(self):
         tag = "<img src=x onerror=alert(1)>"
 
@@ -405,6 +425,10 @@ class Page(Case):
             s["panel"].append({"label": "Answer", "value": "answer", "at": 0, "compared": True})
         played = self.play(self.build(self.spec(change))[0])
         self.assertEqual(played["tabs"], 3)  # the matrix, then one per case
+        mx = next(h for h in played["html"] if 'class="mx"' in h)
+        self.assertIn('<p class="hint">', mx)  # said before the table, not under it
+        self.assertEqual(mx.count('<td tabindex="0" role="button"'), 6)  # every cell: 2 cases x (today, 1A, 1B)
+        self.assertEqual(mx.count(' class="pulse"'), 1)  # one cell rings, the first that differs
         for h in played["html"]:
             self.assertNotIn("<img", h)
 

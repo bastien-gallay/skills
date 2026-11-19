@@ -82,6 +82,7 @@ def validate(spec, specdir, exporting=False):
         p.typed(spec, key, kind, "spec", name)
     p.raise_if_any()
 
+    p.typed(spec, "credit", bool, "spec", "true or false")
     if spec.get("lang", "en") not in ("en", "fr"):
         p.append(f"spec: lang is {spec['lang']!r}, expected en or fr")
     if "oracle" in spec:
@@ -611,7 +612,7 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
     entered = {e[1] for e in spec["edges"]}
     page = {
         "title": spec["title"], "subtitle": spec.get("subtitle", ""), "source": spec.get("source", ""),
-        "lang": spec.get("lang", "en"), "verdictSource": verdict_source,
+        "lang": spec.get("lang", "en"), "verdictSource": verdict_source, "credit": spec.get("credit", True),
         "kinds": {k: {"label": v["label"], "color": v["color"]} for k, v in spec.get("kinds", {}).items()},
         "nodes": {n["id"]: {"kind": n.get("kind"), "role": n.get("role") or ("start" if n["id"] not in entered else None)}
                   for n in spec["nodes"]},
@@ -632,11 +633,28 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
     return {"page": page, "geo": geo}
 
 
+def plain(text):
+    """Spec text without its code marks, as the runtime's plain(): `x` -> x, \\` -> `, an open backtick kept."""
+    out, buf, opened, i = [], "", False, 0
+    while i < len(text):
+        if text.startswith("\\`", i):
+            buf, i = buf + "`", i + 2
+            continue
+        if text[i] == "`":
+            out.append(buf)
+            buf, opened = "", not opened
+        else:
+            buf += text[i]
+        i += 1
+    out.append("`" + buf if opened else buf)
+    return "".join(out)
+
+
 def render(data):
     """The runtime with the data in it. Spec text never reaches the page as markup: the title is
     escaped here, the data cannot close its <script>, and the runtime escapes what it inserts."""
     payload = json.dumps(data, ensure_ascii=False).replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
-    shell = RUNTIME.read_text(encoding="utf-8").replace("__LANG__", data["page"]["lang"]).replace("__TITLE__", html.escape(str(data["page"]["title"])))
+    shell = RUNTIME.read_text(encoding="utf-8").replace("__LANG__", data["page"]["lang"]).replace("__TITLE__", html.escape(plain(str(data["page"]["title"]))))
     return shell.replace("/*__DATA__*/null", payload, 1)
 
 

@@ -54,8 +54,8 @@ footer{padding:0 20px 16px;font-size:11px;color:var(--muted)}
 .edge.todo{stroke:var(--accent);stroke-width:1.4;stroke-dasharray:5 4;opacity:.55}
 .elabel{font:11px var(--sans);fill:var(--muted)}
 .dot{fill:var(--accent)}
-.panes{display:grid;grid-template-columns:1fr;gap:12px}
-.panes.two{grid-template-columns:1fr 1fr}
+.panes{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.panes.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .pane{min-width:0}
 .phead{font-weight:600;margin:0 0 4px;display:none}
 .panes.two .phead{display:block}
@@ -74,8 +74,18 @@ main.matrix{grid-template-columns:minmax(0,1fr)}
 main.matrix aside,main.matrix .legend{display:none}
 table.mx{border-collapse:collapse;width:100%}
 table.mx th,table.mx td{border:1px solid var(--line);padding:6px 8px;vertical-align:top}
-table.mx td{font-family:var(--mono);cursor:pointer}
-table.mx td:hover{outline:2px solid var(--accent);outline-offset:-2px}
+table.mx td{font-family:var(--mono);cursor:pointer;position:relative;padding-right:22px;transition:background .15s,box-shadow .15s}
+table.mx td:hover,table.mx td:focus-visible{outline:none;background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent),0 2px 8px -2px rgba(15,23,42,.25)}
+table.mx td .chev{position:absolute;right:6px;top:50%;width:8px;height:12px;margin-top:-6px;max-height:none;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.55;transition:opacity .15s,transform .15s}
+table.mx td:hover .chev,table.mx td:focus-visible .chev{opacity:1;transform:translateX(3px)}
+table.mx td.pulse{animation:ring .7s ease-in-out .4s 2}
+@keyframes ring{50%{box-shadow:inset 0 0 0 2px var(--accent)}}
+.mxs{overflow-x:auto}
+.hint{display:flex;gap:8px;align-items:center;margin:0 0 10px;padding:6px 10px;border-radius:6px;background:var(--accent-soft);color:var(--ink)}
+.hint svg{width:14px;height:14px;flex:none;fill:var(--accent)}
+code{font-family:var(--mono);font-size:.95em}
+#foot a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
+#foot a:hover{color:var(--accent);text-decoration-color:var(--accent)}
 table.mx .chg{background:var(--hl);font-weight:600}
 table.mx .note{display:block;font:11px var(--sans);color:var(--muted)}
 table.mx+table.mx{margin-top:20px}
@@ -88,8 +98,8 @@ body.onmatrix #motion,body.onmatrix #zoom,body.onmatrix .bar{display:none}
 .panes.zoomed svg.drag{cursor:grabbing}
 #variants .home{margin-right:10px}
 .vnote{display:block;font:12px var(--sans);color:var(--muted);margin-top:4px}
-@media (max-width:900px){main{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){.dot{display:none}}
+@media (max-width:900px){main{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){.dot{display:none}table.mx td.pulse{animation:none}table.mx td,table.mx td .chev{transition:none}}
 </style></head><body>
 <header><h1 id="title"></h1><p class="sub" id="sub"></p></header>
 <div class="bar">
@@ -113,7 +123,7 @@ body.onmatrix #motion,body.onmatrix #zoom,body.onmatrix .bar{display:none}
 </main>
 <footer id="foot"></footer>
 <script>
-const DATA={"page": {"title": "Refund window", "subtitle": "Example: a refund asked on day 30 was refused before the fix", "source": "truepath example, self-contained", "lang": "en", "verdictSource": "port decide.js", "kinds": {"ok": {"label": "refunded", "color": "#15803d"}, "wrong": {"label": "store credit only", "color": "#b91c1c"}}, "nodes": {"REQ": {"kind": null, "role": "start"}, "AGE": {"kind": null, "role": null}, "D": {"kind": null, "role": "decision"}, "REFUND": {"kind": "ok", "role": null}, "CREDIT": {"kind": "wrong", "role": null}}, "scenarios": [{"id": "old", "tab": "Before", "summary": "Day 30: the old check reads `days \u003c 30` and refuses", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "The customer asks on the last day of the window."}, {"hop": ["AGE", "D"], "message": "30 \u003c 30 → false", "caption": "The old check excludes the last day."}, {"hop": ["D", "CREDIT"], "message": "store credit", "caption": "A refund the policy promises is refused."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "no"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "no", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "new", "tab": "After", "summary": "Same request: `days \u003c= 30` keeps day 30 in the window", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "Same request."}, {"hop": ["AGE", "D"], "message": "30 \u003c= 30 → true", "caption": "The last day counts."}, {"hop": ["D", "REFUND"], "message": "refunded", "caption": "The policy is applied as written."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "yes"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "yes", "provenance": {"kind": "port", "text": "port: decide.js"}}]}], "pairs": [{"before": "old", "after": "new", "tab": "before / after", "summary": "The one difference: does day 30 count?"}], "grid": null}, "geo": {"width": 381, "height": 448, "lineHeight": 16, "nodes": {"REQ": {"w": 150, "h": 44, "labelLines": ["refund request"], "y": 32.0, "x": 119.2}, "AGE": {"w": 190, "h": 44, "labelLines": ["days since delivery"], "y": 140.0, "x": 99.2}, "D": {"w": 158, "h": 44, "labelLines": ["within 30 days?"], "y": 248.0, "x": 115.2}, "REFUND": {"w": 150, "h": 44, "labelLines": ["money refunded"], "y": 356.0, "x": 32.0}, "CREDIT": {"w": 135, "h": 44, "labelLines": ["store credit"], "y": 356.0, "x": 214.0}}, "edges": [{"from": "REQ", "to": "AGE", "d": "M194 76 V136", "label": null, "labelPos": null}, {"from": "AGE", "to": "D", "d": "M194 184 V244", "label": null, "labelPos": null}, {"from": "D", "to": "REFUND", "d": "M194 292 V324 H107 V352", "label": "yes", "labelPos": [141.2, 320]}, {"from": "D", "to": "CREDIT", "d": "M194 292 V324 H282 V352", "label": "no", "labelPos": [231.8, 320]}]}};
+const DATA={"page": {"title": "Refund window", "subtitle": "Example: a refund asked on day 30 was refused before the fix", "source": "truepath example, self-contained", "lang": "en", "verdictSource": "port decide.js", "credit": true, "kinds": {"ok": {"label": "refunded", "color": "#15803d"}, "wrong": {"label": "store credit only", "color": "#b91c1c"}}, "nodes": {"REQ": {"kind": null, "role": "start"}, "AGE": {"kind": null, "role": null}, "D": {"kind": null, "role": "decision"}, "REFUND": {"kind": "ok", "role": null}, "CREDIT": {"kind": "wrong", "role": null}}, "scenarios": [{"id": "old", "tab": "Before", "summary": "Day 30: the old check reads `days \u003c 30` and refuses", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "The customer asks on the last day of the window."}, {"hop": ["AGE", "D"], "message": "30 \u003c 30 → false", "caption": "The old check excludes the last day."}, {"hop": ["D", "CREDIT"], "message": "store credit", "caption": "A refund the policy promises is refused."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "no"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "no", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "new", "tab": "After", "summary": "Same request: `days \u003c= 30` keeps day 30 in the window", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "Same request."}, {"hop": ["AGE", "D"], "message": "30 \u003c= 30 → true", "caption": "The last day counts."}, {"hop": ["D", "REFUND"], "message": "refunded", "caption": "The policy is applied as written."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "yes"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "yes", "provenance": {"kind": "port", "text": "port: decide.js"}}]}], "pairs": [{"before": "old", "after": "new", "tab": "before / after", "summary": "The one difference: does day 30 count?"}], "grid": null}, "geo": {"width": 381, "height": 448, "lineHeight": 16, "nodes": {"REQ": {"w": 150, "h": 44, "labelLines": ["refund request"], "y": 32.0, "x": 119.2}, "AGE": {"w": 190, "h": 44, "labelLines": ["days since delivery"], "y": 140.0, "x": 99.2}, "D": {"w": 158, "h": 44, "labelLines": ["within 30 days?"], "y": 248.0, "x": 115.2}, "REFUND": {"w": 150, "h": 44, "labelLines": ["money refunded"], "y": 356.0, "x": 32.0}, "CREDIT": {"w": 135, "h": 44, "labelLines": ["store credit"], "y": 356.0, "x": 214.0}}, "edges": [{"from": "REQ", "to": "AGE", "d": "M194 76 V136", "label": null, "labelPos": null}, {"from": "AGE", "to": "D", "d": "M194 184 V244", "label": null, "labelPos": null}, {"from": "D", "to": "REFUND", "d": "M194 292 V324 H107 V352", "label": "yes", "labelPos": [141.2, 320]}, {"from": "D", "to": "CREDIT", "d": "M194 292 V324 H282 V352", "label": "no", "labelPos": [231.8, 320]}]}};
 const {page,geo}=DATA, grid=page.grid, NS="http://www.w3.org/2000/svg";
 const PX_PER_S=170;       // the dot's speed along a hop
 const DWELL=1100;         // ms a step stays before the next one, in the detail view
@@ -121,8 +131,20 @@ const OVERVIEW_PAUSE=150; // ms between two hops when the dot loops on the whole
 const DIVERGE="var(--diverge)", TINT="10%"; // an outcome box is tinted with its kind's colour
 const $=id=>document.getElementById(id);
 const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e;};
-/** Spec text is data, never markup: everything a spec says goes through esc() before innerHTML. */
+/** Spec text is data, never markup: everything a spec says goes through esc(), or rich() which escapes, before innerHTML. */
 const esc=x=>String(x??"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+/** Spec text in runs: `x` is code, \` a literal backtick; a backtick left open is literal too. */
+function runs(x){const s=String(x??""),out=[];let buf="",open=-1;
+ for(let i=0;i<s.length;i++){
+  if(s[i]==="\\"&&s[i+1]==="`"){buf+="`";i++;}
+  else if(s[i]==="`"){if(open<0){out.push({code:false,text:buf});open=out.length;}else{out.push({code:true,text:buf});open=-1;}buf="";}
+  else buf+=s[i];}
+ if(open>=0){out.push({code:false,text:"`"+buf});}else out.push({code:false,text:buf});
+ return out.filter(r=>r.text||r.code);}
+/** Visible spec text: escaped, with its `code` in the code face. */
+const rich=x=>runs(x).map(r=>r.code?`<code>${esc(r.text)}</code>`:esc(r.text)).join("");
+/** Spec text where markup cannot go (a tooltip, a button label): the backticks are dropped. */
+const plain=x=>runs(x).map(r=>r.text).join("");
 /** Reduced motion: nothing advances by itself; Play, Restart and the step buttons still answer. */
 const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
 /** The page's own words; the spec's text is written in the spec's language. */
@@ -130,14 +152,16 @@ const words={
  fr:{tabs:"Scénarios",variants:"Réponse comparée",back:"Étape précédente",fwd:"Étape suivante",restart:"Recommencer",speed:"Vitesse",
   home:"← matrice",source:"Source : ",logic:" · logique exécutée : ",
   path:"chemin du scénario",diverge:"≠ premier écart entre avant et après",caseCol:"Cas",cell:"Cellule : ",hover:" · au survol : ",
-  differs:b=>`. ≠ : diffère de « ${b} ». ● cas réel, ○ illustratif. Un clic ouvre le cas pas à pas.`,code:"✓ code",port:"⚠ portage",definition:"◇ définition",
+  differs:b=>`. ≠ : diffère de « ${b} ». ● cas réel, ○ illustratif.`,code:"✓ code",port:"⚠ portage",definition:"◇ définition",
+  hint:b=>`Cliquez une cellule : elle ouvre le cas pas à pas, « ${b} » à gauche, la réponse de la colonne à droite.`,credit:"créé avec truepath",
   real:"● cas réel",illus:"○ illustratif",undecided:"⚠️ règle non décidée · ",field:"Champ",before:"avant",after:"après",
   hide:"Masquer le détail ›",show:"‹ Détail pas à pas",pause:"Pause",play:"Lecture",side:"côte à côte",sep:" : ",half:"0,5×",
   zoom:"Zoom",zin:"Zoomer",zout:"Dézoomer",fit:"Voir tout le diagramme",fitText:"Ajuster"},
  en:{tabs:"Scenarios",variants:"Compared answer",back:"Previous step",fwd:"Next step",restart:"Restart",speed:"Speed",
   home:"← matrix",source:"Source: ",logic:" · logic run: ",
   path:"scenario path",diverge:"≠ first difference between before and after",caseCol:"Case",cell:"Cell: ",hover:" · on hover: ",
-  differs:b=>`. ≠: differs from “${b}”. ● real case, ○ illustrative. Click a cell to play the case step by step.`,code:"✓ code",port:"⚠ ported",definition:"◇ definition",
+  differs:b=>`. ≠: differs from “${b}”. ● real case, ○ illustrative.`,code:"✓ code",port:"⚠ ported",definition:"◇ definition",
+  hint:b=>`Click a cell: it opens the case step by step, “${b}” on the left, the column's answer on the right.`,credit:"made with truepath",
   real:"● real case",illus:"○ illustrative",undecided:"⚠️ rule not decided · ",field:"Field",before:"before",after:"after",
   hide:"Hide detail ›",show:"‹ Step-by-step detail",pause:"Pause",play:"Play",side:"side by side",sep:": ",half:"0.5×",
   zoom:"Zoom",zin:"Zoom in",zout:"Zoom out",fit:"Show the whole diagram",fitText:"Fit"}}[page.lang];
@@ -152,8 +176,8 @@ const cellOf=(caseId,variantId)=>scenario(caseId+"/"+variantId);
 const variantOf=id=>grid.variants.find(v=>v.id===id);
 const TABS=grid
  ? [{matrix:true},...grid.cases.map(c=>({case:c}))]
- : [...page.scenarios.map(s=>({sides:[s],label:(s.undecided?"⚠️ ":"")+originBullet(s.origin)+s.tab,title:s.origin.text})),
-    ...page.pairs.map(p=>({sides:[scenario(p.before),scenario(p.after)],label:"⇄ "+p.tab,title:words.side,pair:p}))];
+ : [...page.scenarios.map(s=>({sides:[s],label:(s.undecided?"⚠️ ":"")+originBullet(s.origin)+plain(s.tab),title:plain(s.origin.text)})),
+    ...page.pairs.map(p=>({sides:[scenario(p.before),scenario(p.after)],label:"⇄ "+plain(p.tab),title:words.side,pair:p}))];
 /** view: "detail" plays step by step beside the panel, "overview" draws the whole path. minus/plus: the two variants a grid case compares.
  * The page opens paused: the reader starts it. follow: a zoomed view keeps the moving dot in sight until the reader pans. */
 const st={tab:0,step:0,view:"detail",playing:false,follow:true,speed:1,raf:0,timer:0,section:0,
@@ -170,15 +194,18 @@ const rowsOf=s=>s.rows.map(r=>r.answer?{...r,shown:shortOf(s.variant)}:r);
 /** Where a value comes from: real code, a ported behaviour, or a definition the simulation makes. */
 const provenanceTag=r=>{const p=r.provenance;if(!p)return "";
  const cls=p.kind==="code"?"code":p.kind==="port"?"port":"def";
- return `<span class="basis ${cls}" title="${esc(p.text)}">${words[p.kind]}</span>`;};
+ return `<span class="basis ${cls}" title="${esc(plain(p.text))}">${words[p.kind]}</span>`;};
 /** First step at which the two scenarios' data differ, and the node that produces it. */
 function divergence(a,b){const ra=rowsOf(a),rb=rowsOf(b);let at=Infinity;
  ra.forEach((r,i)=>{if(!r.compared&&r.shown!==rb[i].shown)at=Math.min(at,r.at);}); // a compared row names what differs, it is not an effect
  return at===Infinity?null:{step:at,node:a.steps[at].hop[0]};}
 
-$("title").textContent=page.title;$("sub").textContent=page.subtitle;$("foot").textContent=words.source+page.source+words.logic+page.verdictSource;
+$("title").innerHTML=rich(page.title);$("sub").innerHTML=rich(page.subtitle);document.title=plain(page.title);
+/** The footer: where the case comes from, what ran the logic, and, unless the spec says `credit: false`, what made the page. */
+$("foot").innerHTML=esc(words.source)+rich(page.source)+esc(words.logic+page.verdictSource)
+ +(page.credit?` · <a href="https://github.com/bastien-gallay/truepath" target="_blank" rel="noopener">${words.credit}</a>`:"");
 const swatch=(style,text)=>{const s=document.createElement("span");s.innerHTML=`<span class="sw" style="${style}"></span>${text}`;$("legend").appendChild(s);};
-for(const k of Object.values(page.kinds))swatch(`border-color:${esc(k.color)};background:color-mix(in srgb, ${esc(k.color)} ${TINT}, transparent)`,esc(k.label));
+for(const k of Object.values(page.kinds))swatch(`border-color:${esc(k.color)};background:color-mix(in srgb, ${esc(k.color)} ${TINT}, transparent)`,rich(k.label));
 swatch("border-color:var(--accent);background:var(--accent);border-radius:50%",words.path);
 swatch(`border-color:${DIVERGE}`,words.diverge);
 
@@ -270,22 +297,29 @@ function buildPanes(){const tab=TABS[st.tab],box=$("panes");box.innerHTML="";dia
  const sides=sidesOf(tab);box.className="panes"+(sides.length>1?" two":"");
  diagrams=sides.map((s,k)=>{const pane=document.createElement("div");pane.className="pane";
   const h=document.createElement("p");h.className="phead "+(k?"plus":"minus");
-  h.textContent=(k?"+ ":"− ")+(grid?headOf(s.variant):originBullet(s.origin)+s.tab);pane.appendChild(h);box.appendChild(pane);
+  h.innerHTML=(k?"+ ":"− ")+(grid?rich(headOf(s.variant)):originBullet(s.origin)+rich(s.tab));pane.appendChild(h);box.appendChild(pane);
   return draw(pane,k,s);});}
 /** One section per question: its cases against today and each answer; one field per cell, the others on hover; a click opens the case. */
+const POINTER=`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5l10 6.2-4.3 1 2.4 4.6-1.9 1-2.4-4.6L3 13z"/></svg>`;
+const CHEVRON=`<svg class="chev" viewBox="0 0 8 12" aria-hidden="true"><path d="M2 2l4 4-4 4"/></svg>`;
+/** One section per question: its cases against today and each answer; one field per cell, the others on hover.
+ * A cell is a button (click, Enter, Space) that opens the case; the first changed cell rings twice to show it. */
 function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filter(l=>l!==grid.show);
- const val=(s,label)=>rowsOf(s).find(r=>r.label===label).shown;
- wrap.innerHTML=grid.sections.map((sec,si)=>{
-  const head=`<tr><th>${sec.text?`<span class="q">${esc(sec.text)}</span>`:words.caseCol}</th>${sec.columns.map(c=>
-   `<th>${esc(c.head)}${c.note?`<span class="note">${esc(c.note)}</span>`:""}</th>`).join("")}</tr>`;
+ const val=(s,label)=>rowsOf(s).find(r=>r.label===label).shown,baseName=plain(variantOf(grid.baseline).short);let pulsed=false;
+ wrap.innerHTML=`<p class="hint">${POINTER}<span>${esc(words.hint(baseName))}</span></p>`+grid.sections.map((sec,si)=>{
+  const head=`<tr><th>${sec.text?`<span class="q">${rich(sec.text)}</span>`:words.caseCol}</th>${sec.columns.map(c=>
+   `<th>${rich(c.head)}${c.note?`<span class="note">${rich(c.note)}</span>`:""}</th>`).join("")}</tr>`;
   const body=sec.cases.map(cid=>{const ci=grid.cases.findIndex(c=>c.id===cid),c=grid.cases[ci],base=cellOf(cid,grid.baseline);
-   return `<tr><th title="${esc(c.origin.text)}">${originBullet(c.origin)}${esc(c.label)}</th>${sec.columns.map(col=>{const s=cellOf(cid,col.variant),x=val(s,grid.show);
-    const changed=col.variant!==grid.baseline&&x!==val(base,grid.show),tip=hover.map(l=>l+words.sep+val(s,l)).join("\n");
-    return `<td data-case="${ci}" data-variant="${esc(col.variant)}" data-section="${si}" title="${esc(tip)}">${changed?`<span class="chg">≠ ${esc(x)}</span>`:esc(x)}</td>`;}).join("")}</tr>`;}).join("");
-  return `<table class="mx">${head}${body}</table>`;}).join("")
-  +`<p class="vnote">${words.cell}${esc(grid.show)}${hover.length?words.hover+esc(hover.join(", ")):""}${esc(words.differs(variantOf(grid.baseline).short))}</p>`;
- wrap.onclick=e=>{const td=e.target.closest("td[data-case]");if(!td)return;
-  st.plus=td.dataset.variant;st.minus=grid.baseline;st.section=+td.dataset.section;openTab(+td.dataset.case+1);};
+   return `<tr><th title="${esc(plain(c.origin.text))}">${originBullet(c.origin)}${rich(c.label)}</th>${sec.columns.map(col=>{const s=cellOf(cid,col.variant),x=val(s,grid.show);
+    const changed=col.variant!==grid.baseline&&x!==val(base,grid.show),tip=hover.map(l=>plain(l)+words.sep+val(s,l)).join("\n");
+    const pulse=changed&&!pulsed;if(pulse)pulsed=true;
+    return `<td tabindex="0" role="button" class="${pulse?"pulse":""}" aria-label="${esc(plain(c.label)+" · "+plain(col.head)+words.sep+x)}" data-case="${ci}" data-variant="${esc(col.variant)}" data-section="${si}" title="${esc(tip)}">${changed?`<span class="chg">≠ ${esc(x)}</span>`:esc(x)}${CHEVRON}</td>`;}).join("")}</tr>`;}).join("");
+  return `<div class="mxs"><table class="mx">${head}${body}</table></div>`;}).join("")
+  +`<p class="vnote">${words.cell}${rich(grid.show)}${hover.length?words.hover+hover.map(rich).join(", "):""}${esc(words.differs(baseName))}</p>`;
+ const open=td=>{st.plus=td.dataset.variant;st.minus=grid.baseline;st.section=+td.dataset.section;openTab(+td.dataset.case+1);};
+ wrap.onclick=e=>{const td=e.target.closest("td[data-case]");if(td)open(td);};
+ wrap.onkeydown=e=>{const td=e.target.closest&&e.target.closest("td[data-case]");if(!td||(e.key!=="Enter"&&e.key!==" "))return;
+  e.preventDefault();e.stopPropagation();open(td);}; // Space opens the cell, it does not start Play
  return wrap;}
 
 /** A side's own step at the page's step: in a pair of unequal length, the side that has arrived stays on its outcome. */
@@ -303,34 +337,34 @@ function paint(d,step,detail,div){const s=d.side,keys=s.steps.map(x=>x.hop.join(
 function renderVariants(){const box=$("variants");box.innerHTML="";const tab=TABS[st.tab];if(!grid||tab.matrix)return;
  const home=document.createElement("button");home.className="home";home.textContent=words.home;home.onclick=()=>openTab(0);box.appendChild(home);
  for(const side of ["minus","plus"]){const lbl=document.createElement("span");lbl.className="lbl";lbl.textContent=side==="minus"?"−":"+";box.appendChild(lbl);
-  grid.sections[st.section].columns.forEach(col=>{const b=document.createElement("button");b.textContent=col.short;b.title=col.head;
+  grid.sections[st.section].columns.forEach(col=>{const b=document.createElement("button");b.textContent=plain(col.short);b.title=plain(col.head);
    b.setAttribute("aria-pressed",col.variant===st[side]);b.onclick=()=>{st[side]=col.variant;openTab(st.tab);};box.appendChild(b);});}}
-const originLine=o=>`<span class="origin ${o.kind==="real"?"real":"illustrative"}">${o.kind==="real"?words.real:words.illus} · ${esc(o.text)}</span>`;
+const originLine=o=>`<span class="origin ${o.kind==="real"?"real":"illustrative"}">${o.kind==="real"?words.real:words.illus} · ${rich(o.text)}</span>`;
 function renderSummary(tab,sides){
- if(grid){const notes=sides.map((s,k)=>{const v=variantOf(s.variant);return v.note?`<span class="vnote">${k?"+":"−"} ${esc(headOf(v.id))}${words.sep}${esc(v.note)}</span>`:"";}).join("");
-  $("summary").innerHTML=esc(tab.case.summary)+originLine(tab.case.origin)+notes;}
- else if(sides.length>1)$("summary").innerHTML=esc(tab.pair.summary);
- else $("summary").innerHTML=(sides[0].undecided?`<span class="warn">${words.undecided}</span>`:"")+esc(sides[0].summary)+originLine(sides[0].origin);}
+ if(grid){const notes=sides.map((s,k)=>{const v=variantOf(s.variant);return v.note?`<span class="vnote">${k?"+":"−"} ${rich(headOf(v.id))}${words.sep}${rich(v.note)}</span>`:"";}).join("");
+  $("summary").innerHTML=rich(tab.case.summary)+originLine(tab.case.origin)+notes;}
+ else if(sides.length>1)$("summary").innerHTML=rich(tab.pair.summary);
+ else $("summary").innerHTML=(sides[0].undecided?`<span class="warn">${words.undecided}</span>`:"")+rich(sides[0].summary)+originLine(sides[0].origin);}
 /** One scenario: its caption, its data so far, its steps. */
-function renderOne(s){const step=s.steps[st.step];$("caption").textContent=step.caption;$("msg").textContent=step.message;
- $("data").innerHTML=rowsOf(s).map(r=>`<tr class="${r.at>st.step?"hidden":r.at===st.step?"new":""}"><td>${esc(r.label)}</td><td class="v">${r.at>st.step?"…":esc(r.shown)+provenanceTag(r)}</td></tr>`).join("");
- $("steps").innerHTML=s.steps.map((x,i)=>`<li class="${i===st.step?"cur":""}" data-i="${i}">${esc(x.message)}</li>`).join("");}
+function renderOne(s){const step=s.steps[st.step];$("caption").innerHTML=rich(step.caption);$("msg").innerHTML=rich(step.message);
+ $("data").innerHTML=rowsOf(s).map(r=>`<tr class="${r.at>st.step?"hidden":r.at===st.step?"new":""}"><td>${rich(r.label)}</td><td class="v">${r.at>st.step?"…":esc(r.shown)+provenanceTag(r)}</td></tr>`).join("");
+ $("steps").innerHTML=s.steps.map((x,i)=>`<li class="${i===st.step?"cur":""}" data-i="${i}">${rich(x.message)}</li>`).join("");}
 /** Two scenarios side by side: what they share is said once, what differs is said − then +. */
 function renderTwo(a,b){const sa=a.steps[stepOf(a,st.step)],sb=b.steps[stepOf(b,st.step)];
- $("caption").innerHTML=sa.caption===sb.caption?esc(sa.caption):`<span class="cap2"><span class="sign">−</span>${esc(sa.caption)}</span><span class="cap2"><span class="sign">+</span>${esc(sb.caption)}</span>`;
- $("msg").innerHTML=sa.message===sb.message?esc(sa.message):`− ${esc(sa.message)}<br>+ ${esc(sb.message)}`;
+ $("caption").innerHTML=sa.caption===sb.caption?rich(sa.caption):`<span class="cap2"><span class="sign">−</span>${rich(sa.caption)}</span><span class="cap2"><span class="sign">+</span>${rich(sb.caption)}</span>`;
+ $("msg").innerHTML=sa.message===sb.message?rich(sa.message):`− ${rich(sa.message)}<br>+ ${rich(sb.message)}`;
  const ra=rowsOf(a),rb=rowsOf(b),cols=grid?[shortOf(a.variant),shortOf(b.variant)]:[words.before,words.after];
- $("data").innerHTML=`<tr><th>${words.field}</th><th>− ${esc(cols[0])}</th><th>+ ${esc(cols[1])}</th></tr>`+ra.map((r,i)=>{const hid=r.at>st.step,diff=!hid&&r.shown!==rb[i].shown;
-  return `<tr class="${hid?"hidden":diff?"new diff":""}"><td>${diff?"≠ ":""}${esc(r.label)}</td><td class="v">${hid?"…":esc(r.shown)+provenanceTag(r)}</td><td class="v">${hid?"…":esc(rb[i].shown)+provenanceTag(rb[i])}</td></tr>`;}).join("");
+ $("data").innerHTML=`<tr><th>${words.field}</th><th>− ${rich(cols[0])}</th><th>+ ${rich(cols[1])}</th></tr>`+ra.map((r,i)=>{const hid=r.at>st.step,diff=!hid&&r.shown!==rb[i].shown;
+  return `<tr class="${hid?"hidden":diff?"new diff":""}"><td>${diff?"≠ ":""}${rich(r.label)}</td><td class="v">${hid?"…":esc(r.shown)+provenanceTag(r)}</td><td class="v">${hid?"…":esc(rb[i].shown)+provenanceTag(rb[i])}</td></tr>`;}).join("");
  $("steps").innerHTML=Array.from({length:Math.max(a.steps.length,b.steps.length)},(_,i)=>`<li class="${i===st.step?"cur":""}" data-i="${i}">${stepLine(a.steps[i],b.steps[i])}</li>`).join("");}
 /** One line of a pair's step list: said once when both sides say it, − then + otherwise; a side that has arrived says nothing. */
-function stepLine(x,y){if(x&&y&&x.message===y.message)return esc(x.message);
- return [x&&"− "+esc(x.message),y&&"+ "+esc(y.message)].filter(Boolean).join("<br>");}
+function stepLine(x,y){if(x&&y&&x.message===y.message)return rich(x.message);
+ return [x&&"− "+rich(x.message),y&&"+ "+rich(y.message)].filter(Boolean).join("<br>");}
 function render(){
  const tab=TABS[st.tab],detail=st.view==="detail";
  renderVariants();[...document.querySelectorAll("#tabs button")].forEach((b,i)=>b.setAttribute("aria-pressed",i===st.tab));
  document.body.classList.toggle("onmatrix",!!tab.matrix);
- if(tab.matrix){$("main").className="matrix";$("summary").textContent=grid.summary||"";return;}
+ if(tab.matrix){$("main").className="matrix";$("summary").innerHTML=rich(grid.summary);return;}
  const sides=sidesOf(tab),div=sides.length>1?divergence(sides[0],sides[1]):null;
  $("main").className=detail?"":"overview";
  renderSummary(tab,sides);

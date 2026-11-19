@@ -11,6 +11,16 @@
 - A pair may have two scenarios of different lengths: the shorter stays on
   its outcome while the other goes on. C8 now refuses only a pair naming an
   unknown scenario. Every spec that built still builds.
+- After the tag `v0.1.1`, on `main` (#2, #3):
+  - A matrix cell reads as clickable: a hint above the table says what a
+    click opens, each cell carries a chevron, takes a ring on hover or
+    focus, and is a button reachable by Tab and opened by Enter or Space;
+    the first changed cell rings twice, not under reduced motion. On a
+    narrow screen the table scrolls inside its card, never the page.
+  - The footer ends with *made with truepath* (*créé avec truepath*), a
+    plain link; `"credit": false` in the spec removes it.
+  - `` `x` `` in spec text is shown as code; `` \` `` keeps a backtick.
+    Tooltips, tabs and the `<title>` drop the backticks.
 
 ## 0.1.0
 

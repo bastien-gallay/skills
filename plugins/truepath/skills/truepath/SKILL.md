@@ -88,8 +88,9 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 
 | Key | Shape | Notes |
 | --- | --- | --- |
-| `title`, `subtitle`, `source` | strings | `source` lands in the footer; like every text of the spec they are shown as text, never read as HTML |
+| `title`, `subtitle`, `source` | strings | `source` lands in the footer; like every text of the spec they are shown as text, never read as HTML, except that `` `x` `` is shown as code (`` \` `` for a literal backtick; a tooltip or a tab drops the backticks) |
 | `lang` | `en` (default) or `fr` | language of the page's own words; the spec's text is written in that language |
+| `credit` | `true` (default) or `false` | `false` removes the *made with truepath* link at the end of the footer |
 | `kinds` | `{id: {label, color}}` | at most 4 |
 | `nodes` | `[{id, label, role?, kind?}]` | `role: "decision"` marks a branching point; where a path starts is found, and drawn round; sinks need `kind` |
 | `edges` | `[[from, to, label]]` | label `""` for none |
