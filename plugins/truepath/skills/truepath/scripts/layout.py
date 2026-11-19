@@ -5,8 +5,10 @@
                              edges: [{from, to, d, label, labelPos}]}
 
 A node's rank is its longest path from the sources; a rank is drawn as one layer. An edge that
-climbs back (a loop), or that would cross a box on its way down, runs in a lane of its own to
-the right of every box. Pure stdlib, deterministic: the same graph gives the same file.
+climbs back (a loop) runs in a lane of its own to the right of every box. An edge that would
+cross a box on its way down steps aside just past the boxes in its way, on the nearer side:
+sent around the whole drawing, it was the longest line on the page and widened it for nothing.
+Pure stdlib, deterministic: the same graph gives the same file.
 
 The page draws with the fonts these widths assume: node labels in 13px monospace, edge
 labels in 11px sans (see `.node text` and `.elabel` in runtime.html).
@@ -102,13 +104,37 @@ def place_layer(layer, box, want):
         box[n]["x"] = x + shift
 
 
+def detour(tx, passed, taken):
+    """The x of a vertical that clears every box between two layers, nearest to tx, and the side it lies on.
+
+    `taken` holds the detours already drawn, so two of them never share a vertical."""
+    def clear(x):
+        return not any(o["x"] - CLEARANCE <= x <= o["x"] + o["w"] + CLEARANCE for o in passed) \
+            and all(abs(x - u) >= LANE for u in taken)
+
+    def walk(x, step):
+        for _ in range(len(passed) + len(taken) + 2):
+            if clear(x):
+                return x
+            hit = [o for o in passed if o["x"] - CLEARANCE <= x <= o["x"] + o["w"] + CLEARANCE]
+            if hit:
+                x = (max(o["x"] + o["w"] for o in hit) + LANE) if step > 0 else (min(o["x"] for o in hit) - LANE)
+            else:
+                x += step * LANE
+        return x
+    right, left = walk(tx, 1), walk(tx, -1)
+    if left >= MARGIN and tx - left < right - tx:
+        return left, -1
+    return right, 1
+
+
 def route(edges, ids, box, rank, back):
     """One orthogonal path per edge, and how far right the drawing now reaches."""
     def cx(n):
         return box[n]["x"] + box[n]["w"] / 2
 
     right = max(b["x"] + b["w"] for b in box.values())
-    out, lanes, reach = [], 0, right
+    out, lanes, reach, taken = [], 0, right, []
     for a, b, label in edges:
         s, t = box[a], box[b]
         sx, tx = round(cx(a)), round(cx(b))
@@ -123,14 +149,17 @@ def route(edges, ids, box, rank, back):
             d = f"M{s['x'] + s['w']:.0f} {sy} H{lane:.0f} V{ty} H{t['x'] + t['w'] + STUB:.0f}"
             pos = [lane + LABEL_GAP, (sy + ty) / 2]
         elif any(o["x"] - CLEARANCE <= tx <= o["x"] + o["w"] + CLEARANCE for o in passed):  # a box is in the way
-            lanes += 1
-            lane = right + LANE * lanes
+            lane, side = detour(tx, passed, taken)
+            lane = round(lane)
+            taken.append(lane)
             low = round(t["y"] - GAP_Y / 2)
-            d = f"M{sx} {y1} V{rail} H{lane:.0f} V{low} H{tx} V{y2}"
-            pos = [lane + LABEL_GAP, (rail + low) / 2]
+            d = f"M{sx} {y1} V{rail} H{lane} V{low} H{tx} V{y2}"
+            # the label sits on the outer side of the detour, away from the boxes it steps around
+            pos = [lane + LABEL_GAP if side > 0 else lane - LABEL_GAP - len(label) * EDGE_CHAR_W, (rail + low) / 2]
         elif sx == tx:
             d = f"M{sx} {y1} V{y2}"
-            pos = [sx + CLEARANCE, rail]
+            # below the rail: above it, the stub is shared with the source's other edges, and a label there names them all
+            pos = [sx + CLEARANCE, (rail + y2) / 2 + LABEL_GAP]
         else:
             d = f"M{sx} {y1} V{rail} H{tx} V{y2}"
             pos = [(sx + tx) / 2 - len(label) * EDGE_CHAR_W / 2, rail - LABEL_GAP]  # centred on the rail

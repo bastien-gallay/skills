@@ -1,5 +1,63 @@
 # Changelog
 
+## Unreleased
+
+From a design critique of a first real grid (`docs/design/story-map.md`,
+stories S10–S13).
+
+- C14 refuses a text over its budget: a subtitle over 90 characters, a
+  summary over 110, a caption over 70, a step message over 40. `SKILL.md`
+  says why under *Text budget*. A spec whose texts are longer no longer
+  builds; shorten it, or move the detail into `source` or a `basis`.
+- Prose stops at 75 characters a line: the subtitle, the summary, the
+  matrix hint and the cell legend under it.
+- Every hop takes the same time (0.65 s), however long it is drawn; the
+  dot stays 1.7 s on a decision, the first divergence or an outcome, and
+  0.45 s where it only passes. A long edge drawn around a box held the dot
+  for 9 s, half the playback, on a step that decided nothing.
+- An edge that would cross a box steps aside just past the boxes in its
+  way, on the nearer side, instead of running around the whole drawing.
+- The matrix highlights a case where the section's answers disagree with
+  one another, not every cell that differs from today: a summary saying
+  "D1 changes one case" no longer sits above three highlighted cells. A
+  difference from today keeps its `≠`, in muted ink.
+- The matrix has the graph beside it: the cell under the pointer or the
+  focus lights its path, the first highlighted case lit when the page
+  opens.
+- An open grid case keeps its row of the matrix above the diagrams, the
+  compared cells marked `−` and `+`; a click on another cell compares it.
+- Two sides compared (a pair, a grid case) walk one full-size graph, a dot
+  each marked `−` and `+`; an edge only one side takes is drawn in that
+  side's colour, so the divergence is a fork in one drawing. Two
+  half-width diagrams drew node labels at 5px on a laptop.
+- The case's diagram takes the height left below what sits above it; step
+  by step, a view whose labels would be under 12px starts zoomed to 12px
+  and follows the dots. *Fit* and the overview show the whole graph.
+- A straight edge's label sits below the junction it leaves from, on the
+  part only that edge draws.
+- Play, steps, speed and zoom sit under the diagram, with the keys that
+  drive them; the bar at the top keeps only the tabs, or the way back to
+  the matrix.
+- The two rows of variant buttons are gone: in a grid case, the case's row
+  picks both sides (click for `+`, Shift + click for `−`).
+- The step list no longer tells what is still to come: a step reads once
+  the dot has reached it.
+- Projected at 1280×720, a grid case keeps its controls and its current
+  step on screen: the way back to the matrix sits beside the case's row,
+  the bar above goes, the origin takes one line (in full on hover), and
+  the side panel scrolls within the screen, following the current step.
+- The overview keeps the step's caption under the graph.
+- Under reduced motion the dots no longer vanish: they land on their node
+  at once, so the path is not told by edge colour alone. Boxes off the
+  path stay readable.
+- The values a matrix cell shows on hover are also said in words under
+  the graph beside it, for the pointer and the keyboard focus alike.
+- French page words keep `«` and `»` with their word, and `:` with the
+  word before it.
+- Where a value comes from is said once, under its table (`✓ code`,
+  `⚠ ported`, `◇ definition`); a value keeps its glyph only when the
+  table mixes several. The full text stays on hover.
+
 ## 0.1.2
 
 Issues #2 and #3, and what a first use on a real repository showed.

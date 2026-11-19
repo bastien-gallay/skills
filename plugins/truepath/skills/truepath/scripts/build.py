@@ -574,6 +574,41 @@ def c13_panel_rows_appear_at_a_real_step(b):
                 yield f"{s['id']}: panel row {row['label']!r} appears at step {row['at']}, the scenario has {n}"
 
 
+# What a text may say at most, in characters: the motion carries the explanation, the text labels it.
+TEXT_BUDGET = {"title": 60, "subtitle": 90, "summary": 110, "question": 90, "origin": 110, "caption": 70, "message": 40}
+
+
+def c14_texts_stay_within_their_budget(b):
+    """A reader projected on a wall reads a sentence, not a paragraph; a longer text also takes longer to write."""
+    def over(kind, where, text):
+        n = len(str(text or "").replace("`", ""))
+        if n > TEXT_BUDGET[kind]:
+            return f"{where}: {kind} is {n} characters, at most {TEXT_BUDGET[kind]}"
+        return None
+    spec, grid = b.spec, b.spec.get("grid") or {}
+    texts = [("title", "title", spec.get("title")), ("subtitle", "subtitle", spec.get("subtitle")),
+             ("summary", "grid", grid.get("summary"))]
+    texts += [("question", f"question {q.get('id')}", q.get("text")) for q in grid.get("questions", [])]
+    for c in grid.get("cases", []):
+        texts += [("summary", f"case {c.get('id')}", c.get("summary")),
+                  ("origin", f"case {c.get('id')}", (c.get("origin") or {}).get("text"))]
+    texts += [("summary", f"pair {p.get('tab')}", p.get("summary")) for p in spec.get("pairs", [])]
+    seen = set()
+    for s in b.scenarios:
+        if not grid:
+            texts += [("summary", s["id"], s.get("summary")),
+                      ("origin", s["id"], (s.get("origin") or {}).get("text"))]
+        for i, step in enumerate(s["steps"]):
+            for kind in ("caption", "message"):
+                if (kind, step.get(kind)) not in seen:
+                    seen.add((kind, step.get(kind)))
+                    texts.append((kind, f"{s['id']} step {i}", step.get(kind)))
+    for kind, where, text in texts:
+        said = over(kind, where, text)
+        if said:
+            yield said
+
+
 # The ids are the handles SKILL.md documents: stable, never renumbered.
 CHECKS = [
     ("C1", c1_hops_are_edges), ("C2", c2_path_is_unbroken_from_a_source), ("C3", c3_expect_is_what_the_logic_gives),
@@ -581,6 +616,7 @@ CHECKS = [
     ("C7", c7_scenarios_say_where_they_come_from), ("C8", c8_pairs_name_known_scenarios), ("C9", c9_panel_rows_resolve),
     ("C10", c10_matrix_shows_panel_rows), ("C11", c11_a_section_depends_on_its_question_only),
     ("C12", c12_every_case_is_in_the_matrix), ("C13", c13_panel_rows_appear_at_a_real_step),
+    ("C14", c14_texts_stay_within_their_budget),
 ]
 
 

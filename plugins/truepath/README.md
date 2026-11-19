@@ -18,7 +18,7 @@ writes nothing if one disagrees.
 
 ```text
 spec.json ──┐
-oracle/port ├─► build.py ──► checks C1–C13 ─► sim.html   (or nothing)
+oracle/port ├─► build.py ──► checks C1–C14 ─► sim.html   (or nothing)
 layout.py ──┘                                └► fixture.json (--export)
 ```
 

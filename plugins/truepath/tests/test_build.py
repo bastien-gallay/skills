@@ -182,6 +182,16 @@ class Checks(Case):
     def test_c13_panel_row_after_the_last_step(self):
         self.refused(lambda s: s["panel"][2].update(at=7), "C13")
 
+    def test_c14_text_over_its_budget(self):
+        self.refused(lambda s: s.update(subtitle="x" * 91), "C14")
+        self.refused(lambda s: s["scenarios"][0].update(summary="x" * 111), "C14")
+        self.refused(lambda s: s["scenarios"][0]["steps"][0].update(caption="x" * 71), "C14")
+        self.refused(lambda s: s["scenarios"][0]["steps"][0].update(message="x" * 41), "C14")
+
+    def test_c14_backticks_cost_nothing(self):
+        out, _, _, _ = self.build(self.spec(lambda s: s.update(subtitle="`x`" * 45)))
+        self.assertTrue(out.exists())
+
 
 class Grid(Case):
     def grid(self, change=None):
@@ -256,6 +266,19 @@ class Layout(unittest.TestCase):
         lanes = [e["d"].split(" H")[1].split(" ")[0] for e in geo["edges"][3:]]
         self.assertEqual(len(set(lanes)), 3, lanes)
         self.assertGreater(geo["width"], max(map(float, lanes)))
+
+    def test_an_edge_steps_aside_beside_the_box_in_its_way_not_around_the_drawing(self):
+        """S->T would cross M: it passes just beside M, inside the drawing, not past the wide X on the right."""
+        nodes = [{"id": "S", "label": "S"}, {"id": "M", "label": "M"},
+                 {"id": "X", "label": "a wide box on the right side"}, {"id": "T", "label": "T"}]
+        edges = [["S", "M", ""], ["S", "X", ""], ["M", "T", ""], ["S", "T", "skip"]]
+        geo = build.layout(nodes, edges)
+        skip = geo["edges"][3]["d"]
+        lane = float(skip.split(" H")[1].split(" ")[0])
+        x = geo["nodes"]["X"]
+        self.assertLess(lane, x["x"] + x["w"], skip)
+        m = geo["nodes"]["M"]
+        self.assertFalse(m["x"] <= lane <= m["x"] + m["w"], skip)
 
     def test_a_loop_label_stays_inside_the_drawing(self):
         import layout
@@ -434,7 +457,12 @@ class Page(Case):
         mx = next(h for h in played["html"] if 'class="mx"' in h)
         self.assertIn('<p class="hint">', mx)  # said before the table, not under it
         self.assertEqual(mx.count('<td tabindex="0" role="button"'), 6)  # every cell: 2 cases x (today, 1A, 1B)
-        self.assertEqual(mx.count(' class="pulse"'), 1)  # one cell rings, the first that differs
+        self.assertEqual(mx.count(' class="pulse hit"'), 1)  # one cell rings, the first where the answers disagree
+        self.assertEqual(mx.count('<tr class="split">'), 1)  # day 30 splits the answers, day 31 does not
+        self.assertEqual(mx.count('hit" aria-label'), 2)  # both answers of the split case are highlighted, not today
+        minis = [h for h in played["html"] if 'class="mx mini"' in h]  # an open case keeps its row of the matrix
+        marks = {h.count('aria-current="true"') for h in minis}
+        self.assertEqual(marks, {1, 2})  # today alone marks one cell; a comparison marks two, − and +
         for h in played["html"]:
             self.assertNotIn("<img", h)
 

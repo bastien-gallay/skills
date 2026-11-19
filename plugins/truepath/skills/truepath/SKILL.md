@@ -12,7 +12,7 @@ offline `.html` — or nothing.
 
 ```text
 spec.json ──┐
-oracle/port ├─► build.py ──► checks C1–C13 ─► sim.html   (or nothing)
+oracle/port ├─► build.py ──► checks C1–C14 ─► sim.html   (or nothing)
 layout.py ──┘                                └► fixture.json (--export)
 ```
 
@@ -54,14 +54,19 @@ pairs, the reader gets one tab per case and no table to compare them in.
 `<subject>.sim.html`; `-o` names another file.
 
 The page opens paused on the first tab, with the detail panel open; the green
-play button starts it. Folding the panel switches to the overview: the whole
-path drawn, one dot looping on it.
+play button, under the diagram with the other controls and the keys that
+drive them, starts it. The list of steps tells a step once the dot has
+reached it; the ones to come are numbered blanks, still a click away.
+Folding the panel switches to the overview: the whole path drawn, one dot
+looping on it.
 
 The diagram zooms with `−`, `+`, Ctrl/Cmd + wheel, a trackpad or two-finger
 pinch, and the keys `+`, `-`, `0`; *Fit* (or `0`) shows it whole again. Once
 zoomed, a drag or the wheel pans, and the view glides after the moving dot so
 the current hop stays in sight. A pan stops that following; Play, Restart and
-*Fit* resume it. The two diagrams of a pair zoom and pan as one.
+*Fit* resume it. Step by step, when the whole graph would draw its labels
+under 12px, the view starts zoomed to that size and follows the dots; *Fit*
+and the overview show the whole graph.
 
 ## Where verdicts come from
 
@@ -116,7 +121,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `edges` | `[[from, to, label]]` | label `""` for none |
 | `panel` | `[{label, value, at, labels?, digits?, compared?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search |
 | `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`; `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
-| `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played side by side as `−` and `+`, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
+| `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
 | `oracle` | `{repo, ref, paths, link?, files?, cwd, cmd}` | see above |
 | `port` | path to a CommonJS file exporting `decide(inputs)` | used when there is no oracle |
@@ -145,11 +150,19 @@ A flat `variants: [{id, label, short?, note?, inputs}]` with `baseline` as
 an id still works: the matrix then has one section, every case against every variant.
 
 The page opens on the matrix: one table per question, its cases against today
-and each answer, the cell's line marked `≠` where it differs from today. There
-is no tab per case: a click on a cell opens it, today next to that answer,
-with the first divergence marked. Two button rows, `−` and `+`, pick either
-side among the section's answers (1A next to 1B, not only next to today), each
-named as its question names it; `← matrix` goes back. In the panel, a row
+and each answer. A case where the answers disagree with one another is
+highlighted: that is what the reader decides on. A value that differs from
+today is marked `≠`, quietly, since a change every answer brings is not a
+choice.
+
+Beside the matrix, the whole graph is drawn still: the cell under the
+pointer or the keyboard focus lights its path there, so a row reads as a
+route, not only as a value. There is no tab per case: a click on a cell
+opens it, today next to that answer, with the first divergence marked. The
+case keeps its row of the matrix above the diagrams, the two cells it
+compares marked `−` and `+`: a click on another cell puts it on `+`,
+Shift + click on `−`, so 1A plays next to 1B, not only next to today.
+`← matrix` goes back. In the panel, a row
 with `"value": "answer"` and `"compared": true` names the answer played.
 
 **Step templates.** `message`, `caption` and `hop` may quote `{inputs.x}` or
@@ -174,6 +187,7 @@ serve every rule.
 | C11 | a case shown under a question whose cell still depends on another question |
 | C12 | a case in no matrix section, or a section naming an unknown case |
 | C13 | a panel row set to appear at a step the scenario does not have |
+| C14 | a text over its budget (see *Text budget*) |
 
 C3 and C4 are the point: a scenario that says something the code does not do
 cannot be published. C6 guards the layout rather than the spec: boxes are
@@ -185,11 +199,36 @@ A spec the build cannot read at all (a missing key, an edge to an unknown
 node, a port that throws) is refused the same way, in plain words, before
 the checks run.
 
+## Text budget
+
+The motion carries the explanation; the text labels it. Write the shortest
+text that names what the reader sees, one sentence at most: a reader in a
+workshop reads a line, not a paragraph, and a short spec is faster to write.
+C14 refuses a text over its budget, in characters, backticks not counted:
+
+| Text | At most |
+| --- | --- |
+| `title` | 60 |
+| `subtitle` | 90 |
+| a `summary` (scenario, pair, grid, case), an `origin.text` | 110 |
+| a grid question's `text` | 90 |
+| a step `caption` | 70 |
+| a step `message` | 40 |
+
+Detail that does not fit belongs in `source`, which lands in the footer, or
+in a `basis` text, shown on hover.
+
 ## Design rules
 
-- One moving element per diagram: a single dot, constant speed, one hop at a
-  time. Two diagrams side by side move in step; when one has fewer steps, its
-  dot waits on its outcome while the other goes on.
+- One moving element per diagram: a single dot, one hop at a time. Every
+  hop takes the same time, however long it is drawn; the dot then stays
+  long where the story is (a decision, the first divergence, an outcome)
+  and briefly where it only passes. Time on screen follows meaning, not
+  ink. Two sides compared walk one graph, a dot each, marked `−` and `+`
+  and moving in step; when one has fewer steps, its dot waits on its
+  outcome while the other goes on. An edge both take is the path colour,
+  an edge only one takes is that side's colour: the divergence is a fork
+  in one drawing, not a difference between two thumbnails.
 - Taken edges are solid, untaken ones dashed and grey; nodes off the path fade.
 - Colour encodes the outcome kind only. In a pair, the first divergence (the
   first step where a panel value differs) is outlined amber and marked `≠` on
@@ -200,6 +239,9 @@ the checks run.
   unreadable.
 - Light theme by default, dark under `prefers-color-scheme`; no web font, so
   the file works offline.
+- Under `prefers-reduced-motion` nothing glides or rings: the dots land on
+  their node at once and stay visible; meaning never rests on colour alone
+  (`−` and `+` are written on the dots, `≠` beside the values).
 
 ## Files
 
