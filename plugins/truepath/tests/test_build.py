@@ -345,7 +345,7 @@ class Page(Case):
 
     def test_the_example_plays_through(self):
         played = self.play(EXAMPLE / "sim.html")
-        self.assertEqual(played["tabs"], 3)
+        self.assertEqual(played["tabs"], 1)  # the pair: its two scenarios get no tab of their own
         self.assertTrue(any("30 &lt; 30" in h for h in played["html"]))
 
     def test_the_page_opens_paused_with_play_marked(self):
@@ -389,6 +389,11 @@ class Page(Case):
         for h in played["html"]:
             self.assertNotIn("<img", h)
 
+    def test_a_scenario_outside_any_pair_keeps_its_tab(self):
+        def change(s):
+            s["scenarios"].append({**copy.deepcopy(s["scenarios"][0]), "id": "alone", "tab": "Alone"})
+        self.assertEqual(self.play(self.build(self.spec(change))[0])["tabs"], 2)  # the lone scenario, the pair
+
     def test_the_credit_is_shown_unless_the_spec_turns_it_off(self):
         link = '<a href="https://github.com/bastien-gallay/truepath" target="_blank" rel="noopener">'
         on = self.play(self.build(self.spec())[0])["html"]
@@ -398,6 +403,7 @@ class Page(Case):
 
     def test_backticks_are_code_in_text_and_dropped_in_tooltips(self):
         def change(s):
+            s.pop("pairs")  # a paired scenario has no tab of its own: its summary would not show
             s["title"] = "uses `chardet`"
             s["scenarios"][0]["summary"] = "`<b>` and \\`tick\\` and `open"
             s["scenarios"][0]["origin"]["text"] = "from `ticket`"
@@ -482,7 +488,8 @@ class Oracle(Case):
             self.oracle(s)
             s["oracle"]["files"] = {"src/given/extra.json": "extra.json"}
             s["oracle"]["cmd"] = ["node", "-e", "require('./given/extra.json');require('./run.js')"]
-        self.build(self.spec(change))
+        *_, source, _ = self.build(self.spec(change))
+        self.assertTrue(source.endswith(" + from the spec: extra.json"), source)  # not passed off as the ref's code
 
     def test_export_asserts_only_what_code_computed(self):
         *_, note = self.build(self.spec(self.oracle), export_to=self.dir / "wt")

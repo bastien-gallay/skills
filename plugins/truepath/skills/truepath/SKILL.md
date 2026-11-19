@@ -16,6 +16,22 @@ oracle/port ├─► build.py ──► checks C1–C13 ─► sim.html   (or n
 layout.py ──┘                                └► fixture.json (--export)
 ```
 
+## First, the shape
+
+Pick the shape from the question before writing a spec. The page earns its
+place when the *path* differs between cases; when only a number or a list
+changes and every case walks the same path, it does not.
+
+| The question | Shape |
+| --- | --- |
+| one case, before and after a fix | one `pair` |
+| one rule, a few cases | `scenarios` |
+| several cases, each under two versions, rules or answers | a `grid` with `variants` (or `questions`): one matrix, each cell opening its case |
+| every case walks the same path, only a count or a list changes | not truepath: answer with a table, and say why no page was built |
+
+More than two pairs comparing the same two versions is a grid: written as
+pairs, the reader gets one tab per case and no table to compare them in.
+
 ## Workflow
 
 1. Copy the nearest example next to the subject's notes (see *Files*),
@@ -65,6 +81,10 @@ the live checkout: a branch under work may move during the build), extracts
 `oracle.repo` is read from the spec's folder when it is relative. `link` and
 `files` are both written `{path in the snapshot: where it comes from}`: a
 path in the repository for `link`, a file next to the spec for `files`.
+What `files` brings is not the ref's code: the footer names each such file
+after the ref (`code of main @ 1a2b3c4 + from the spec: glue.py`). Code from
+another ref, an old version to compare against say, belongs in its own
+oracle run or in the snapshot's `paths`, not in `files`.
 
 A verdict is an object of fields. `outcome` is required: it names the node the
 path must end on, and is what ties a scenario to the logic. `basis` optionally
@@ -96,7 +116,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `edges` | `[[from, to, label]]` | label `""` for none |
 | `panel` | `[{label, value, at, labels?, digits?, compared?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search |
 | `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`; `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
-| `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played side by side as `−` and `+`; they may differ in length: the shorter stays on its outcome while the other goes on |
+| `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played side by side as `−` and `+`, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
 | `oracle` | `{repo, ref, paths, link?, files?, cwd, cmd}` | see above |
 | `port` | path to a CommonJS file exporting `decide(inputs)` | used when there is no oracle |

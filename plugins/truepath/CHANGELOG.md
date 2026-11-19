@@ -21,6 +21,14 @@
     plain link; `"credit": false` in the spec removes it.
   - `` `x` `` in spec text is shown as code; `` \` `` keeps a backtick.
     Tooltips, tabs and the `<title>` drop the backticks.
+  - A scenario played in a pair has no tab of its own: five pairs made
+    fifteen tabs, ten of them half of a pair. `refund-window` opens on its
+    one pair.
+  - `SKILL.md` opens on *First, the shape*: more than two pairs between the
+    same two versions is a grid, and a comparison where every case walks
+    the same path is a table, not a page.
+  - What `oracle.files` brings is named in the footer after the ref, so code
+    from the spec is no longer shown as the ref's code.
 
 ## 0.1.0
 

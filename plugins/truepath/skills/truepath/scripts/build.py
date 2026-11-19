@@ -248,7 +248,11 @@ def run_oracle(spec, scenarios, specdir):
         raise UnreadableSpec(f"oracle: cannot run {o['cmd']!r}: {e}") from e
     if run.returncode or not io_out.exists():
         raise UnreadableSpec("oracle failed:\n" + run.stdout[-3000:] + run.stderr[-3000:])
-    label = f"code of {o['ref']} @ {sha}" if spec.get("lang", "en") == "en" else f"code de {o['ref']} @ {sha}"
+    en = spec.get("lang", "en") == "en"
+    label = f"code of {o['ref']} @ {sha}" if en else f"code de {o['ref']} @ {sha}"
+    if o.get("files"):  # what the spec brings is not the ref's code: the footer names it
+        brought = ", ".join(sorted(str(src) for src in o["files"].values()))
+        label += f" + from the spec: {brought}" if en else f" + apporté par le spec : {brought}"
     return read_verdicts(io_out.read_text(encoding="utf-8"), "oracle"), label
 
 

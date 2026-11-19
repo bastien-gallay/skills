@@ -174,9 +174,11 @@ const originBullet=o=>o.kind==="real"?"● ":"○ ";
 const scenario=id=>page.scenarios.find(s=>s.id===id);
 const cellOf=(caseId,variantId)=>scenario(caseId+"/"+variantId);
 const variantOf=id=>grid.variants.find(v=>v.id===id);
+/** A scenario played in a pair has no tab of its own: the pair already shows it, beside the other side. */
+const paired=new Set(page.pairs.flatMap(p=>[p.before,p.after]));
 const TABS=grid
  ? [{matrix:true},...grid.cases.map(c=>({case:c}))]
- : [...page.scenarios.map(s=>({sides:[s],label:(s.undecided?"⚠️ ":"")+originBullet(s.origin)+plain(s.tab),title:plain(s.origin.text)})),
+ : [...page.scenarios.filter(s=>!paired.has(s.id)).map(s=>({sides:[s],label:(s.undecided?"⚠️ ":"")+originBullet(s.origin)+plain(s.tab),title:plain(s.origin.text)})),
     ...page.pairs.map(p=>({sides:[scenario(p.before),scenario(p.after)],label:"⇄ "+plain(p.tab),title:words.side,pair:p}))];
 /** view: "detail" plays step by step beside the panel, "overview" draws the whole path. minus/plus: the two variants a grid case compares.
  * The page opens paused: the reader starts it. follow: a zoomed view keeps the moving dot in sight until the reader pans. */
