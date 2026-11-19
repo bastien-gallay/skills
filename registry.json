@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "hub": "bastien-gallay/skills",
-  "updated": "2026-11-18",
+  "updated": "2026-11-19",
   "classes": {
     "skill": "Plugin-distributable Claude Code skill (skills/<name>/SKILL.md + manifests).",
     "style": "Behavior toggle, dual-target (claude-code + claude-ai), built from a canonical prompt.md."
@@ -116,7 +116,7 @@
       "repository": "https://github.com/bastien-gallay/truepath",
       "install": "/plugin install truepath@skills",
       "status": "beta",
-      "version": "0.1.1"
+      "version": "0.1.2"
     },
     {
       "name": "flair",
