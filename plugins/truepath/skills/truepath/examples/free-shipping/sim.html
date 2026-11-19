@@ -169,7 +169,7 @@ for(const id of ["tabs","variants","back","fwd","restart","speed","zoom","zin","
 for(const id of ["zin","zout","fit"])$(id).title=words[id];
 $("speed").options[0].textContent=words.half;$("fit").textContent=words.fitText;
 
-// ---- what the page shows: a matrix then one tab per case (grid), or one tab per scenario and per pair
+// ---- what the page shows: a matrix then one tab per case (grid), or one tab per pair and per scenario outside a pair
 const originBullet=o=>o.kind==="real"?"● ":"○ ";
 const scenario=id=>page.scenarios.find(s=>s.id===id);
 const cellOf=(caseId,variantId)=>scenario(caseId+"/"+variantId);
@@ -301,7 +301,6 @@ function buildPanes(){const tab=TABS[st.tab],box=$("panes");box.innerHTML="";dia
   const h=document.createElement("p");h.className="phead "+(k?"plus":"minus");
   h.innerHTML=(k?"+ ":"− ")+(grid?rich(headOf(s.variant)):originBullet(s.origin)+rich(s.tab));pane.appendChild(h);box.appendChild(pane);
   return draw(pane,k,s);});}
-/** One section per question: its cases against today and each answer; one field per cell, the others on hover; a click opens the case. */
 const POINTER=`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5l10 6.2-4.3 1 2.4 4.6-1.9 1-2.4-4.6L3 13z"/></svg>`;
 const CHEVRON=`<svg class="chev" viewBox="0 0 8 12" aria-hidden="true"><path d="M2 2l4 4-4 4"/></svg>`;
 /** One section per question: its cases against today and each answer; one field per cell, the others on hover.
