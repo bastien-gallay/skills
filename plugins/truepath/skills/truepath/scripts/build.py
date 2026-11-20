@@ -192,6 +192,7 @@ def validate_views(spec, p):
 
 
 STATS = ("mean", "median")  # what one case's measures sum up: several runs read as one
+SOURCES = ("runs", "estimate")  # timed on real runs, or worked out from a model of each step: never mixed up
 
 
 def validate_measure(spec, specdir, p):
@@ -200,12 +201,15 @@ def validate_measure(spec, specdir, p):
     m = spec["measure"]
     if "grid" in spec:
         p.append("measure: measured time is drawn for scenarios and pairs, not yet for a grid")
-    if p.keys(m, ["cmd", "stat"], "measure"):
+    runs = m.get("source", "runs") == "runs"  # an estimate sums up no runs: it has no stat
+    if p.keys(m, ["cmd", "stat"] if runs else ["cmd"], "measure"):
         if not isinstance(m["cmd"], list) or not m["cmd"] or not all(isinstance(a, str) for a in m["cmd"]):
             p.append("measure.cmd: expected a command as a list of words, run without a shell")
-        if m["stat"] not in STATS:
+        if runs and m["stat"] not in STATS:
             p.append(f"measure.stat is {m['stat']!r}, expected one of {', '.join(STATS)}")
     p.typed(m, "unit", str, "measure", "a unit, such as s or ms")
+    if m.get("source", "runs") not in SOURCES:
+        p.append(f"measure.source is {m['source']!r}, expected one of {', '.join(SOURCES)}")
     if "tolerance" in m and (isinstance(m["tolerance"], bool) or not isinstance(m["tolerance"], (int, float))
                              or m["tolerance"] < 0):
         p.append("measure.tolerance: expected a number of units, 0 or more")
@@ -427,7 +431,7 @@ def provenance(basis):
     """What a `basis` text claims: `code: …`, `port: …`, `double: …` (a stub or a fake answered), or anything else, a definition.
 
     The word before the colon decides, not a prefix: "code of conduct" is a definition."""
-    m = re.match(r"\s*(code|port|double|measure)\s*:", str(basis))
+    m = re.match(r"\s*(code|port|double|measure|estimate)\s*:", str(basis))
     return m.group(1) if m else "definition"
 
 
@@ -558,7 +562,7 @@ def timed(row, value, unit):
             and (v == "measure.total" or v.startswith("measure.steps.")))
 
 
-def panel_rows(scenario, panel, in_grid, unit=None):
+def panel_rows(scenario, panel, in_grid, unit=None, source="runs"):
     """The panel as one scenario fills it: each row already shown, with where its value comes from."""
     rows = []
     basis = scenario["verdict"].get("basis") if isinstance(scenario["verdict"].get("basis"), dict) else {}
@@ -582,7 +586,7 @@ def panel_rows(scenario, panel, in_grid, unit=None):
             head, _, rest = row["value"].partition(".")
             said = basis.get(rest.split(".")[0]) if head == "verdict" else None
             if head == "measure" and isinstance(scenario.get("measure"), dict):
-                said = "measure: " + measure_basis(scenario["measure"])
+                said = ("estimate: " if source == "estimate" else "measure: ") + measure_basis(scenario["measure"])
             if said:
                 out["provenance"] = {"kind": provenance(said), "text": str(said)}
         rows.append(out)
@@ -829,6 +833,10 @@ def c17_measured_nodes_are_on_the_path(b):
                 yield f"{s['id']}: a time is measured on {node}, which its path does not reach"
 
 
+def estimated(spec):
+    return spec.get("measure", {}).get("source") == "estimate"
+
+
 def count(v):
     return isinstance(v, int) and not isinstance(v, bool) and v >= 0
 
@@ -840,7 +848,9 @@ def c18_a_measure_says_what_it_sums_up(b):
         m = s["measure"]
         if not number(m.get("total")) or m["total"] < 0:
             yield f"{s['id']}: its measure gives no `total`, the time a whole run took"
-        if not isinstance(m.get("n"), int) or isinstance(m.get("n"), bool) or m["n"] < 1:
+        if estimated(b.spec):
+            pass  # an estimate sums up no runs: n, failed and excluded do not apply
+        elif not isinstance(m.get("n"), int) or isinstance(m.get("n"), bool) or m["n"] < 1:
             yield f"{s['id']}: its measure gives no `n`, the number of runs it sums up (1 or more)"
         if "failed" in m and (not isinstance(m["failed"], int) or isinstance(m["failed"], bool) or m["failed"] < 0):
             yield f"{s['id']}: `failed` is the number of failed runs left out, 0 or more"
@@ -927,8 +937,9 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
     }
     if "measure" in spec:
         m = spec["measure"]
-        page["measure"] = {"stat": m["stat"], "unit": m.get("unit", "s"), "tolerance": m.get("tolerance", 1),
-                           "compare": m.get("compare"), "rows": [measure_row(s) for s in scenarios]}
+        page["measure"] = {"stat": m.get("stat"), "unit": m.get("unit", "s"), "tolerance": m.get("tolerance", 1),
+                           "compare": m.get("compare"), "source": m.get("source", "runs"),
+                           "rows": [measure_row(s) for s in scenarios]}
     data = {"page": page, "geo": geo[views_of(spec)[0]]}
     if len(geo) > 1:  # the page offers to switch: every view's geometry, in the spec's order
         data["views"] = {v: geo[v] for v in views_of(spec)}
@@ -937,7 +948,7 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
 
 def measure_basis(m):
     """Where the times come from, without the word the footer already puts before it, in either language."""
-    return re.sub(r"^\s*(measure|mesure)\s*:\s*", "", str(m.get("basis", "")), flags=re.IGNORECASE).strip()
+    return re.sub(r"^\s*(measure|mesure|estimate|estimation)\s*:\s*", "", str(m.get("basis", "")), flags=re.IGNORECASE).strip()
 
 
 def measure_row(s):
@@ -948,7 +959,7 @@ def measure_row(s):
             if n in m["steps"] and n not in order:
                 order.append(n)
     left = ([[m["failed"], None]] if m.get("failed") else []) + [[e["n"], e["why"]] for e in m.get("excluded", []) if e["n"]]
-    return {"scenario": s["id"], "total": m["total"], "n": m["n"], "left": left,  # None: failed, in the page's words
+    return {"scenario": s["id"], "total": m["total"], "n": m.get("n"), "left": left,  # None: failed, in the page's words
             "basis": measure_basis(m),
             "segs": [[n, m["steps"][n]] for n in order]}
 
@@ -1019,7 +1030,8 @@ def build(specpath, out=None, export_to=None, check_only=False, dry_run=False):
     fill_templates(scenarios, spec.get("panel", []))
     for s in scenarios:
         s["rows"] = panel_rows(s, spec.get("panel", []), in_grid=bool(grid),
-                               unit=spec["measure"].get("unit", "s") if "measure" in spec else None)
+                               unit=spec["measure"].get("unit", "s") if "measure" in spec else None,
+                               source=spec.get("measure", {}).get("source", "runs"))
     violations = check(Subject(spec, scenarios, grid, geo))
     if violations:
         raise ChecksFailed(violations)

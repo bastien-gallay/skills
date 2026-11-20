@@ -27,7 +27,8 @@ changes and every case walks the same path, it does not.
 | one case, before and after a fix | one `pair` |
 | one rule, a few cases | `scenarios` |
 | several cases, each under two versions, rules or answers | a `grid` with `variants` (or `questions`): one matrix, each cell opening its case |
-| timed runs whose path differs between cases (a step one case skips, a loop that turns more often): where does the time go, and why did it move | `scenarios` with a `measure`: one bar per case under the graph (see *Measured time*) |
+| timed runs whose path differs between cases (a step one case skips, a loop that turns more often): where does the time go, and why did it move | `scenarios` with a `measure`: one bar per case beside or under the graph (see *Measured time*) |
+| a few ways to the same end, compared on one number (which is fastest) | `scenarios`, one per way, with a `measure` of `source: "estimate"` when nothing runs: the bars stand beside the graph |
 | every case walks the same path, only a count, a list or the time per step changes | not truepath: answer with a table, and say why no page was built |
 
 More than two pairs comparing the same two versions is a grid: written as
@@ -213,10 +214,16 @@ steps' medians need not add up to the median run: C16 holds within
 raw log next to the spec, so the page can be built again when the log
 grows.
 
-The page draws one bar per case under the graph, every case on one scale:
-the case played is in bold, the node the dot is on is filled in every bar,
+The page draws one bar per case, every case on one scale, running as the
+graph runs: upright beside a top-to-bottom graph, its steps stacked down
+in path order, and under a left-to-right one. Beside the graph, the
+heights compare at a glance ways that share few steps (three ways to the
+same end); under it, the segments line up steps that most cases share.
+The case played is in bold, the node the dot is on is filled in every bar,
 and `≠` outlines, in each bar after the first, the step that moved most
-from the first bar; a step gone from that bar is outlined in the first.
+from the first bar; a step gone from that bar is outlined in the first. A
+bar that shares no step with the first takes no mark: another way, not a
+change.
 A step whose time follows the load rather than the case (a plan that grows
 with the modules applied) would take that mark from the change that
 matters: `"compare": [nodes]` in `measure` names the steps the mark weighs.
@@ -224,6 +231,14 @@ Hovering a segment outlines its node; a click opens its case on the first
 step that reaches it. A panel row may read
 `measure.total` or `measure.n`, marked `◉ measured`. The footer names each
 basis.
+
+When nothing can be run (a game, a process on paper, a plan), the times
+can still be worked out from a model of each step: `"source": "estimate"`.
+The command then writes `{total, steps, basis}` only, with no `n` nor
+`stat`; the page says *estimated* where it would say *measured*, and a
+panel row reading the time is marked `≈ estimated`. Say in `basis` what
+each step is assumed to take. An estimate never stands for a measure: when
+runs exist, measure them.
 
 Name a case by what it measures (*Week 1*, *before the cache*), and keep
 the path faithful to the runs: a loop that turns twelve times in one week
@@ -349,7 +364,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `oracle` | `{repo, ref, paths, link?, files?, doubles?, cwd, cmd}` | see above; `doubles` is required when `files` is given |
 | `doubts` | `[{id, question, scenarios, answer?, assumed?}]` | what was asked before building, and the answer: see *Doubts* |
 | `port` | path to a CommonJS file exporting `decide(inputs)` | used when there is no oracle |
-| `measure` | `{cmd, stat, unit?, tolerance?, cwd?, compare?}` | measured time per step: see *Measured time*; `stat` is `mean` or `median`, `unit` `s` by default, `tolerance` (1 by default) how far the steps may add up from the total; `compare` the nodes the `≠` mark weighs (all by default); scenarios and pairs, not a grid |
+| `measure` | `{cmd, stat, unit?, tolerance?, cwd?, compare?, source?}` | measured time per step: see *Measured time*; `source` is `runs` (the default) or `estimate`, which needs no `stat`; `stat` is `mean` or `median`, `unit` `s` by default, `tolerance` (1 by default) how far the steps may add up from the total; `compare` the nodes the `≠` mark weighs (all by default); scenarios and pairs, not a grid |
 | `export` | `{dir, fixture, assert}` | `--export <worktree>` writes the fixture there |
 
 ## Comparing several rules: the grid
@@ -419,7 +434,7 @@ serve every rule.
 | C15 | a scenario resting on an unanswered doubt, unless it is `undecided`; a doubt naming an unknown case |
 | C16 | measured steps that do not add up to the run's total, within `tolerance` |
 | C17 | a time measured on a node that does not exist, or that the scenario's path does not reach |
-| C18 | a measure without its `total`, its number of runs `n` (1 or more) or its `basis`; a negative time |
+| C18 | a measure without its `total`, its number of runs `n` (1 or more, not asked of an estimate) or its `basis`; a negative time |
 
 C3 and C4 are the point: a scenario that says something the code does not do
 cannot be published. C6 guards the layout rather than the spec: boxes are

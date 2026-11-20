@@ -41,7 +41,7 @@ table{width:100%;border-collapse:collapse}
 td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 td:first-child{color:var(--muted);width:46%}
 td.v{font-family:var(--mono);overflow-wrap:anywhere} /* a long identifier wraps inside the panel, never past its edge */
-.basis{font:11px var(--sans);margin-left:6px;cursor:help}.basisrow td{border-bottom:none;color:var(--muted);font-size:11px;padding-top:8px}.basisrow .basis{margin:0 10px 0 0;cursor:auto}.basis.code{color:var(--plus)}.basis.port{color:var(--diverge)}.basis.def{color:var(--muted)}.basis.double{color:var(--muted)}.basis.measure{color:var(--accent)}
+.basis{font:11px var(--sans);margin-left:6px;cursor:help}.basisrow td{border-bottom:none;color:var(--muted);font-size:11px;padding-top:8px}.basisrow .basis{margin:0 10px 0 0;cursor:auto}.basis.code{color:var(--plus)}.basis.port{color:var(--diverge)}.basis.def{color:var(--muted)}.basis.double{color:var(--muted)}.basis.measure{color:var(--accent)}.basis.estimate{color:var(--diverge)}
 tr.new td{background:var(--hl)}
 tr.hidden td.v{color:var(--dim)}
 ol.steps{margin:0;padding-left:20px;color:var(--muted)}
@@ -63,6 +63,24 @@ ol.steps li.cur{color:var(--ink);font-weight:600}
 .tltotal{font-family:var(--mono);white-space:nowrap}.tlrow.on .tltotal{font-weight:600}
 .tlaxis{position:relative;height:14px;color:var(--muted);font-family:var(--mono);font-size:10px}
 .tlaxis span{position:absolute;transform:translateX(-50%)}.tlaxis span:first-child{transform:none}
+/* beside a top-to-bottom graph, one upright bar per case: its steps stacked down in path order, as the graph runs */
+.stage.up{display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:18px;align-items:stretch}
+.timeline.up{margin:0;display:flex;flex-direction:column;min-height:240px}
+.timeline.up .tlhead{width:0;min-width:100%}
+.tlcols{flex:1;display:flex;gap:12px;min-height:0}
+.tlcol{display:flex;flex-direction:column;align-items:center;width:64px;min-height:0;font-family:var(--mono)}
+.tlcol .tlvbar{flex:1;display:flex;flex-direction:column;width:30px;min-height:0}
+.tlcol .tlvbar .room{flex-basis:0;min-height:0}
+.tlcol .tlvbar .seg{flex-basis:0;min-height:0;width:100%;padding:0;border:none;border-radius:0;box-shadow:inset 0 -1px 0 var(--surface);background:var(--line);
+ color:var(--ink);font:10px var(--mono);text-align:center;overflow:hidden;cursor:pointer}
+.tlcol .tlvbar .seg:nth-of-type(even){background:var(--dim)}
+.tlcol .tlvbar .seg.on{background:var(--accent);color:var(--surface)}
+.tlcol .tlvbar .seg.neq{box-shadow:inset 0 0 0 2px var(--diverge)}
+.tlcol .tlvbar .seg:hover,.tlcol .tlvbar .seg:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.tlcol .tltotal{margin-bottom:4px}.tlcol.on .tltotal{font-weight:600}
+.tlcol .tlname{margin-top:6px;max-width:64px;text-align:center;white-space:normal;font-family:var(--sans)}.tlcol.on .tlname{color:var(--ink);font-weight:600}
+.tlcol .tlruns{color:var(--muted);font-size:10px;text-align:center}
+@media (max-width:900px){.stage.up{display:block}.timeline.up{margin-top:10px}.tlcols{height:220px;flex:none}}
 .node.peek rect{stroke:var(--accent);stroke-width:2.6}
 .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1.5px solid}
 footer{padding:0 20px 16px;font-size:11px;color:var(--muted)}
@@ -169,7 +187,7 @@ ol.steps li.peek{background:var(--hl);border-radius:4px}
  <div class="grp" id="variants"></div>
 </div>
 <main id="main">
- <section class="card"><div class="summary" id="summary"></div><div class="panes" id="panes"></div><div class="timeline" id="timeline" hidden></div>
+ <section class="card"><div class="summary" id="summary"></div><div class="stage" id="stage"><div class="panes" id="panes"></div><div class="timeline" id="timeline" hidden></div></div>
   <div class="controls" id="controls">
    <div class="grp" id="motion"><button id="back">◀</button><button id="play">⏸</button><button id="fwd">▶</button><button id="restart">↺</button>
    <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div>
@@ -230,9 +248,9 @@ const words={
   home:"← matrice",source:"Source\u00a0: ",logic:" · logique exécutée\u00a0: ",
   path:"chemin du scénario",diverge:"≠ premier écart entre avant et après",caseCol:"Cas",cell:"Cellule\u00a0: ",outcome:"issue, puis ",hover:"Au survol\u00a0: ",
   differs:b=>`≠ diffère de «\u00a0${b}\u00a0»`,split:"les réponses divergent",pick:"Clic ou Entrée\u00a0: comparer en +. Avec Maj\u00a0: en −.",esc:"<kbd>Échap</kbd> matrice",later:"étape à venir",
-  keys:"Clavier\u00a0: <kbd>←</kbd><kbd>→</kbd> étape · <kbd>Début</kbd><kbd>Fin</kbd> première, dernière · <kbd>Espace</kbd> lecture",tabKeys:" · onglet\u00a0: <kbd>1</kbd>…<kbd>9</kbd>, ou <kbd>↑</kbd><kbd>↓</kbd> depuis un onglet",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",viewKeys:" · <kbd>V</kbd> vue",views:"Vue",view:{flow:["↓","De haut en bas"],"flow-lr":["→","De gauche à droite"]},minusOnly:"chemin du seul −",plusOnly:"chemin du seul +",code:"✓ code",port:"⚠ portage",definition:"◇ définition",double:"◌ doublure",measure:"◉ mesuré",
-  tlHead:(stat,unit)=>`Temps mesuré par étape, ${stat==="mean"?"moyenne":"médiane"} des exécutions de chaque cas (${unit})`,
-  runs:(n,left)=>`n\u00a0${n}`+(left.length?` · hors calcul\u00a0: `+left.map(([c,w])=>`${c}\u00a0${w??"en échec"}`).join(", "):""),measured:" · mesuré\u00a0: ",
+  keys:"Clavier\u00a0: <kbd>←</kbd><kbd>→</kbd> étape · <kbd>Début</kbd><kbd>Fin</kbd> première, dernière · <kbd>Espace</kbd> lecture",tabKeys:" · onglet\u00a0: <kbd>1</kbd>…<kbd>9</kbd>, ou <kbd>↑</kbd><kbd>↓</kbd> depuis un onglet",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",viewKeys:" · <kbd>V</kbd> vue",views:"Vue",view:{flow:["↓","De haut en bas"],"flow-lr":["→","De gauche à droite"]},minusOnly:"chemin du seul −",plusOnly:"chemin du seul +",code:"✓ code",port:"⚠ portage",definition:"◇ définition",double:"◌ doublure",measure:"◉ mesuré",estimate:"≈ estimé",
+  tlHead:(stat,unit,src)=>src==="estimate"?`Temps estimé par étape, pour chaque cas (${unit})`:`Temps mesuré par étape, ${stat==="mean"?"moyenne":"médiane"} des exécutions de chaque cas (${unit})`,
+  runs:(n,left)=>`n\u00a0${n}`+(left.length?` · hors calcul\u00a0: `+left.map(([c,w])=>`${c}\u00a0${w??"en échec"}`).join(", "):""),measured:" · mesuré\u00a0: ",estimated:" · estimé\u00a0: ",
   seg:(node,v,unit,pct)=>`${node}\u00a0: ${v}\u00a0${unit} (${pct}\u00a0%)`,segNeq:" · l'étape qui change le plus par rapport à la première ligne",segGone:" · l'étape qui change le plus\u00a0: absente des lignes suivantes",
   passes:"n<sup>e</sup> passage par un nœud qui revient",pass:(n,node,i,m)=>`passage ${n} par «\u00a0${node}\u00a0» · étape ${i}\u00a0: ${m}`,
   hint:b=>`Cliquez une cellule\u00a0: elle ouvre le cas pas à pas, «\u00a0${b}\u00a0» à gauche, la réponse de la colonne à droite.`,credit:"créé avec truepath",
@@ -243,9 +261,9 @@ const words={
   home:"← matrix",source:"Source: ",logic:" · logic run: ",
   path:"scenario path",diverge:"≠ first difference between before and after",caseCol:"Case",cell:"Cell: ",outcome:"outcome, then ",hover:"On hover: ",
   differs:b=>`≠ differs from “${b}”`,split:"the answers disagree",pick:"Click or Enter: compare as +. With Shift: as −.",esc:"<kbd>Esc</kbd> matrix",later:"step to come",
-  keys:"Keys: <kbd>←</kbd><kbd>→</kbd> step · <kbd>Home</kbd><kbd>End</kbd> first, last · <kbd>Space</kbd> play",tabKeys:" · tab: <kbd>1</kbd>…<kbd>9</kbd>, or <kbd>↑</kbd><kbd>↓</kbd> from a tab",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",viewKeys:" · <kbd>V</kbd> view",views:"View",view:{flow:["↓","Top to bottom"],"flow-lr":["→","Left to right"]},minusOnly:"path of − only",plusOnly:"path of + only",code:"✓ code",port:"⚠ ported",definition:"◇ definition",double:"◌ double",measure:"◉ measured",
-  tlHead:(stat,unit)=>`Measured time per step, the ${stat} of each case's runs (${unit})`,
-  runs:(n,left)=>`n\u00a0${n}`+(left.length?` · left out: `+left.map(([c,w])=>`${c}\u00a0${w??"failed"}`).join(", "):""),measured:" · measured: ",
+  keys:"Keys: <kbd>←</kbd><kbd>→</kbd> step · <kbd>Home</kbd><kbd>End</kbd> first, last · <kbd>Space</kbd> play",tabKeys:" · tab: <kbd>1</kbd>…<kbd>9</kbd>, or <kbd>↑</kbd><kbd>↓</kbd> from a tab",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",viewKeys:" · <kbd>V</kbd> view",views:"View",view:{flow:["↓","Top to bottom"],"flow-lr":["→","Left to right"]},minusOnly:"path of − only",plusOnly:"path of + only",code:"✓ code",port:"⚠ ported",definition:"◇ definition",double:"◌ double",measure:"◉ measured",estimate:"≈ estimated",
+  tlHead:(stat,unit,src)=>src==="estimate"?`Estimated time per step, for each case (${unit})`:`Measured time per step, the ${stat} of each case's runs (${unit})`,
+  runs:(n,left)=>`n\u00a0${n}`+(left.length?` · left out: `+left.map(([c,w])=>`${c}\u00a0${w??"failed"}`).join(", "):""),measured:" · measured: ",estimated:" · estimated: ",
   seg:(node,v,unit,pct)=>`${node}: ${v}\u00a0${unit} (${pct}%)`,segNeq:" · the step that changes most from the first row",segGone:" · the step that changes most: gone from the rows below",
   passes:"n<sup>th</sup> pass through a node a loop revisits",pass:(n,node,i,m)=>`pass ${n} through “${node}” · step ${i}: ${m}`,
   hint:b=>`Click a cell: it opens the case step by step, “${b}” on the left, the column's answer on the right.`,credit:"made with truepath",
@@ -288,7 +306,7 @@ const valueAt=(r,i)=>r.series?r.series[Math.max(0,Math.min(i-r.at,r.series.lengt
 /** A row is new at step i when it appears there, or when its series changes there. */
 const changedAt=(r,i)=>r.at===i||(!!r.series&&i>r.at&&valueAt(r,i)!==valueAt(r,i-1));
 /** Where a value comes from: real code, a ported behaviour, or a definition the simulation makes. */
-const basisClass=k=>k==="code"?"code":k==="port"?"port":k==="double"?"double":k==="measure"?"measure":"def";
+const basisClass=k=>k==="code"?"code":k==="port"?"port":k==="double"?"double":k==="measure"?"measure":k==="estimate"?"estimate":"def";
 /** Next to a value: the glyph alone, its full text on hover, and nothing when every value of the table has that provenance
  *  (`only`); the words are said once, under the table (basisLegend). */
 const onlyKind=rows=>{const ks=new Set(rows.filter(r=>r.provenance).map(r=>r.provenance.kind));return ks.size===1?[...ks][0]:null;};
@@ -319,7 +337,7 @@ function forkOf(a,b){const n=Math.max(a.steps.length,b.steps.length);
 $("title").innerHTML=rich(page.title);$("sub").innerHTML=rich(page.subtitle);document.title=plain(page.title);
 /** The footer: where the case comes from, what ran the logic, and, unless the spec says `credit: false`, what made the page. */
 $("foot").innerHTML=esc(words.source)+rich(page.source)+esc(words.logic+page.verdictSource)
- +(page.measure?esc(words.measured+[...new Set(page.measure.rows.map(r=>r.basis))].join(" · ")):"")
+ +(page.measure?esc((page.measure.source==="estimate"?words.estimated:words.measured)+[...new Set(page.measure.rows.map(r=>r.basis))].join(" · ")):"")
  +(page.credit?` · <a href="https://github.com/bastien-gallay/truepath" target="_blank" rel="noopener">${words.credit}</a>`:"");
 /** A kind's swatch: its colour on the border, a tint inside; the word beside it carries the meaning. */
 const kindFill=c=>`border-color:${esc(c)};background:color-mix(in srgb, ${esc(c)} ${TINT}, transparent)`;
@@ -589,21 +607,26 @@ function stepLine(x,y){if(x&&y&&x.message===y.message)return rich(x.message);
 const niceStep=x=>{const p=Math.pow(10,Math.floor(Math.log10(x))),f=x/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p;};
 const fmtT=v=>String(Math.round(v*10)/10);
 function renderTimeline(sides){const m=page.measure,box=$("timeline");if(!m){box.hidden=true;return;}
- box.hidden=false;const here=new Set(sides.map(s=>s.id)),s0=sides[0],cur=new Set(s0?s0.steps[stepOf(s0,st.step)].hop.slice(1):[]); // every node the hop runs through
+ box.hidden=false;const up=!geo.across; // the bars run as the graph does: upright beside a top-to-bottom one
+ box.classList.toggle("up",up);$("stage").classList.toggle("up",up);const here=new Set(sides.map(s=>s.id)),s0=sides[0],cur=new Set(s0?s0.steps[stepOf(s0,st.step)].hop.slice(1):[]); // every node the hop runs through
  const max=Math.max(...m.rows.map(r=>r.total),1e-9),first=Object.fromEntries(m.rows[0].segs);
  const compared=n=>!m.compare||m.compare.includes(n); // a step left out moves with the load, not with the case
  const neqs=m.rows.map((r,k)=>{let neq=null,most=m.tolerance;if(!k)return null; // the step that moved most from the first row, beyond the tolerance
-  const mine=Object.fromEntries(r.segs);
+  const mine=Object.fromEntries(r.segs);if(!Object.keys(mine).some(n=>n in first))return null; // another way, no step in common: nothing to compare
   for(const n of new Set([...Object.keys(first),...Object.keys(mine)]))if(compared(n)){const d=Math.abs((mine[n]||0)-(first[n]||0));if(d>most){most=d;neq=n;}}
   return neq;});
  const gone=new Set(m.rows.map((r,k)=>neqs[k]).filter(n=>n&&!m.rows.some((r,k)=>k&&neqs[k]===n&&r.segs.some(([x])=>x===n)))); // a step that vanished: marked where it was
  const rows=m.rows.map((r,k)=>{const neq=k?neqs[k]:null;
   const s=scenario(r.scenario),segs=r.segs.map(([n,v])=>{const label=plain(page.nodes[n].label),pct=Math.round(100*v/(r.total||1));
    const mark=n===neq?words.segNeq:!k&&gone.has(n)?words.segGone:"";
-   return `<button type="button" class="seg${cur.has(n)?" on":""}${mark?" neq":""}" style="width:${(100*v/max).toFixed(3)}%" data-row="${k}" data-node="${esc(n)}" title="${esc(words.seg(label,fmtT(v),m.unit,pct)+mark)}" aria-label="${esc(plain(s.tab)+" · "+words.seg(label,fmtT(v),m.unit,pct)+mark)}">${mark?"≠ ":""}${esc(label)}</button>`;}).join("");
-  return `<div class="tlrow${here.has(r.scenario)?" on":""}"><span class="tlname" title="${esc(r.basis)}">${rich(s.tab)}</span><div class="tlbar">${segs}</div><span class="tltotal">${fmtT(r.total)}\u00a0${esc(m.unit)} · ${esc(words.runs(r.n,r.left))}</span></div>`;});
+   return `<button type="button" class="seg${cur.has(n)?" on":""}${mark?" neq":""}" style="${up?`flex-grow:${v.toFixed(4)}`:`width:${(100*v/max).toFixed(3)}%`}" data-row="${k}" data-node="${esc(n)}" title="${esc(words.seg(label,fmtT(v),m.unit,pct)+mark)}" aria-label="${esc(plain(s.tab)+" · "+words.seg(label,fmtT(v),m.unit,pct)+mark)}">${up?(mark?"≠":""):(mark?"≠ ":"")+esc(label)}</button>`;}).join("");
+  const runs=m.source==="estimate"?"":words.runs(r.n,r.left),on=here.has(r.scenario)?" on":"";
+  if(up)return `<div class="tlcol${on}"><span class="tltotal">${fmtT(r.total)}\u00a0${esc(m.unit)}</span><div class="tlvbar"><span class="room" style="flex-grow:${(max-r.total).toFixed(4)}"></span>${segs}</div><span class="tlname" title="${esc(r.basis)}">${rich(s.tab)}</span>${runs?`<span class="tlruns">${esc(runs)}</span>`:""}</div>`;
+  return `<div class="tlrow${on}"><span class="tlname" title="${esc(r.basis)}">${rich(s.tab)}</span><div class="tlbar">${segs}</div><span class="tltotal">${fmtT(r.total)}\u00a0${esc(m.unit)}${runs?" · "+esc(runs):""}</span></div>`;});
  const step=niceStep(max/4),ticks=[];for(let t=0;t<=max+1e-9;t+=step)ticks.push(`<span style="left:${(100*t/max).toFixed(3)}%">${fmtT(t)}</span>`);
- box.innerHTML=`<div class="tlhead">${esc(words.tlHead(m.stat,m.unit))}</div>${rows.join("")}<div class="tlrow"><span></span><div class="tlaxis">${ticks.join("")}</div><span></span></div>`;
+ const head=`<div class="tlhead">${esc(words.tlHead(m.stat,m.unit,m.source))}</div>`;
+ if(up){box.innerHTML=head+`<div class="tlcols">${rows.join("")}</div>`;return;}
+ box.innerHTML=head+`${rows.join("")}<div class="tlrow"><span></span><div class="tlaxis">${ticks.join("")}</div><span></span></div>`;
  for(const b of box.querySelectorAll(".seg"))b.classList.toggle("bare",b.clientWidth<SEG_MIN_PX);} // a few letters say nothing: the name waits for the hover
 /** A segment points at its node on the graph; a click opens its case on the first step that reaches that node. */
 function peekNode(n,on){diagrams.forEach(d=>{const g=d.nodeEls&&d.nodeEls[n];g&&g.classList.toggle("peek",on);});}
@@ -664,7 +687,7 @@ function pathOf(d,h){if(h.length===2)return d.edgeEls[h.join(">")];const key=h.j
 function go(i){st.step=Math.max(0,Math.min(nSteps()-1,i));render();runHop();}
 /** The case's diagram fills the screen below what sits above it, whole, outcomes included: a projected page shows the fork. */
 const WIN=typeof window==="undefined"?null:window; // absent when the page is played without a browser (tests)
-function fitHeight(){if(!WIN)return;const below=$("controls").offsetHeight+$("legend").offsetHeight+$("timeline").offsetHeight+FOOT_ROOM;
+function fitHeight(){if(!WIN)return;const tl=$("timeline"),below=$("controls").offsetHeight+$("legend").offsetHeight+(tl.classList.contains("up")?0:tl.offsetHeight)+FOOT_ROOM;
  const aside=document.querySelector("aside"),at=aside.getBoundingClientRect().top+WIN.scrollY; // the panel scrolls within the screen
  aside.style.maxHeight=Math.max(MIN_DIAGRAM_H,WIN.innerHeight-at-8)+"px";
  for(const d of diagrams){const top=d.svg.getBoundingClientRect().top+WIN.scrollY;

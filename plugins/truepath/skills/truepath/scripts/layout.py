@@ -191,7 +191,28 @@ def loop_lanes(loops, ids, box, rank, right, gaps):
     return paths
 
 
-def route(edges, ids, box, rank, back, gaps, near=False):
+def left_loops(edges, ids, box, rank, back):
+    """The loops that climb on the left of the drawing, nearest first, with what each needs beside it.
+
+    A loop goes left when its two ends are the leftmost boxes of their rows, no box between them
+    stands further left, and the right side is crowded: there it would run around the next
+    column and seem to frame it. Its name and pass badges sit left of its lane."""
+    label = {(a, b): lab for a, b, lab in edges}
+    looped = in_loop(edges, back)
+    chosen = []
+    for a, b in sorted(back, key=lambda e: (rank[e[0]] - rank[e[1]], e)):
+        lo, hi, edge = rank[b], rank[a], min(box[a]["x"], box[b]["x"])
+        row = {r: [n for n in ids if rank[n] == r] for r in (lo, hi)}
+        first = all(box[n]["x"] >= box[a]["x"] for n in row[hi]) and all(box[n]["x"] >= box[b]["x"] for n in row[lo])
+        clear = all(box[n]["x"] >= edge for n in ids if lo < rank[n] < hi)
+        crowded = len(row[hi]) > 1 or len(row[lo]) > 1
+        if first and clear and crowded:
+            w = len(label[a, b] or "") * EDGE_CHAR_W
+            chosen.append(((a, b), LABEL_GAP + (w + PASS_ROOM if w else 0) + (3 * PASS_W if a in looped else 0)))
+    return chosen
+
+
+def route(edges, ids, box, rank, back, gaps, near=False, lefts=()):
     """One orthogonal path per edge, and how far right the drawing now reaches.
 
     `gaps[r]` is the gap after rank r. The rail an edge leaves on runs in the middle of it, or,
@@ -201,7 +222,8 @@ def route(edges, ids, box, rank, back, gaps, near=False):
         return box[n]["x"] + box[n]["w"] / 2
 
     right = max(b["x"] + b["w"] for b in box.values())
-    loops = loop_lanes([(a, b) for a, b, _ in edges if (a, b) in back], ids, box, rank, right, gaps)
+    left = {e: k for k, (e, _) in enumerate(lefts)}
+    loops = loop_lanes([(a, b) for a, b, _ in edges if (a, b) in back and (a, b) not in left], ids, box, rank, right, gaps)
     out, reach, taken = [], right, []
     for a, b, label in edges:
         s, t = box[a], box[b]
@@ -210,6 +232,17 @@ def route(edges, ids, box, rank, back, gaps, near=False):
         rail = round(y1 + (LANE if near else gaps[rank[a]] / 2))
         passed = [box[n] for n in ids if rank[a] < rank[n] < rank[b]]
         lane = None
+        if (a, b) in left:  # out of the source's left side, up a lane on the left, into the target's left side
+            lane = round(min(s["x"], t["x"]) - LANE * (left[a, b] + 1))
+            sy, ty = round(s["y"] + s["h"] / 2), round(t["y"] + t["h"] / 2)
+            d = f"M{s['x']:.0f} {sy} H{lane} V{ty} H{t['x'] - STUB:.0f}"
+            w = len(label or "") * EDGE_CHAR_W
+            room = 3 * PASS_W if a in in_loop(edges, back) else 0  # its badges, between its name and its lane
+            pos = [lane - LABEL_GAP - room - (w + PASS_ROOM if w else 0), sy - LABEL_GAP]  # just above where it leaves
+            badge = [pos[0] + w + PASS_ROOM, pos[1] - 4, 1] if label else [lane - LABEL_GAP - room, sy - LANE, 1]
+            out.append({"from": a, "to": b, "d": d, "label": label or None, "pass": [round(badge[0], 1), round(badge[1], 1), 1],
+                        "labelPos": [round(pos[0], 1), round(pos[1], 1)] if label else None})
+            continue
         if (a, b) in back:  # out of the source's side, up its lane, into the target's side
             d, lane, climb, low = loops[a, b]
             pos = [lane + LABEL_GAP, climb]
@@ -268,12 +301,14 @@ def layout(nodes, edges, across=False):
     for layer in layers[1:]:
         place_layer(layer, box, {n: sum(cx(p) for p in parents[n]) / len(parents[n]) for n in layer})
 
+    lefts = [] if across else left_loops(edges, ids, box, rank, back)
+    room = max((LANE * (k + 1) + need for k, (_, need) in enumerate(lefts)), default=0)  # lanes and names left of the boxes
     left = min(b["x"] for b in box.values())
     for b in box.values():
-        b["x"] = round(b["x"] - left + MARGIN, 1)
+        b["x"] = round(b["x"] - left + MARGIN + room, 1)
         b["y"] = round(b["y"], 1)
 
-    routed, reach = route(edges, ids, box, rank, back, gaps, near=across)
+    routed, reach = route(edges, ids, box, rank, back, gaps, near=across, lefts=lefts)
     height = max(b["y"] + b["h"] for b in box.values()) + MARGIN + LANE  # the last layer gets a little more room below
     geo = {"width": round(reach + MARGIN), "height": round(height), "lineHeight": LINE_H, "nodes": box, "edges": routed}
     return turn(geo, back) if across else geo

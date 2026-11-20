@@ -427,6 +427,19 @@ class Layout(unittest.TestCase):
             for y_, lo_, hi_, s_ in flats:
                 self.assertFalse(s != s_ and y == y_ and lo < hi_ and lo_ < hi, f"{s} and {s_} share y={y}")
 
+    def test_a_short_loop_beside_another_column_climbs_on_the_left(self):
+        """H <-> P, each with a box on its right: the loop runs left of them, never around the right column."""
+        nodes = [{"id": i, "label": f"box {i}"} for i in ("S", "D", "H", "J", "P", "F")]
+        edges = [["S", "D", ""], ["D", "H", "a"], ["D", "J", "b"], ["H", "P", ""], ["J", "F", ""], ["P", "H", "yes"]]
+        geo = build.layout(nodes, edges)
+        loop = next(e for e in geo["edges"] if (e["from"], e["to"]) == ("P", "H"))
+        lane = float(loop["d"].split(" H")[1].split(" ")[0])
+        h, p = geo["nodes"]["H"], geo["nodes"]["P"]
+        self.assertLess(lane, min(h["x"], p["x"]), loop["d"])
+        self.assertGreaterEqual(loop["labelPos"][0], 0)
+        self.assertLess(loop["labelPos"][0], lane)
+        self.assertGreater(loop["pass"][0], loop["labelPos"][0])  # badges after its name, before its lane
+
     def test_a_loop_is_found_from_the_sources_whatever_the_declaration_order(self):
         edges = [["A", "B", ""], ["B", "C", ""], ["C", "B", "again"]]
         tops = set()
@@ -563,6 +576,25 @@ class Measure(Case):
         self.refused(self.measured([dict(rows[0], excluded=[{"n": 2}]), rows[1]]), "C18")
         out, *_ = self.build(self.spec(self.measured(rows)))
         self.assertEqual(self.data(out)["measure"]["rows"][0]["left"], [[2, "with nothing to apply"]])
+
+    def test_an_estimate_needs_no_runs_and_says_so(self):
+        rows = [{"total": 10, "steps": {"AGE": 4, "REQ": 1, "D": 5}, "basis": "estimate: rules of thumb"},
+                {"total": 7, "steps": {"AGE": 2, "D": 5}, "basis": "estimate: rules of thumb"}]
+        def change(s):
+            self.measured(rows)(s)
+            s["measure"] = {"cmd": s["measure"]["cmd"], "source": "estimate"}
+            s["panel"].append({"label": "Time", "value": "measure.total", "at": "last"})
+        out, *_ = self.build(self.spec(change))
+        page = self.data(out)
+        self.assertEqual((page["measure"]["source"], page["measure"]["rows"][0]["basis"]), ("estimate", "rules of thumb"))
+        row = next(r for r in page["scenarios"][0]["rows"] if r["label"] == "Time")
+        self.assertEqual(row["provenance"]["kind"], "estimate")
+
+    def test_an_unknown_source_is_refused(self):
+        def change(s):
+            self.measured()(s)
+            s["measure"]["source"] = "guess"
+        self.unreadable(change, "expected one of runs, estimate")
 
     def test_compare_names_the_steps_whose_time_compares(self):
         self.unreadable(self.measured(compare=["NOPE"]), "'NOPE' is no node")

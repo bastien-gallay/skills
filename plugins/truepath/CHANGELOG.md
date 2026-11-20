@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.5
+
+From three ways to the same end, compared on how long each takes, with
+nothing to run: the reply drew a bar chart beside the flow, and that chart
+said what the page did not. Every existing spec builds as before.
+
+- The bars run as the graph does: upright beside a top-to-bottom graph,
+  each case's steps stacked down in path order, its total above it; under
+  a left-to-right one, as before. Ways that share few steps compare by
+  height at a glance; the page showed each way's time only in its own tab.
+- `measure.source: "estimate"` draws times worked out from a model of each
+  step, when nothing can run: no `n`, no `stat`, and the page says
+  *estimated* where it says *measured*, a panel row marked `≈ estimated`.
+  An estimate read as `◇ definition` before.
+- `≠` no longer marks a bar that shares no step with the first: another
+  way is not a change.
+- A short loop whose two ends lead their rows climbs on the left when
+  boxes stand on their right: around them, it seemed to frame the next
+  column. Its name and pass badges sit together, left of its lane.
+
 ## 0.2.4
 
 From an agent, alone with the skill, timing a full reload of a board
