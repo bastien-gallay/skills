@@ -382,11 +382,11 @@ function draw(pane,k,sides){
  for(const [id,col] of [["on","var(--accent)"],["off","var(--dim)"],["m","var(--minus)"],["p","var(--plus)"]]){
   const m=el("marker",{id:`a-${id}-${k}`,viewBox:"0 0 10 10",refX:8,refY:5,markerWidth:6,markerHeight:6,orient:"auto-start-reverse"},defs);
   el("path",{d:"M2 1L8 5L2 9",fill:"none",stroke:col,"stroke-width":1.6,"stroke-linecap":"round"},m);}
- const edgeEls={},nodeEls={},taken=new Set(sides.flatMap(s=>s.steps.flatMap(x=>legs(x.hop))));
+ const edgeEls={},nodeEls={},labelEls={},taken=new Set(sides.flatMap(s=>s.steps.flatMap(x=>legs(x.hop))));
  const isTaken=e=>taken.has(e.from+">"+e.to);
  for(const e of [...geo.edges].sort((x,y)=>isTaken(x)-isTaken(y))){ // the path last: it is drawn over the stubs it shares with other edges
   edgeEls[e.from+">"+e.to]=el("path",{d:e.d,class:"edge"},svg);
-  if(e.label&&e.labelPos){el("text",{x:e.labelPos[0],y:e.labelPos[1],class:"elabel"},svg).textContent=e.label;}}
+  if(e.label&&e.labelPos){(labelEls[e.from+">"+e.to]=el("text",{x:e.labelPos[0],y:e.labelPos[1],class:"elabel"},svg)).textContent=e.label;}}
  // the dots come after the boxes, so a box never hides them; two sides carry their sign, not only their colour
  for(const [id,box] of Object.entries(geo.nodes)){
   const n=page.nodes[id],g=el("g",{class:"node"+(n.role==="decision"?" dec":"")},svg);
@@ -401,7 +401,7 @@ function draw(pane,k,sides){
  const dots=sides.map((s,j)=>{const g=el("g",{class:"dot"+(sides.length>1?" "+SIDE[j]:""),transform:"translate(-40 -40)"},svg);
   el("circle",{r:sides.length>1?9:5},g);
   if(sides.length>1)el("text",{class:"dsign","text-anchor":"middle","dominant-baseline":"central"},g).textContent=SIGN[j];return g;});
- return {svg,edgeEls,nodeEls,k,sides,dots,passes};
+ return {svg,edgeEls,nodeEls,labelEls,k,sides,dots,passes};
 }
 const PASS_R=8,PASS_GAP=3,PASS_MAX=3,PASS_CHAR=6.2,PASS_HIT=6; // PASS_HIT: unseen margin around a badge that still takes the click // a badge is a circle; beyond PASS_MAX visits on one branch, the earlier ones are one range
 const geoEdge=k=>geo.edges.find(e=>e.from+">"+e.to===k);
@@ -410,7 +410,9 @@ function paintPasses(d,step,detail){const layer=d.passes,two=d.sides.length>1,fo
  const keep=focused&&focused.getAttribute&&focused.getAttribute("data-key");layer.textContent="";
  d.sides.forEach((s,j)=>{const here=stepOf(s,step),by=new Map();
   for(const q of passesOf(s))if(!detail||q.step<=here){if(!by.has(q.edge))by.set(q.edge,[]);by.get(q.edge).push(q);}
-  for(const [k,list] of by){const e=geoEdge(k);if(!e||!e.pass)continue;const [x,y0,dir]=e.pass,y=y0+(two?(j?1:-1)*(PASS_R+1):0);
+  for(const [k,list] of by){const e=geoEdge(k);if(!e||!e.pass)continue;let [x,y0,dir]=e.pass;const y=y0+(two?(j?1:-1)*(PASS_R+1):0);
+   const lab=d.labelEls[k]; // layout.py estimates a label's width; the browser knows it
+   if(lab&&lab.getComputedTextLength){const w=lab.getComputedTextLength();if(w>0)x=e.labelPos[0]+w+4;}
    const last=list[list.length-1];
    const items=list.length<=PASS_MAX?list.map(q=>({q,text:String(q.visit)})):[{q:list[list.length-2],text:`${list[0].visit}–${list[list.length-2].visit}`,all:list.slice(0,-1)},{q:last,text:String(last.visit)}];
    let at=x; // layout.py leaves the room between the anchor and the line or the label
