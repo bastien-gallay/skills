@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 From a design critique of a first real grid (`docs/design/story-map.md`,
 stories S10–S13), then a second critique (S22–S27), then a first loop, a

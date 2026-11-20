@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "truepath — single-plugin marketplace.",
-    "version": "0.1.2"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "truepath",
       "source": "./",
       "description": "Self-contained HTML simulations of a process or a bug path, whose verdicts come from the repository's own code; the build refuses any scenario that contradicts them.",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "license": "MIT",
       "homepage": "https://github.com/bastien-gallay/truepath",
       "repository": "https://github.com/bastien-gallay/truepath",
