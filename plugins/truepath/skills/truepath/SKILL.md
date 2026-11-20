@@ -242,7 +242,8 @@ runs exist, measure them.
 
 A `race` runs its scenarios at once on the clock: each step lasts the time
 of the nodes it reaches (a node reached twice in a loop shares its time
-between its visits; a step with no time is a blink), so the fastest way
+between its visits; a step with no time shares the timed step next to it),
+so the fastest way
 arrives first, the slowest after twelve seconds at 1×. A clock runs above
 the graph, each bar fills in its dot's colour, the step list tells each
 arrival, and the summary the order of arrival with each time.
@@ -491,11 +492,13 @@ in a `basis` text, shown on hover.
   says how fast it goes. The run into an outcome slows down at its end, and
   an arrival rings out of the dot and pulses twice round the outcome's box.
 - In a race, the camera keeps the leader (the dot furthest along its own
-  way) in sight: it frames every running dot, zooming out no further than
-  readable labels; when they no longer fit, it follows the leader alone,
-  closer. The race's clock slows into each arrival and holds a moment on
-  it, every dot alike, so the race stays fair. A pan or a zoom by hand
-  hands the camera to the reader until Play or *Fit*.
+  way) in sight: it frames the edge every running dot is on, zooming out no
+  further than readable labels; when they no longer fit, it follows the
+  leader alone, closer. It zooms back in only for a real gain and pans only
+  when a way leaves the frame, so a loop does not make it breathe. The
+  race's clock slows into each arrival and holds a moment on it, every dot
+  alike, so the race stays fair. A pan or a zoom by hand hands the camera
+  to the reader until Play or *Fit*.
 - Taken edges are solid, untaken ones dashed and grey; nodes off the path fade.
 - A loop's order is written where it branches: numbered badges on the
   branches leaving a node passed more than once, one per pass, set once

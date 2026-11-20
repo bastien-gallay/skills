@@ -417,18 +417,27 @@ function follow(dots){if(!st.follow||view.k===1||!dots.length)return;
  if(!glideRaf)glideRaf=requestAnimationFrame(glide);}
 /** A race's camera keeps the leader in sight: it frames every running dot, zooming out no further than readable labels;
  *  when they no longer fit, it follows the leader alone and zooms back in on it. Only while the reader lets it lead. */
-const CAM_MARGIN=70,CAM_CLOSE=1.25; // units around the dots framed; how much closer than readable it comes on a lone leader
+const CAM_MARGIN=70,CAM_CLOSE=1.25,CAM_HOLD=1500; // CAM_HOLD: ms an arrived dot stays framed, its landing in sight // units around the dots framed; how much closer than readable it comes on a lone leader
 let kRead=1; // the zoom at which labels are readable, measured by readable()
-function camera(qs,lead){if(!st.follow||!st.readable||!qs.length)return;
+const cam={mode:"field"}; // "field": every running way framed; "lead": the leader alone, when the field no longer fits
+const CAM_IN=1.25,CAM_SWITCH=.9,CAM_BACK=1.05,CAM_INSET=.08,ZOOM_EASE=.05; // zoom in only for a 25% gain; mode change margins
+function camera(items,lead){if(!st.follow||!st.readable||!items.length)return;
  const W=geo.width,a=viewH()/viewW(); // a view of zoom k is W/k wide and a·W/k high
- const box=pts=>{const xs=pts.map(q=>q.x),ys=pts.map(q=>q.y);return {x0:Math.min(...xs)-CAM_MARGIN,x1:Math.max(...xs)+CAM_MARGIN,y0:Math.min(...ys)-CAM_MARGIN,y1:Math.max(...ys)+CAM_MARGIN};};
- let b=box(qs),k=Math.min(W/(b.x1-b.x0),a*W/(b.y1-b.y0));
- if(k<kRead){b=box([lead]);k=kRead*CAM_CLOSE;} // the field no longer fits at a readable size: the leader alone, closer
- aim.k=Math.max(1,Math.min(ZOOM_MAX,kRead*CAM_CLOSE,Math.max(kRead,k)));
- const w=W/aim.k,h=a*w,cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2;
- aim.x=Math.max(0,Math.min(W-w,cx-w/2));aim.y=Math.max(0,Math.min(Math.max(0,geo.height-h),cy-h/2));
+ const boxOf=xs=>{let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const it of xs){const b=it.box;x0=Math.min(x0,b.x);y0=Math.min(y0,b.y);x1=Math.max(x1,b.x+b.width);y1=Math.max(y1,b.y+b.height);}
+  return {x0:x0-CAM_MARGIN,y0:y0-CAM_MARGIN,x1:x1+CAM_MARGIN,y1:y1+CAM_MARGIN};};
+ const fit=b=>Math.min(W/(b.x1-b.x0),a*W/(b.y1-b.y0));
+ const field=boxOf(items),kField=fit(field);
+ if(cam.mode==="field"&&kField<kRead*CAM_SWITCH)cam.mode="lead";else if(cam.mode==="lead"&&kField>kRead*CAM_BACK)cam.mode="field";
+ const b=cam.mode==="field"?field:boxOf([lead]);
+ const want=Math.max(1,Math.min(ZOOM_MAX,kRead*CAM_CLOSE,Math.max(kRead,fit(b))));
+ if(aim.k==null||want<aim.k||want>aim.k*CAM_IN)aim.k=want; // out at once when needed, in only for a real gain
+ const w=W/aim.k,h=a*w,ix=w*CAM_INSET,iy=h*CAM_INSET,ax=aim.x??view.x,ay=aim.y??view.y;
+ const inside=b.x0>=ax+ix&&b.x1<=ax+w-ix&&b.y0>=ay+iy&&b.y1<=ay+h-iy; // the frame moves only when a way leaves it
+ if(!inside){const cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2;aim.x=Math.max(0,Math.min(W-w,cx-w/2));aim.y=Math.max(0,Math.min(Math.max(0,geo.height-h),cy-h/2));}
  if(REDUCED){view.k=aim.k;setView(aim);return;}
  if(!glideRaf)glideRaf=requestAnimationFrame(glide);}
+const nodeBox=id=>{const b=geo.nodes[id];return {x:b.x,y:b.y,width:b.w,height:b.h};};
 /** Behind each dot of a timed page, a short fading comet: where it was a moment ago says how fast it goes. */
 const TRAIL_N=12,TRAIL_STEP=3,TRAIL_FADE=300; // dots in the comet; the least move, in units, that adds one
 function trail(d,j,q){if(REDUCED||!page.measure||!d.trails)return;const t=d.trails[j];const last=t.pts[t.pts.length-1];
@@ -437,12 +446,12 @@ function trail(d,j,q){if(REDUCED||!page.measure||!d.trails)return;const t=d.trai
   const f=1-i/TRAIL_N;c.setAttribute("cx",p.x);c.setAttribute("cy",p.y);c.setAttribute("r",(d.sides.length>1?7:4)*f);c.setAttribute("opacity",.45*f);});}
 function clearTrails(d){(d.trails||[]).forEach(t=>{t.pts.length=0;t.els.forEach(c=>c.setAttribute("r",0));});}
 /** An arrival: a ring out of the dot, two pulses round the outcome's box; once per arrival, none under reduced motion. */
-function land(d,j,q,id){if(REDUCED||d.landed.has(j))return;d.landed.add(j);
+function land(d,j,q,id){if(d.landed.has(j))return;d.landed.add(j);d.landedAt[j]=performance.now();if(REDUCED)return;
  const t=d.trails&&d.trails[j];if(t)setTimeout(()=>{t.pts.length=0;t.els.forEach(c=>c.setAttribute("r",0));},TRAIL_FADE); // arrived: the comet goes
  el("circle",{cx:q.x,cy:q.y,r:d.sides.length>1?9:6,class:"ring"+(d.sides.length>1?" "+d.side[j]:"")},d.fx).addEventListener("animationend",e=>e.target.remove());
  const b=geo.nodes[id],n=page.nodes[id],col=n.kind?page.kinds[n.kind].color:"var(--accent)";
  const r=el("rect",{x:b.x,y:b.y,width:b.w,height:b.h,rx:8,class:"land"},d.fx);r.style.stroke=col;r.addEventListener("animationend",e=>e.target.remove());}
-function glide(){if(aim.k!=null&&Math.abs(aim.k-view.k)>.002){view.k+=(aim.k-view.k)*FOLLOW_EASE;const c=clampView(view);view.x=c.x;view.y=c.y;} // the zoom glides as the view does
+function glide(){if(aim.k!=null&&Math.abs(aim.k-view.k)>.002){view.k+=(aim.k-view.k)*ZOOM_EASE;const c=clampView(view);view.x=c.x;view.y=c.y;} // the zoom glides as the view does
  const dx=aim.x-view.x,dy=aim.y-view.y;
  if(Math.abs(dx)<.5&&Math.abs(dy)<.5&&(aim.k==null||Math.abs(aim.k-view.k)<=.002)){glideRaf=0;setView(aim);return;}
  view.x+=dx*FOLLOW_EASE;view.y+=dy*FOLLOW_EASE;applyView();glideRaf=requestAnimationFrame(glide);}
@@ -504,7 +513,7 @@ function draw(pane,k,sides){const [sg,sd]=signsOf();
  const dots=sides.map((s,j)=>{const g=el("g",{class:"dot"+(sides.length>1?" "+sd[j]:""),transform:"translate(-40 -40)"},svg);
   el("circle",{r:sides.length>1?9:5},g);
   if(sides.length>1)el("text",{class:"dsign","text-anchor":"middle","dominant-baseline":"central"},g).textContent=sg[j];return g;});
- return {svg,edgeEls,nodeEls,labelEls,k,sides,dots,passes,side:sd,sign:sg,trails,fx,landed:new Set()};
+ return {svg,edgeEls,nodeEls,labelEls,k,sides,dots,passes,side:sd,sign:sg,trails,fx,landed:new Set(),landedAt:{}};
 }
 const PASS_R=8,PASS_GAP=3,PASS_MAX=3,PASS_CHAR=6.2,PASS_HIT=6; // PASS_HIT: unseen margin around a badge that still takes the click // a badge is a circle; beyond PASS_MAX visits on one branch, the earlier ones are one range
 const geoEdge=k=>geo.edges.find(e=>e.from+">"+e.to===k);
@@ -610,9 +619,17 @@ function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filt
 /** A race on the clock: each side's steps last what the measure gives them (a step with none, a blink), every side on one
  *  clock. Step i of the race is the i-th time a dot arrives somewhere; a side is on the first step it has not yet ended. */
 const RACE_MS=12000,BLINK=.005; // the slowest arrives after RACE_MS at 1×; a step with no time takes BLINK of the race
+/** A step with no time (a decision, the run into an outcome) shares the time of the timed step next to it, the one
+ *  before it first: the dot glides into its outcome instead of jumping there, and the total stays what was measured. */
+function glidePer(per){const out=per.slice();let i=0;
+ while(i<out.length){if(out[i]>0){i++;continue;}let b=i;while(b+1<out.length&&!(out[b+1]>0))b++;
+  const k=i>0&&out[i-1]>0?i-1:b+1<out.length?b+1:-1;
+  if(k>=0){const share=out[k]/(b-i+2);out[k]=share;for(let x=i;x<=b;x++)out[x]=share;}
+  i=b+1;}
+ return out;}
 function clockOn(){const tab=TABS[st.tab];if(!tab||!tab.race||!page.measure)return null;if(tab.clock!==undefined)return tab.clock;
  const rows=tab.sides.map(s=>page.measure.rows.find(r=>r.scenario===s.id));if(rows.some(r=>!r||!r.per))return tab.clock=null;
- const real=Math.max(...rows.map(r=>r.total),1e-9),ends=rows.map(r=>{let t=0;return r.per.map(v=>t+=v>0?v:real*BLINK);});
+ const real=Math.max(...rows.map(r=>r.total),1e-9),ends=rows.map(r=>{let t=0;return glidePer(r.per).map(v=>t+=v>0?v:real*BLINK);});
  const times=[...new Set(ends.flat().map(t=>+t.toFixed(6)))].sort((a,b)=>a-b),span=Math.max(...times);
  return tab.clock={ends,times,span,real,rows,stepAt:(side,c)=>{const e=ends[tab.sides.indexOf(side)];const k=e.findIndex(t=>t>=c-1e-6);return k<0?e.length-1:k;}};}
 const stepOf=(side,i)=>{const c=clockOn();if(c&&c.ends[TABS[st.tab].sides.indexOf(side)])return c.stepAt(side,c.times[Math.min(i,c.times.length-1)]);
@@ -764,13 +781,14 @@ function runRace(c){const d=diagrams[0],c1=c.times[st.step],c0=st.step?c.times[s
  if(!st.step)clearTrails(d);
  const place=t=>{const qs=d.sides.map((s,j)=>{const e=c.ends[j];let k=e.findIndex(x=>x>t+1e-9);const end=k<0;if(end)k=e.length-1;
    const a=k?e[k-1]:0,f=end?1:Math.max(0,Math.min(1,(t-a)/((e[k]-a)||1))),p=pathOf(d,s.steps[k].hop);
-   return {q:p.getPointAtLength(f*p.getTotalLength()),end,id:dest(s.steps[k].hop),p:t/e[e.length-1]};});
+   return {q:p.getPointAtLength(f*p.getTotalLength()),end,id:dest(s.steps[k].hop),p:t/e[e.length-1],box:end?geo.nodes[dest(s.steps[k].hop)]&&nodeBox(dest(s.steps[k].hop)):p.getBBox()};});
   const dx=spread(qs.map(x=>x.q));qs.forEach((x,j)=>{d.dots[j].setAttribute("transform",`translate(${x.q.x+dx[j]} ${x.q.y})`);
    if(x.end&&st.playing)land(d,j,x.q,x.id);else if(!x.end){d.landed.delete(j);trail(d,j,x.q);}});
   const clock=$("rclock");if(clock)clock.textContent=`⏱ ${fmtT(t*c.real/c.span)}\u00a0${page.measure.unit}`;
-  const run=qs.filter(x=>!x.end);lastDots=run.map(x=>x.q);
-  const lead=run.reduce((b,x)=>!b||x.p>b.p?x:b,null); // the leader: furthest along its own way
-  if(st.readable&&lead)camera(lastDots,lead.q);else follow(lastDots);};
+  const now=performance.now(),run=qs.filter((x,j)=>!x.end||now-(d.landedAt[j]??-1e9)<CAM_HOLD);lastDots=run.map(x=>x.q); // an arrival stays in frame a moment
+  const landing=run.find(x=>x.end); // a dot just arrived: its landing is what to see, ahead of the leader
+  const lead=landing||run.filter(x=>!x.end).reduce((b,x)=>!b||x.p>b.p?x:b,null)||run[0]; // else the leader: furthest along its own way
+  if(st.readable&&lead)camera(run,lead);else follow(lastDots);};
  const tick=ts=>{if(!st.playing){place(c1);return;}
   t0??=ts;const f=Math.min(1,(ts-t0)/dur);place(c0+(c1-c0)*(arrives?easeOut(f):f));
   if(f<1){st.raf=requestAnimationFrame(tick);return;}
@@ -816,7 +834,7 @@ function fitHeight(){if(!WIN)return;const tl=$("timeline"),below=$("controls").o
  *  on where the path starts, then follows the dots. Fit, and the overview, show the whole graph again. */
 function readable(){if(!WIN||st.view!=="detail"||!diagrams.length)return;const d=diagrams[0],u=unitsPerPx(d.svg);
  if(!isFinite(u)||NODE_FONT/u>=MIN_LABEL_PX)return;
- view.k=kRead=Math.min(ZOOM_MAX,MIN_LABEL_PX*u/NODE_FONT);aim.k=null;st.follow=true;st.readable=true;
+ view.k=kRead=Math.min(ZOOM_MAX,MIN_LABEL_PX*u/NODE_FONT);aim.k=null;cam.mode="field";st.follow=true;st.readable=true;
  const r=d.svg.getBoundingClientRect(),tall=geo.height*MIN_LABEL_PX/NODE_FONT; // the whole height at readable size, in px
  if(geo.width/r.width>=.99*geo.height/r.height&&tall>r.height+1)diagrams.forEach(x=>{x.svg.style.height=Math.round(tall)+"px";}); // max-height still caps it
  const b=geo.nodes[d.sides[0].steps[0].hop[0]];setView({x:b.x+b.w/2-viewW()/2,y:b.y-viewH()*FOLLOW_MARGIN});}

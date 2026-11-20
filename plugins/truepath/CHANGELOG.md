@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.2
+
+From watching the race again: the fastest dot was lost before it arrived.
+
+- A step with no time of its own (a decision, the run into an outcome)
+  shares the time of the timed step next to it: a dot glides into its
+  outcome instead of jumping down a long edge in a blink, and arrives on
+  the clock at its measured time (`/kill` at 2.5 s, not 2.8 s).
+- A dot that has just arrived stays framed, ahead of the leader, while its
+  landing plays, then the camera goes back to the race.
+- The race's camera moves far less: it frames the edge each dot is on, not
+  the dot itself, so a loop that comes and goes no longer pumps the zoom;
+  it zooms out at once when it must, back in only for a real gain, pans
+  only when a way leaves the frame, and leaves the whole field for the
+  leader alone, and back, with a margin either way. The zoom glides slower
+  than the pan. In the drowning-against-fall race, the zoom now turns
+  round once, where it breathed with every pass of the loop.
+
 ## 0.3.1
 
 From watching the first race: the camera lost the leader, the dots
