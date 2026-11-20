@@ -9,7 +9,8 @@ on a cell that differs plays that case, today next to the answer
 An agent skill that turns a process, a bug path or a rule under discussion
 into one self-contained HTML page: a dot walks the real path through the
 graph, a data panel shows what changes at each step, and two scenarios play
-side by side with their first difference marked.
+side by side with their first difference marked, or several ways race on
+one clock, timed step by step.
 
 What makes it more than an animation: the verdicts come from your
 repository's own code, run on a frozen `git archive` of a ref, or from a
@@ -24,11 +25,11 @@ layout.py ──┘                                └► fixture.json (--export
 
 ## Status
 
-0.2.5, tagged
-[`v0.2.2`](https://github.com/bastien-gallay/truepath/releases/tag/v0.2.2)
+0.3.0, tagged
+[`v0.3.0`](https://github.com/bastien-gallay/truepath/releases/tag/v0.3.0)
 on 2026-11-20. The spec vocabulary may still change before
 1.0; [`CHANGELOG.md`](CHANGELOG.md) says what did. The examples build with 0
-violations, and the two that keep their page rebuild it byte for byte; the
+violations, and the three that keep their page rebuild it byte for byte; the
 tests check both on every push to `main` and every pull request.
 Known limits are listed under *Limits* in
 [`SKILL.md`](skills/truepath/SKILL.md).

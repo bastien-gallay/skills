@@ -78,6 +78,7 @@ def validate(spec, specdir, exporting=False):
         p.raise_if_any()
     for key, kind, name in (("nodes", list, "a list"), ("edges", list, "a list"), ("kinds", dict, "an object"),
                             ("panel", list, "a list"), ("scenarios", list, "a list"), ("pairs", list, "a list"),
+                            ("races", list, "a list"),
                             ("grid", dict, "an object"), ("oracle", dict, "an object"), ("export", dict, "an object"),
                             ("measure", dict, "an object {cmd, stat, unit?, tolerance?, cwd?}")):
         p.typed(spec, key, kind, "spec", name)
@@ -158,9 +159,14 @@ def validate(spec, specdir, exporting=False):
         p.append(f"scenarios: id {d} is used twice")
     for i, pair in enumerate(spec.get("pairs", [])):
         p.keys(pair, ["before", "after", "tab", "summary"], f"pairs[{i}]")
+    for i, race in enumerate(spec.get("races", [])):  # 2 to 4 ways run at once on one graph, each keeping its own tab
+        if p.keys(race, ["scenarios", "tab", "summary"], f"races[{i}]"):
+            ids = race["scenarios"]
+            if not isinstance(ids, list) or not 2 <= len(ids) <= RACE_MAX or len(set(map(str, ids))) != len(ids):
+                p.append(f"races[{i}].scenarios: expected 2 to {RACE_MAX} different scenario ids")
     if "grid" in spec:
-        if scenarios or spec.get("pairs"):
-            p.append("spec: a grid page shows only its cells; move `scenarios` and `pairs` to another spec")
+        if scenarios or spec.get("pairs") or spec.get("races"):
+            p.append("spec: a grid page shows only its cells; move `scenarios`, `pairs` and `races` to another spec")
         validate_grid(spec["grid"], p)
     elif not scenarios:
         p.append("spec: no scenario and no grid, so there is nothing to play")
@@ -191,6 +197,7 @@ def validate_views(spec, p):
             p.append("spec: views names a view twice")
 
 
+RACE_MAX = 4  # dots told apart by a number and a colour: beyond four, the graph is a crowd
 STATS = ("mean", "median")  # what one case's measures sum up: several runs read as one
 SOURCES = ("runs", "estimate")  # timed on real runs, or worked out from a model of each step: never mixed up
 
@@ -683,11 +690,15 @@ def c7_scenarios_say_where_they_come_from(b):
 
 
 def c8_pairs_name_known_scenarios(b):
-    """A pair may differ in length: the page keeps the side that has arrived on its outcome."""
+    """A pair or a race may differ in length: the page keeps a side that has arrived on its outcome."""
     for p in b.spec.get("pairs", []):
         for side in ("before", "after"):
             if p[side] not in b.by_id:
                 yield f"pair {p['tab']}: {side} names unknown scenario {p[side]}"
+    for r in b.spec.get("races", []):
+        for i in r["scenarios"]:
+            if i not in b.by_id:
+                yield f"race {r['tab']}: names unknown scenario {i}"
 
 
 def c9_panel_rows_resolve(b):
@@ -750,7 +761,7 @@ TEXT_BUDGET = {"title": 60, "subtitle": 90, "summary": 110, "question": 90, "ori
 def c14_texts_stay_within_their_budget(b):
     """A reader projected on a wall reads a sentence, not a paragraph; a longer text also takes longer to write."""
     def over(kind, where, text):
-        n = len(str(text or "").replace("`", ""))
+        n = len(plain(str(text or "")))  # what the page shows: code marks are not read, an escaped backtick is
         if n > TEXT_BUDGET[kind]:
             return f"{where}: {kind} is {n} characters, at most {TEXT_BUDGET[kind]}"
         return None
@@ -762,6 +773,7 @@ def c14_texts_stay_within_their_budget(b):
         texts += [("summary", f"case {c.get('id')}", c.get("summary")),
                   ("origin", f"case {c.get('id')}", (c.get("origin") or {}).get("text"))]
     texts += [("summary", f"pair {p.get('tab')}", p.get("summary")) for p in spec.get("pairs", [])]
+    texts += [("summary", f"race {r.get('tab')}", r.get("summary")) for r in spec.get("races", [])]
     seen = set()
     for s in b.scenarios:
         if not grid:
@@ -926,6 +938,7 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
                        "steps": [{"hop": st["hop"], "message": st["message"], "caption": st["caption"]} for st in s["steps"]],
                        "rows": s["rows"]} for s in scenarios],
         "pairs": [{k: p[k] for k in ("before", "after", "tab", "summary")} for p in spec.get("pairs", [])],
+        "races": [{k: r[k] for k in ("scenarios", "tab", "summary")} for r in spec.get("races", [])],
         "grid": grid and {
             "baseline": grid["baseline"], "show": grid["show"], "hover": grid["hover"], "summary": grid["summary"],
             "variants": [{k: v[k] for k in ("id", "label", "short", "note")} for v in grid["variants"]],
@@ -961,7 +974,17 @@ def measure_row(s):
     left = ([[m["failed"], None]] if m.get("failed") else []) + [[e["n"], e["why"]] for e in m.get("excluded", []) if e["n"]]
     return {"scenario": s["id"], "total": m["total"], "n": m.get("n"), "left": left,  # None: failed, in the page's words
             "basis": measure_basis(m),
-            "segs": [[n, m["steps"][n]] for n in order]}
+            "segs": [[n, m["steps"][n]] for n in order], "per": step_times(s["steps"], m["steps"])}
+
+
+def step_times(steps, times):
+    """What each step takes, for a race run on the clock: the time of the nodes its hop reaches, a node reached
+    several times (a loop) sharing its time between its visits. The start node and the nodes with no time take none."""
+    visits = {}
+    for st in steps:
+        for n in st["hop"][1:]:
+            visits[n] = visits.get(n, 0) + 1
+    return [round(sum(times[n] / visits[n] for n in st["hop"][1:] if n in times), 4) for st in steps]
 
 
 def plain(text):

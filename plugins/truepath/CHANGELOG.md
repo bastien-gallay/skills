@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.3.0
+
+A new kind of tab, the race (story S37): three ways to the same end,
+compared on how long each takes, could be read one tab at a time, or two by
+two as a pair that marked every step as a divergence. Every existing spec
+builds as before.
+
+- `races: [{scenarios, tab, summary}]` runs 2 to 4 scenarios at once on one
+  graph, a numbered dot each, in its own colour; each scenario keeps its
+  own tab, and nothing is compared: no `≠`. The panel has a column per
+  side, the summary the order of arrival.
+- With a measure for each side, measured or estimated, the race runs on
+  one clock: each step lasts the time of the nodes it reaches, a node a
+  loop reaches twice sharing its time between its visits, so the fastest
+  way arrives first and the slowest after twelve seconds at 1×. A clock
+  runs above the graph, each bar fills in its dot's colour, and the step
+  list tells each arrival. Without a measure, the dots take a step
+  together.
+- Dots on one point sit side by side, however many there are.
+- A pair's panel names its two sides by their tabs, not *before* and
+  *after*: a pair is not always a fix.
+- C14 counts a text as the page shows it: code marks do not count, an
+  escaped backtick does.
+- The README's status links the tag it names.
+
 ## 0.2.5
 
 From three ways to the same end, compared on how long each takes, with

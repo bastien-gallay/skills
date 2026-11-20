@@ -355,7 +355,7 @@ class Contract(Case):
 
     def test_the_page_receives_what_it_shows_and_nothing_else(self):
         page = self.page(self.build(self.spec())[0])
-        self.assertEqual(sorted(page), ["credit", "grid", "kinds", "lang", "nodes", "pairs", "scenarios", "source",
+        self.assertEqual(sorted(page), ["credit", "grid", "kinds", "lang", "nodes", "pairs", "races", "scenarios", "source",
                                         "subtitle", "title", "verdictSource"])
         self.assertEqual(sorted(page["scenarios"][0]),
                          ["case", "id", "origin", "rows", "steps", "summary", "tab", "undecided", "variant"])
@@ -590,6 +590,17 @@ class Measure(Case):
         row = next(r for r in page["scenarios"][0]["rows"] if r["label"] == "Time")
         self.assertEqual(row["provenance"]["kind"], "estimate")
 
+    def test_a_race_on_the_clock_plays_through(self):
+        """Both sides measured: the race runs on one clock, and every tab and step plays without an error."""
+        def change(s):
+            self.measured()(s)
+            s["races"] = [{"tab": "Race", "summary": "both at once", "scenarios": ["old", "new"]}]
+        out, *_ = self.build(self.spec(change))
+        run = subprocess.run(["node", str(ROOT / "tests/play_page.js"), str(out)], check=False, capture_output=True, text=True)
+        self.assertEqual(run.returncode, 0, run.stderr[-2000:])
+        played = json.loads(run.stdout)
+        self.assertTrue(any('class="rs r1"' in h for h in played["html"]))  # the race's panel numbers its sides
+
     def test_an_unknown_source_is_refused(self):
         def change(s):
             self.measured()(s)
@@ -657,6 +668,28 @@ class Measure(Case):
             self.measured()(s)
             s["measure"]["stat"] = "p95"
         self.unreadable(change, "expected one of mean, median")
+
+
+class Race(Case):
+    """Two to four ways at once on one graph: each keeps its tab, and on the clock each step lasts what it takes."""
+    def test_a_race_names_two_to_four_known_scenarios(self):
+        self.unreadable(lambda s: s.update(races=[{"tab": "R", "summary": "x", "scenarios": ["old"]}]), "expected 2 to 4")
+        self.refused(lambda s: s.update(races=[{"tab": "R", "summary": "x", "scenarios": ["old", "nope"]}]), "C8")
+        out, *_ = self.build(self.spec(lambda s: s.update(races=[{"tab": "R", "summary": "x", "scenarios": ["old", "new"]}])))
+        text = out.read_text(encoding="utf-8")
+        page = json.loads(text[text.index("const DATA=") + 11:text.index(";\n", text.index("const DATA="))])["page"]
+        self.assertEqual(page["races"], [{"scenarios": ["old", "new"], "tab": "R", "summary": "x"}])
+
+    def test_a_step_lasts_the_time_of_the_nodes_it_reaches_a_loop_sharing_it(self):
+        steps = [{"hop": ["S", "A"]}, {"hop": ["A", "L"]}, {"hop": ["L", "C", "L"]}, {"hop": ["L", "E"]}]
+        self.assertEqual(build.step_times(steps, {"A": 3, "L": 4, "E": 1}), [3, 2, 2, 1])  # L reached twice: 4 s shared
+
+    def test_a_grid_takes_no_race(self):
+        def change(s):
+            del s["scenarios"], s["pairs"]
+            s["grid"] = copy.deepcopy(GRID)
+            s["races"] = [{"tab": "R", "summary": "x", "scenarios": ["a", "b"]}]
+        self.unreadable(change, "`races` to another spec")
 
 
 class Unreadable(Case):

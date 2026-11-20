@@ -28,7 +28,7 @@ changes and every case walks the same path, it does not.
 | one rule, a few cases | `scenarios` |
 | several cases, each under two versions, rules or answers | a `grid` with `variants` (or `questions`): one matrix, each cell opening its case |
 | timed runs whose path differs between cases (a step one case skips, a loop that turns more often): where does the time go, and why did it move | `scenarios` with a `measure`: one bar per case beside or under the graph (see *Measured time*) |
-| a few ways to the same end, compared on one number (which is fastest) | `scenarios`, one per way, with a `measure` of `source: "estimate"` when nothing runs: the bars stand beside the graph |
+| a few ways to the same end, compared on one number (which is fastest) | `scenarios`, one per way, with a `measure` of `source: "estimate"` when nothing runs: the bars stand beside the graph; add a `race` to run them at once |
 | every case walks the same path, only a count, a list or the time per step changes | not truepath: answer with a table, and say why no page was built |
 
 More than two pairs comparing the same two versions is a grid: written as
@@ -240,6 +240,13 @@ panel row reading the time is marked `≈ estimated`. Say in `basis` what
 each step is assumed to take. An estimate never stands for a measure: when
 runs exist, measure them.
 
+A `race` runs its scenarios at once on the clock: each step lasts the time
+of the nodes it reaches (a node reached twice in a loop shares its time
+between its visits; a step with no time is a blink), so the fastest way
+arrives first, the slowest after twelve seconds at 1×. A clock runs above
+the graph, each bar fills in its dot's colour, the step list tells each
+arrival, and the summary the order of arrival with each time.
+
 Name a case by what it measures (*Week 1*, *before the cache*), and keep
 the path faithful to the runs: a loop that turns twelve times in one week
 and twice in the next is twelve passes and two, and its badges say so.
@@ -359,6 +366,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `edges` | `[[from, to, label]]` | label `""` for none; one edge per pair of nodes, its label naming every case it carries (`same or absent`) |
 | `panel` | `[{label, value, at, labels?, digits?, compared?, series?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first), or `"last"` for each scenario's own last step (a result, in scenarios of different lengths); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search and never marked `≠`; `series: true` when `value` is a list with one value per step from `at`, the last one kept: what a loop builds up line by line |
 | `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`, or `hop: [from, via…, to]` to run through a node without stopping (a loop's return); `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
+| `races` | `[{scenarios, tab, summary}]` | 2 to 4 scenario ids run at once on one graph, a numbered dot each, in a tab of its own: unlike a pair, each scenario keeps its tab, and nothing is compared (no `≠`). With a `measure` for each, the race runs on one clock (see *Measured time*); otherwise the dots take a step together |
 | `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
 | `oracle` | `{repo, ref, paths, link?, files?, doubles?, cwd, cmd}` | see above; `doubles` is required when `files` is given |
@@ -424,7 +432,7 @@ serve every rule.
 | C5 | an outcome without a kind, a kind without a legend, more than 4 kinds |
 | C6 | a label wider than its box (13px monospace) |
 | C7 | a scenario without an origin saying real or illustrative, and where from |
-| C8 | a pair naming a scenario that does not exist |
+| C8 | a pair or a race naming a scenario that does not exist |
 | C9 | a panel row that reads a field a scenario lacks, or a series row whose value is not a list |
 | C10 | a matrix cell naming a panel row that does not exist |
 | C11 | a case shown under a question whose cell still depends on another question |
