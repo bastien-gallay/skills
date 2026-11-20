@@ -1,24 +1,9 @@
 # Changelog
 
-## 0.2.1
+## 0.2.2
 
-The view, chosen apart from the shape (stories S33–S34): a case drawn left
-to right, and a switch between views when the spec offers both. Every
-existing spec builds as before.
-
-- `view: "flow-lr"` lays the ranks out left to right: the same layout on
-  boxes turned a quarter, then turned back. A branch's name sits on the run
-  entering its target, after a rail kept close to the source, and each gap
-  is as wide as the names entering it, plus room for pass badges only
-  where a loop comes back. Loops run under the drawing.
-- `views` offers other views beside the zoom (`↓` `→`, or the key `V`):
-  the page draws the same case again on the same step.
-- SKILL.md picks the view from the question, after the shape, and asks
-  the user when two fit.
-
-After the tag `v0.2.1`, on `main`: measured time (story S35), asked for by
-a CI job that walked the same steps every week while its time moved.
-Installed copies get it with the next release.
+Measured time (story S35), asked for by a CI job that walked the same steps
+every week while its time moved. Every existing spec builds as before.
 
 - `measure` runs a command that reads real runs and gives each scenario
   its time per node, the number of runs it sums up (`mean` or `median`),
@@ -34,6 +19,22 @@ Installed copies get it with the next release.
   path, timed per step, is a page.
 - `examples/deploy-job/`: the same deploy over three weeks, its tools
   installed by every run, then twelve modules planned each time, then two.
+
+## 0.2.1
+
+The view, chosen apart from the shape (stories S33–S34): a case drawn left
+to right, and a switch between views when the spec offers both. Every
+existing spec builds as before.
+
+- `view: "flow-lr"` lays the ranks out left to right: the same layout on
+  boxes turned a quarter, then turned back. A branch's name sits on the run
+  entering its target, after a rail kept close to the source, and each gap
+  is as wide as the names entering it, plus room for pass badges only
+  where a loop comes back. Loops run under the drawing.
+- `views` offers other views beside the zoom (`↓` `→`, or the key `V`):
+  the page draws the same case again on the same step.
+- SKILL.md picks the view from the question, after the shape, and asks
+  the user when two fit.
 
 ## 0.2.0
 
