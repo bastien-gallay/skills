@@ -19,9 +19,10 @@ product
 truepath turns a process, a bug path or a rule under discussion into one
 self-contained HTML page: a dot walks the real path through the graph, a
 data panel shows what changes at each step, and scenarios play side by side
-with their first difference marked. The verdicts come from the repository's
-own code. Success: a reader who did not write the spec understands, in under
-a minute, which case goes where and why, without reading the detail.
+with their first difference marked, or several ways race on one clock. The
+verdicts come from the repository's own code. Success: a reader who did not
+write the spec understands, in under a minute, which case goes where and
+why, without reading the detail.
 
 ## Brand Personality
 
@@ -41,7 +42,8 @@ in motion; the motion carries the explanation, the text only labels it.
 2. One glance links everything: matrix, graph and scenarios read as one
    object, a cell maps visibly to its path.
 3. Time on screen follows importance: the dot spends time where the
-   decision is, not where the drawing is long.
+   decision is, not where the drawing is long; on a timed page, in a race,
+   it follows the time measured or estimated instead.
 4. Proof is visible: every verdict shows where it came from.
 5. Controls sit where the eye already is.
 

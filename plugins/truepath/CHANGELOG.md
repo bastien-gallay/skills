@@ -13,6 +13,11 @@ A race example the repository can keep, and a dot that falls.
   does, does not brake into its outcome, and lands in a puff of dust
   instead of a ring. Any other `motion` is refused.
 
+After the tag, words only: `SKILL.md`, the README, `docs/PRODUCT.md` and
+the runtime's comments still described one dot at an even pace and a
+zero-time step as a blink; they now say what 0.3.1 to 0.3.3 do. The README
+lists all six examples.
+
 ## 0.3.2
 
 From watching the race again: the fastest dot was lost before it arrived.

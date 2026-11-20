@@ -198,8 +198,8 @@ def validate_views(spec, p):
             p.append("spec: views names a view twice")
 
 
-RACE_MAX = 4
-MOTIONS = ("fall",)  # how a step's dot moves when not at an even pace: "fall" speeds up as a falling body does  # dots told apart by a number and a colour: beyond four, the graph is a crowd
+RACE_MAX = 4  # dots told apart by a number and a colour: beyond four, the graph is a crowd
+MOTIONS = ("fall",)  # how a step's dot moves when not at an even pace: "fall" speeds up as a falling body does
 STATS = ("mean", "median")  # what one case's measures sum up: several runs read as one
 SOURCES = ("runs", "estimate")  # timed on real runs, or worked out from a model of each step: never mixed up
 

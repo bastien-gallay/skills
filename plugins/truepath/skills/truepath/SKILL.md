@@ -1,6 +1,6 @@
 ---
 name: truepath
-description: Generate a self-contained HTML simulation that explains a process or a bug path step by step — one dot travels the real path, a data panel shows what changes at each step, and "before / after" scenarios play side by side with their first divergence marked. Verdicts are computed by the repository's own code (an oracle run on a frozen git snapshot) or by a declared JS port, and the build refuses to write anything that contradicts them. Use when asked to "show the process running", "animate this bug", "compare before and after the fix", « fais une simulation du process », « montre le cas avant/après », or to explain a decision rule with real or illustrative cases.
+description: Generate a self-contained HTML simulation that explains a process or a bug path step by step — one dot travels the real path, a data panel shows what changes at each step, "before / after" scenarios play side by side with their first divergence marked, and several ways can race on one clock, timed step by step. Verdicts are computed by the repository's own code (an oracle run on a frozen git snapshot) or by a declared JS port, and the build refuses to write anything that contradicts them. Use when asked to "show the process running", "animate this bug", "compare before and after the fix", « fais une simulation du process », « montre le cas avant/après », or to explain a decision rule with real or illustrative cases.
 ---
 
 # truepath
@@ -118,7 +118,8 @@ looping on it.
 The diagram zooms with `−`, `+`, Ctrl/Cmd + wheel, a trackpad or two-finger
 pinch, and the keys `+`, `-`, `0`; *Fit* (or `0`) shows it whole again. Once
 zoomed, a drag or the wheel pans, and the view glides after the moving dot so
-the current hop stays in sight. A pan stops that following; Play, Restart and
+the current hop stays in sight (a race has its own camera, see *Design
+rules*). A pan stops that following; Play, Restart and
 *Fit* resume it. A case opens on the whole graph; when that draws its labels
 under 12px, the first Play or step zooms to that size and follows the dots;
 *Fit* and the overview show the whole graph.
@@ -244,7 +245,8 @@ A `race` runs its scenarios at once on the clock: each step lasts the time
 of the nodes it reaches (a node reached twice in a loop shares its time
 between its visits; a step with no time shares the timed step next to it),
 so the fastest way
-arrives first, the slowest after twelve seconds at 1×. A clock runs above
+arrives first, the slowest after twelve seconds of clock at 1×, a little more
+on screen since each arrival slows down and holds. A clock runs above
 the graph, each bar fills in its dot's colour, the step list tells each
 arrival, and the summary the order of arrival with each time.
 
@@ -478,8 +480,9 @@ in a `basis` text, shown on hover.
 
 ## Design rules
 
-- One moving element per diagram: a single dot, one hop at a time. Every hop
-  takes the same time, however long it is drawn; the dot then stays long where
+- One moving element per way: a dot, one hop at a time. Outside a race, every
+  hop takes the same time, however long it is drawn (the run into an outcome
+  and a fall excepted, below); the dot then stays long where
   the story is (a decision, the first divergence, an outcome) and briefly where
   it only passes. Time on screen follows meaning, not ink. A node the dot only
   passes through, a loop's return say, is a `via` of the step, not a step of its
@@ -487,22 +490,26 @@ in a `basis` text, shown on hover.
   moving in step; when one has fewer steps, its dot waits on its outcome while
   the other goes on. An edge both take is the path colour, an edge only one
   takes is that side's colour: the divergence is a fork in one drawing, not a
-  difference between two thumbnails.
+  difference between two thumbnails. In a race, two to four dots move on
+  one clock instead, each step lasting its measured or estimated time.
 - On a timed page, a short comet trails each dot: where it was a moment ago
-  says how fast it goes. The run into an outcome slows down at its end, and
-  an arrival rings out of the dot and pulses twice round the outcome's box.
+  says how fast it goes. On every page, the run into an outcome slows down at
+  its end, and an arrival rings out of the dot and pulses twice round the
+  outcome's box.
   A step marked `motion: "fall"` is the exception: its dot speeds up all
   the way down, the distance growing with the square of the time, and lands
   in a puff of dust. A long fall reads best as one step through a node
   (`hop: [edge, falling, bottom]`), the time it takes kept short.
-- In a race, the camera keeps the leader (the dot furthest along its own
+- In a race zoomed to readable labels (a graph that reads whole is not
+  followed), the camera keeps the leader (the dot furthest along its own
   way) in sight: it frames the edge every running dot is on, zooming out no
   further than readable labels; when they no longer fit, it follows the
   leader alone, closer. It zooms back in only for a real gain and pans only
   when a way leaves the frame, so a loop does not make it breathe. The
   race's clock slows into each arrival and holds a moment on it, every dot
-  alike, so the race stays fair. A pan or a zoom by hand hands the camera
-  to the reader until Play or *Fit*.
+  alike, so the race stays fair. A pan by hand takes the view until Play
+  or Restart; a zoom by hand or *Fit* keeps it the reader's until the tab
+  is opened again.
 - Taken edges are solid, untaken ones dashed and grey; nodes off the path fade.
 - A loop's order is written where it branches: numbered badges on the
   branches leaving a node passed more than once, one per pass, set once
@@ -520,7 +527,8 @@ in a `basis` text, shown on hover.
   dots.
 - Light theme by default, dark under `prefers-color-scheme`; no web font, so
   the file works offline.
-- Under `prefers-reduced-motion` nothing glides or rings: the dots land on
+- Under `prefers-reduced-motion` nothing glides, rings, trails or puffs: the
+  camera jumps where it would glide, the dots land on
   their node at once and stay visible; meaning never rests on colour alone
   (`−` and `+` are written on the dots, `≠` beside the values).
 
@@ -552,8 +560,11 @@ build only inside a git repository that holds them.
 
 - One diagram type: the process flow, top to bottom or left to right.
   Sequence and architecture views are not built yet.
-- Measured time is drawn for scenarios and pairs, not yet for a grid; a
+- Measured time is drawn for scenarios, pairs and races, not yet for a
+  grid; a
   step's time is the sum of its passes, not one bar per pass.
+- A step's `motion` knows one value, `fall`; a dot cannot yet hold still
+  mid-edge.
 - `C6` is measured on macOS (`ui-monospace`); a narrower Windows font only
   adds air.
 - Steps are declared, not derived from the logic: C3 and C4 catch a wrong

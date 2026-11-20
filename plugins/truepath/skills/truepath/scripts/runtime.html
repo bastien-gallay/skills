@@ -236,7 +236,7 @@ ol.steps li.peek{background:var(--hl);border-radius:4px}
 const DATA=/*__DATA__*/null;
 const {page}=DATA, grid=page.grid, NS="http://www.w3.org/2000/svg";
 let geo=DATA.geo; // the view drawn: DATA.views holds every view the spec offers, when it offers more than one
-const HOP_MS=650;         // every hop takes the same time, however long it is drawn: time on screen follows meaning, not ink
+const HOP_MS=650;         // outside a race, every hop takes the same time, however long it is drawn: time on screen follows meaning, not ink (the run into an outcome lasts SLOW times longer; a fall speeds up)
 const DWELL_PASS=450;     // ms the dot stays on a node that only passes it on
 const DWELL_KEY=1700;     // ms it stays where the story is: a decision, the first divergence, an outcome
 const DOT_GAP=20;         // two dots nearer than this are set apart
@@ -464,7 +464,7 @@ function glide(){if(aim.k!=null&&Math.abs(aim.k-view.k)>.002){view.k+=(aim.k-vie
 function unitsPerPx(svg){const r=svg.getBoundingClientRect();return Math.max(viewW()/r.width,viewH()/r.height);}
 function toDiagram(svg,px,py){const r=svg.getBoundingClientRect(),u=unitsPerPx(svg);
  return [view.x+(px-r.left-(r.width-viewW()/u)/2)*u,view.y+(py-r.top-(r.height-viewH()/u)/2)*u];}
-/** A pan is the reader taking the view: it stops following the dot until Play or Fit. */
+/** A pan is the reader taking the view: it stops following the dot until Play or Restart. */
 function panBy(svg,dx,dy){st.follow=false;const u=unitsPerPx(svg);setView({x:view.x-dx*u,y:view.y-dy*u});}
 /** Ctrl/Cmd + wheel (a trackpad pinch arrives so) zooms at the pointer; the wheel and a drag pan once zoomed; two fingers pinch. */
 function listenZoom(svg){const pts=new Map();let pinch=null,gesture=1;
@@ -621,9 +621,9 @@ function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filt
  return wrap;}
 
 /** A side's own step at the page's step: in a pair of unequal length, the side that has arrived stays on its outcome. */
-/** A race on the clock: each side's steps last what the measure gives them (a step with none, a blink), every side on one
+/** A race on the clock: each side's steps last what the measure gives them (a step with none shares a timed neighbour's, see glidePer), every side on one
  *  clock. Step i of the race is the i-th time a dot arrives somewhere; a side is on the first step it has not yet ended. */
-const RACE_MS=12000,BLINK=.005; // the slowest arrives after RACE_MS at 1×; a step with no time takes BLINK of the race
+const RACE_MS=12000,BLINK=.005; // the slowest arrives after RACE_MS of clock at 1×; a step with no time and no timed neighbour takes BLINK of the race
 /** A step with no time (a decision, the run into an outcome) shares the time of the timed step next to it, the one
  *  before it first: the dot glides into its outcome instead of jumping there, and the total stays what was measured. */
 function glidePer(per){const out=per.slice();let i=0;
@@ -765,7 +765,7 @@ function render(){
  $("play").textContent=st.playing?"⏸":"⏵";$("play").setAttribute("aria-label",st.playing?words.pause:words.play);
  $("play").classList.toggle("go",!st.playing); // paused, Play is the obvious next click
 }
-// ---- motion: one dot per diagram, same hop index, same duration; a side that has arrived waits on its outcome
+// ---- motion: a dot per side; outside a race, same hop index, same duration, a side that has arrived waiting on its outcome; a race runs on its clock (runRace)
 const easeInOut=f=>f<.5?4*f*f*f:1-Math.pow(-2*f+2,3)/2;
 /** How long the view stays after step i's hop: long where a reader has something to see, short where the dot only passes. */
 function dwellAfter(i){const tab=TABS[st.tab],sides=sidesOf(tab),div=sides.length===2&&!tab.race?divergence(sides[0],sides[1]):null;
@@ -777,7 +777,7 @@ const nSteps=()=>{const c=clockOn();if(c)return c.times.length;const s=sidesOf(T
 function spread(qs){return qs.map((q,j)=>{const near=qs.flatMap((o,k)=>Math.hypot(o.x-q.x,o.y-q.y)<DOT_GAP?[k]:[]);
  return near.length>1?(near.indexOf(j)-(near.length-1)/2)*DOT_GAP:0;});}
 /** A race on the clock: from the last arrival to the next, every dot where its own time puts it; the clock runs on
- *  through the arrivals while playing, and the slowest side arrives after RACE_MS at 1×. */
+ *  through the arrivals while playing, and the slowest side arrives after RACE_MS of clock at 1× (longer on screen: SLOW, ARRIVE_PAUSE). */
 const SLOW=1.8,ARRIVE_PAUSE=650; // the run into an arrival lasts SLOW times longer, easing out; the race then holds a moment
 const easeOut=f=>1-Math.pow(1-f,3);
 /** Where a dot is along its step: a "fall" covers its edge as a body falls, the distance growing with the square of the time. */

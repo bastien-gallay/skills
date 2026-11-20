@@ -76,6 +76,8 @@ on day 30, refused before an off-by-one fix and granted after it.
 | [`refund-window`](skills/truepath/examples/refund-window/) | a before/after pair | a JS port |
 | [`free-shipping`](skills/truepath/examples/free-shipping/) | a grid: two open questions against three cases | a JS port |
 | [`loyalty-tier`](skills/truepath/examples/loyalty-tier/) | an oracle, and the fixture it exports | the folder's own `src/tier.js`, as committed |
+| [`payment-retry`](skills/truepath/examples/payment-retry/) | an oracle running one unit alone, a loop and its passes | the folder's own code, with a stub and a mock |
+| [`deploy-job`](skills/truepath/examples/deploy-job/) | measured time over three weeks, left to right | a JS port, and a script averaging a fictitious CI log |
 | [`canyon-chase`](skills/truepath/examples/canyon-chase/) | two races on one clock, and a fall | a JS port of cartoon physics |
 
 `loyalty-tier` reads its code through `git archive`, so it builds from a
@@ -96,7 +98,8 @@ hunter looks down, hangs a moment, then falls
 ](docs/canyon-chase.gif)
 
 The page opens paused, the play button green; the diagram zooms and pans,
-and once zoomed the view follows the dot.
+and once zoomed the view follows the dots; in a race it keeps the leader in
+sight.
 
 ![A before/after pair: the same refund request refused on the left, granted
 on the right, the decision where they part outlined

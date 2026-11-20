@@ -236,7 +236,7 @@ ol.steps li.peek{background:var(--hl);border-radius:4px}
 const DATA={"page": {"title": "Refund window", "subtitle": "Example: a refund asked on day 30 was refused before the fix", "source": "truepath example, self-contained", "lang": "en", "verdictSource": "port decide.js", "credit": true, "kinds": {"ok": {"label": "refunded", "color": "#15803d"}, "wrong": {"label": "store credit only", "color": "#b91c1c"}}, "nodes": {"REQ": {"label": "refund request", "kind": null, "role": "start"}, "AGE": {"label": "days since delivery", "kind": null, "role": null}, "D": {"label": "within 30 days?", "kind": null, "role": "decision"}, "REFUND": {"label": "money refunded", "kind": "ok", "role": null}, "CREDIT": {"label": "store credit", "kind": "wrong", "role": null}}, "scenarios": [{"id": "old", "tab": "Before", "summary": "Day 30: the old check reads `days \u003c 30` and refuses", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "The customer asks on the last day of the window."}, {"hop": ["AGE", "D"], "message": "30 \u003c 30 → false", "caption": "The old check excludes the last day."}, {"hop": ["D", "CREDIT"], "message": "store credit", "caption": "A refund the policy promises is refused."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "no"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "no", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "new", "tab": "After", "summary": "Same request: `days \u003c= 30` keeps day 30 in the window", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "Same request."}, {"hop": ["AGE", "D"], "message": "30 \u003c= 30 → true", "caption": "The last day counts."}, {"hop": ["D", "REFUND"], "message": "refunded", "caption": "The policy is applied as written."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "yes"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "yes", "provenance": {"kind": "port", "text": "port: decide.js"}}]}], "pairs": [{"before": "old", "after": "new", "tab": "before / after", "summary": "The one difference: does day 30 count?"}], "races": [], "grid": null}, "geo": {"width": 381, "height": 448, "lineHeight": 16, "nodes": {"REQ": {"w": 150, "h": 44, "labelLines": ["refund request"], "y": 32.0, "x": 119.2}, "AGE": {"w": 190, "h": 44, "labelLines": ["days since delivery"], "y": 140.0, "x": 99.2}, "D": {"w": 158, "h": 44, "labelLines": ["within 30 days?"], "y": 248.0, "x": 115.2}, "REFUND": {"w": 150, "h": 44, "labelLines": ["money refunded"], "y": 356.0, "x": 32.0}, "CREDIT": {"w": 135, "h": 44, "labelLines": ["store credit"], "y": 356.0, "x": 214.0}}, "edges": [{"from": "REQ", "to": "AGE", "d": "M194 76 V136", "label": null, "pass": [188, 122.0, -1], "labelPos": null}, {"from": "AGE", "to": "D", "d": "M194 184 V244", "label": null, "pass": [188, 230.0, -1], "labelPos": null}, {"from": "D", "to": "REFUND", "d": "M194 292 V324 H107 V352", "label": "yes", "pass": [162.8, 316, 1], "labelPos": [141.2, 320]}, {"from": "D", "to": "CREDIT", "d": "M194 292 V324 H282 V352", "label": "no", "pass": [247.2, 316, 1], "labelPos": [231.8, 320]}]}};
 const {page}=DATA, grid=page.grid, NS="http://www.w3.org/2000/svg";
 let geo=DATA.geo; // the view drawn: DATA.views holds every view the spec offers, when it offers more than one
-const HOP_MS=650;         // every hop takes the same time, however long it is drawn: time on screen follows meaning, not ink
+const HOP_MS=650;         // outside a race, every hop takes the same time, however long it is drawn: time on screen follows meaning, not ink (the run into an outcome lasts SLOW times longer; a fall speeds up)
 const DWELL_PASS=450;     // ms the dot stays on a node that only passes it on
 const DWELL_KEY=1700;     // ms it stays where the story is: a decision, the first divergence, an outcome
 const DOT_GAP=20;         // two dots nearer than this are set apart
@@ -464,7 +464,7 @@ function glide(){if(aim.k!=null&&Math.abs(aim.k-view.k)>.002){view.k+=(aim.k-vie
 function unitsPerPx(svg){const r=svg.getBoundingClientRect();return Math.max(viewW()/r.width,viewH()/r.height);}
 function toDiagram(svg,px,py){const r=svg.getBoundingClientRect(),u=unitsPerPx(svg);
  return [view.x+(px-r.left-(r.width-viewW()/u)/2)*u,view.y+(py-r.top-(r.height-viewH()/u)/2)*u];}
-/** A pan is the reader taking the view: it stops following the dot until Play or Fit. */
+/** A pan is the reader taking the view: it stops following the dot until Play or Restart. */
 function panBy(svg,dx,dy){st.follow=false;const u=unitsPerPx(svg);setView({x:view.x-dx*u,y:view.y-dy*u});}
 /** Ctrl/Cmd + wheel (a trackpad pinch arrives so) zooms at the pointer; the wheel and a drag pan once zoomed; two fingers pinch. */
 function listenZoom(svg){const pts=new Map();let pinch=null,gesture=1;
@@ -621,9 +621,9 @@ function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filt
  return wrap;}
 
 /** A side's own step at the page's step: in a pair of unequal length, the side that has arrived stays on its outcome. */
-/** A race on the clock: each side's steps last what the measure gives them (a step with none, a blink), every side on one
+/** A race on the clock: each side's steps last what the measure gives them (a step with none shares a timed neighbour's, see glidePer), every side on one
  *  clock. Step i of the race is the i-th time a dot arrives somewhere; a side is on the first step it has not yet ended. */
-const RACE_MS=12000,BLINK=.005; // the slowest arrives after RACE_MS at 1×; a step with no time takes BLINK of the race
+const RACE_MS=12000,BLINK=.005; // the slowest arrives after RACE_MS of clock at 1×; a step with no time and no timed neighbour takes BLINK of the race
 /** A step with no time (a decision, the run into an outcome) shares the time of the timed step next to it, the one
  *  before it first: the dot glides into its outcome instead of jumping there, and the total stays what was measured. */
 function glidePer(per){const out=per.slice();let i=0;
@@ -765,7 +765,7 @@ function render(){
  $("play").textContent=st.playing?"⏸":"⏵";$("play").setAttribute("aria-label",st.playing?words.pause:words.play);
  $("play").classList.toggle("go",!st.playing); // paused, Play is the obvious next click
 }
-// ---- motion: one dot per diagram, same hop index, same duration; a side that has arrived waits on its outcome
+// ---- motion: a dot per side; outside a race, same hop index, same duration, a side that has arrived waiting on its outcome; a race runs on its clock (runRace)
 const easeInOut=f=>f<.5?4*f*f*f:1-Math.pow(-2*f+2,3)/2;
 /** How long the view stays after step i's hop: long where a reader has something to see, short where the dot only passes. */
 function dwellAfter(i){const tab=TABS[st.tab],sides=sidesOf(tab),div=sides.length===2&&!tab.race?divergence(sides[0],sides[1]):null;
@@ -777,7 +777,7 @@ const nSteps=()=>{const c=clockOn();if(c)return c.times.length;const s=sidesOf(T
 function spread(qs){return qs.map((q,j)=>{const near=qs.flatMap((o,k)=>Math.hypot(o.x-q.x,o.y-q.y)<DOT_GAP?[k]:[]);
  return near.length>1?(near.indexOf(j)-(near.length-1)/2)*DOT_GAP:0;});}
 /** A race on the clock: from the last arrival to the next, every dot where its own time puts it; the clock runs on
- *  through the arrivals while playing, and the slowest side arrives after RACE_MS at 1×. */
+ *  through the arrivals while playing, and the slowest side arrives after RACE_MS of clock at 1× (longer on screen: SLOW, ARRIVE_PAUSE). */
 const SLOW=1.8,ARRIVE_PAUSE=650; // the run into an arrival lasts SLOW times longer, easing out; the race then holds a moment
 const easeOut=f=>1-Math.pow(1-f,3);
 /** Where a dot is along its step: a "fall" covers its edge as a body falls, the distance growing with the square of the time. */
