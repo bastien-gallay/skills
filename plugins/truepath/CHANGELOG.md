@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.3.1
+
+From watching the first race: the camera lost the leader, the dots
+arrived without a sound, and a timed run looked like any other. Every
+existing spec builds as before.
+
+- A race's camera keeps the leader in sight: it frames every running dot,
+  zooming out no further than readable labels, then follows the leader
+  alone, closer, when they no longer fit. A pan or a zoom by hand still
+  takes the view until Play or *Fit*.
+- The race's clock slows into each arrival and holds a moment on it, for
+  every dot alike; on any page, the hop into an outcome slows at its end.
+- On a timed page (a `measure`, measured or estimated), a short comet
+  trails each dot; it fades once the dot has arrived.
+- An arrival rings out of the dot and pulses twice round the outcome's
+  box. None of this moves under reduced motion.
+- A panel row reading a measured time rounds it as its bar does: `32.65`
+  read `32.6` in the panel and `32.7` on the bar.
+
 ## 0.3.0
 
 A new kind of tab, the race (story S37): three ways to the same end,

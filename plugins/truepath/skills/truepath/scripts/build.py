@@ -19,6 +19,7 @@ import copy
 import hashlib
 import html
 import json
+import math
 import os
 import pathlib
 import re
@@ -585,7 +586,7 @@ def panel_rows(scenario, panel, in_grid, unit=None, source="runs"):
                     out["series"] = [shown(row, v) for v in value]  # one value per step from `at`, the last one stays
                     out["shown"] = out["series"][-1]
                 elif timed(row, value, unit):  # a time from the measure reads as its bar reads it: 82.3 ms
-                    out["shown"] = f"{round(value, 1):g}\u00a0{unit}"
+                    out["shown"] = f"{math.floor(value * 10 + 0.5) / 10:g}\u00a0{unit}"  # rounded as the page rounds a bar's time
                 else:
                     out["shown"] = None if row.get("series") else shown(row, value)  # C9 says so
             except KeyError:

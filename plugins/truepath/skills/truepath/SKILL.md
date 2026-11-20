@@ -487,6 +487,15 @@ in a `basis` text, shown on hover.
   the other goes on. An edge both take is the path colour, an edge only one
   takes is that side's colour: the divergence is a fork in one drawing, not a
   difference between two thumbnails.
+- On a timed page, a short comet trails each dot: where it was a moment ago
+  says how fast it goes. The run into an outcome slows down at its end, and
+  an arrival rings out of the dot and pulses twice round the outcome's box.
+- In a race, the camera keeps the leader (the dot furthest along its own
+  way) in sight: it frames every running dot, zooming out no further than
+  readable labels; when they no longer fit, it follows the leader alone,
+  closer. The race's clock slows into each arrival and holds a moment on
+  it, every dot alike, so the race stays fair. A pan or a zoom by hand
+  hands the camera to the reader until Play or *Fit*.
 - Taken edges are solid, untaken ones dashed and grey; nodes off the path fade.
 - A loop's order is written where it branches: numbered badges on the
   branches leaving a node passed more than once, one per pass, set once

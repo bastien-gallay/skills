@@ -25,8 +25,8 @@ layout.py ──┘                                └► fixture.json (--export
 
 ## Status
 
-0.3.0, tagged
-[`v0.3.0`](https://github.com/bastien-gallay/truepath/releases/tag/v0.3.0)
+0.3.1, tagged
+[`v0.3.1`](https://github.com/bastien-gallay/truepath/releases/tag/v0.3.1)
 on 2026-11-20. The spec vocabulary may still change before
 1.0; [`CHANGELOG.md`](CHANGELOG.md) says what did. The examples build with 0
 violations, and the three that keep their page rebuild it byte for byte; the
