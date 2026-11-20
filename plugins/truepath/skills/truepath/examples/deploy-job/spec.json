@@ -130,7 +130,13 @@
   ],
   "stat": "mean",
   "unit": "s",
-  "tolerance": 1
+  "tolerance": 1,
+  "compare": [
+   "WAIT",
+   "PREP",
+   "TOOLS",
+   "PICK"
+  ]
  },
  "scenarios": [
   {

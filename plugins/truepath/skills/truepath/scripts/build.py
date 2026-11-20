@@ -211,6 +211,14 @@ def validate_measure(spec, specdir, p):
         p.append("measure.tolerance: expected a number of units, 0 or more")
     if "cwd" in m and not (specdir / str(m["cwd"])).is_dir():
         p.append(f"measure.cwd: {m['cwd']} is not a folder next to the spec")
+    if "compare" in m:  # the steps whose time compares from case to case; the others move with the load
+        ids = {n.get("id") for n in spec.get("nodes", []) if isinstance(n, dict)}
+        if not isinstance(m["compare"], list) or not m["compare"]:
+            p.append("measure.compare: expected a list of the nodes whose time compares from one case to the next")
+        else:
+            for n in m["compare"]:
+                if n not in ids:
+                    p.append(f"measure.compare: {n!r} is no node")
 
 
 def validate_doubles(o, p):
@@ -380,7 +388,7 @@ def run_measure(spec, scenarios, specdir):
 
     Measures are data, not code under test: the command runs in the spec's folder (or `cwd` under
     it), never on a snapshot. It reads TRUEPATH_MEASURE_IN, [{id, inputs}] in scenario order, and
-    writes TRUEPATH_MEASURE_OUT, one object per scenario: {total, n, failed?, steps: {node: time}, basis}."""
+    writes TRUEPATH_MEASURE_OUT, one object per scenario: {total, n, failed?, excluded?, steps: {node: time}, basis}."""
     m = spec["measure"]
     workdir = specdir / WORKDIR
     workdir.mkdir(exist_ok=True)
@@ -809,6 +817,10 @@ def c17_measured_nodes_are_on_the_path(b):
                 yield f"{s['id']}: a time is measured on {node}, which its path does not reach"
 
 
+def count(v):
+    return isinstance(v, int) and not isinstance(v, bool) and v >= 0
+
+
 def c18_a_measure_says_what_it_sums_up(b):
     if "measure" not in b.spec:
         return
@@ -820,6 +832,11 @@ def c18_a_measure_says_what_it_sums_up(b):
             yield f"{s['id']}: its measure gives no `n`, the number of runs it sums up (1 or more)"
         if "failed" in m and (not isinstance(m["failed"], int) or isinstance(m["failed"], bool) or m["failed"] < 0):
             yield f"{s['id']}: `failed` is the number of failed runs left out, 0 or more"
+        left = m.get("excluded", [])
+        if not isinstance(left, list) or not all(
+                isinstance(e, dict) and count(e.get("n")) and isinstance(e.get("why"), str) and e["why"].strip()
+                for e in left):
+            yield f"{s['id']}: `excluded` lists the runs left out, [{{n, why}}]: how many, and why in the page's words"
         steps = m.get("steps") if isinstance(m.get("steps"), dict) else {}
         for node, v in steps.items():
             if not number(v) or v < 0:
@@ -899,7 +916,7 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
     if "measure" in spec:
         m = spec["measure"]
         page["measure"] = {"stat": m["stat"], "unit": m.get("unit", "s"), "tolerance": m.get("tolerance", 1),
-                           "rows": [measure_row(s) for s in scenarios]}
+                           "compare": m.get("compare"), "rows": [measure_row(s) for s in scenarios]}
     data = {"page": page, "geo": geo[views_of(spec)[0]]}
     if len(geo) > 1:  # the page offers to switch: every view's geometry, in the spec's order
         data["views"] = {v: geo[v] for v in views_of(spec)}
@@ -913,7 +930,8 @@ def measure_row(s):
         for n in st["hop"]:
             if n in m["steps"] and n not in order:
                 order.append(n)
-    return {"scenario": s["id"], "total": m["total"], "n": m["n"], "failed": m.get("failed", 0),
+    left = ([[m["failed"], None]] if m.get("failed") else []) + [[e["n"], e["why"]] for e in m.get("excluded", []) if e["n"]]
+    return {"scenario": s["id"], "total": m["total"], "n": m["n"], "left": left,  # None: failed, in the page's words
             "basis": str(m.get("basis", "")).removeprefix("measure:").strip(),
             "segs": [[n, m["steps"][n]] for n in order]}
 

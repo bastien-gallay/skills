@@ -182,22 +182,29 @@ snapshot: measures are data, not code under test. It reads
 `TRUEPATH_MEASURE_OUT`, one object per scenario:
 
 ```json
-{"total": 152.3, "n": 4, "failed": 1, "steps": {"WAIT": 4.5, "TOOLS": 35.3, "PLAN": 24.8},
+{"total": 152.3, "n": 4, "failed": 1, "excluded": [{"n": 2, "why": "with nothing to apply"}],
+ "steps": {"WAIT": 4.5, "TOOLS": 35.3, "PLAN": 24.8},
  "basis": "measure: CI log of week 1; each run cut by the time stamps of its log lines"}
 ```
 
 `total` is what a whole run took, `n` how many runs the `stat` (`mean` or
-`median`) sums up, `failed` the runs left out, `steps` the time on each
-node, all passes through a loop together. `basis` says where the times come
-from and how a run was cut into steps; when steps run side by side, say
-which one a second counts for. Keep the script that reads the raw log next
-to the spec, so the page can be built again when the log grows.
+`median`) sums up, `failed` the failed runs left out, `excluded` the runs
+left out for another reason (`why` in the page's language), `steps` the
+time on each node, all passes through a loop together. `basis` says where
+the times come from and how a run was cut into steps, in the page's
+language; when steps run side by side, say which one a second counts for.
+Keep the script that reads the raw log next to the spec, so the page can be
+built again when the log grows.
 
 The page draws one bar per case under the graph, every case on one scale:
 the case played is in bold, the node the dot is on is filled in every bar,
 and `≠` outlines, in each bar after the first, the step that moved most
-from the first bar. Hovering a segment outlines its node; a click opens its
-case on the first step that reaches it. A panel row may read
+from the first bar; a step gone from that bar is outlined in the first.
+A step whose time follows the load rather than the case (a plan that grows
+with the modules applied) would take that mark from the change that
+matters: `"compare": [nodes]` in `measure` names the steps the mark weighs.
+Hovering a segment outlines its node; a click opens its case on the first
+step that reaches it. A panel row may read
 `measure.total` or `measure.n`, marked `◉ measured`. The footer names each
 basis.
 
@@ -325,7 +332,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `oracle` | `{repo, ref, paths, link?, files?, doubles?, cwd, cmd}` | see above; `doubles` is required when `files` is given |
 | `doubts` | `[{id, question, scenarios, answer?, assumed?}]` | what was asked before building, and the answer: see *Doubts* |
 | `port` | path to a CommonJS file exporting `decide(inputs)` | used when there is no oracle |
-| `measure` | `{cmd, stat, unit?, tolerance?, cwd?}` | measured time per step: see *Measured time*; `stat` is `mean` or `median`, `unit` `s` by default, `tolerance` (1 by default) how far the steps may add up from the total; scenarios and pairs, not a grid |
+| `measure` | `{cmd, stat, unit?, tolerance?, cwd?, compare?}` | measured time per step: see *Measured time*; `stat` is `mean` or `median`, `unit` `s` by default, `tolerance` (1 by default) how far the steps may add up from the total; `compare` the nodes the `≠` mark weighs (all by default); scenarios and pairs, not a grid |
 | `export` | `{dir, fixture, assert}` | `--export <worktree>` writes the fixture there |
 
 ## Comparing several rules: the grid
@@ -462,6 +469,8 @@ in a `basis` text, shown on hover.
   (`−` and `+` are written on the dots, `≠` beside the values).
 
 ## Files
+
+Paths are relative to this file's folder.
 
 | Path | Role |
 | --- | --- |

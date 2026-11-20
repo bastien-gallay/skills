@@ -553,7 +553,21 @@ class Measure(Case):
         m = self.data(out)["measure"]
         self.assertEqual((m["stat"], m["unit"]), ("mean", "s"))
         self.assertEqual(m["rows"][0]["segs"], [["REQ", 1], ["AGE", 4], ["D", 5]])
-        self.assertEqual((m["rows"][0]["n"], m["rows"][0]["failed"], m["rows"][0]["basis"]), (3, 1, "a test log"))
+        self.assertEqual((m["rows"][0]["n"], m["rows"][0]["left"], m["rows"][0]["basis"]), (3, [[1, None]], "a test log"))
+        self.assertEqual(m["rows"][1]["left"], [])
+
+    def test_runs_left_out_for_another_reason_say_why(self):
+        rows = [{"total": 10, "n": 3, "excluded": [{"n": 2, "why": "with nothing to apply"}],
+                 "steps": {"AGE": 4, "REQ": 1, "D": 5}, "basis": "measure: a test log"},
+                {"total": 7, "n": 2, "steps": {"AGE": 2, "D": 5}, "basis": "measure: a test log"}]
+        self.refused(self.measured([dict(rows[0], excluded=[{"n": 2}]), rows[1]]), "C18")
+        out, *_ = self.build(self.spec(self.measured(rows)))
+        self.assertEqual(self.data(out)["measure"]["rows"][0]["left"], [[2, "with nothing to apply"]])
+
+    def test_compare_names_the_steps_whose_time_compares(self):
+        self.unreadable(self.measured(compare=["NOPE"]), "'NOPE' is no node")
+        out, *_ = self.build(self.spec(self.measured(compare=["AGE"])))
+        self.assertEqual(self.data(out)["measure"]["compare"], ["AGE"])
 
     def test_a_panel_row_reads_the_measure_and_says_so(self):
         def change(s):

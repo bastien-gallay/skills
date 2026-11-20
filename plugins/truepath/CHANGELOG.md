@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.3
+
+From a first measured run on a real CI job, three days of a deploy whose
+image stopped installing its tools, and whose plan grew with the work
+applied. Every existing spec builds as before.
+
+- `measure.compare` names the steps whose time compares from one case to
+  the next: `≠` marked the plan, which grew with the work applied that day,
+  and missed the install step the image had dropped. A step gone from a
+  bar now takes the mark too, outlined in the first bar where it was.
+- `excluded: [{n, why}]` in a measure says which runs were left out for
+  another reason than a failure: runs with nothing to apply read as failed.
+  The row says *hors calcul : 1 sans couche*, without an agreement to get
+  wrong.
+- A diagram drawn left to right grows taller when it zooms to readable
+  labels, up to the room left on screen: it kept its thin strip, and the
+  branches above and below the path ran off it. *Fit* gives the strip back.
+- A timeline segment too narrow for its name shows none: a few letters
+  said nothing. The name stays on hover.
+- SKILL.md asks for a measure's basis in the page's language, and says
+  where the paths of its *Files* table start.
+
 ## 0.2.2
 
 Measured time (story S35), asked for by a CI job that walked the same steps
