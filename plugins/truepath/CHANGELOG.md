@@ -22,6 +22,22 @@ line-by-line file parser (S28–S31).
 - A pair's `compared` row (the fix, the rule) is no longer marked `≠`: it
   differs by design, and the mark pointed at it as an effect.
 
+From a first run on a project the author does not build: an excerpt of a
+public repository, its unit run alone.
+
+- The oracle runs the unit by default, the way a unit test does: one
+  function or module, unchanged, its collaborators replaced by doubles that
+  answer what the scenario says. `oracle.doubles` lists them, `{name, kind:
+  stub|fake|mock, replaces}`, and the footer names them; glue brought by
+  `files` without that list is refused.
+- `scripts/fetch.py` lists a GitHub repository's paths and fetches a few
+  files at one commit into a local git repository, with an `excerpt.json`
+  naming their origin. The footer then names the upstream commit, not the
+  local one that holds the copy.
+- `doubts`: what the author was unsure of is asked before building, the
+  strongest first, and the answer kept in the spec. C15 refuses a scenario
+  resting on an unanswered doubt, unless it is `undecided`.
+
 - A matrix cell says how its case ends, the outcome's label beside its
   colour, then the value: `rien` read the same for a value lost, dropped on
   purpose, or lost again. The highlight of a split case is gone; `≠` is the

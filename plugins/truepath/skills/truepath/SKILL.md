@@ -12,7 +12,7 @@ offline `.html` — or nothing.
 
 ```text
 spec.json ──┐
-oracle/port ├─► build.py ──► checks C1–C14 ─► sim.html   (or nothing)
+oracle/port ├─► build.py ──► checks C1–C15 ─► sim.html   (or nothing)
 layout.py ──┘                                └► fixture.json (--export)
 ```
 
@@ -34,21 +34,29 @@ pairs, the reader gets one tab per case and no table to compare them in.
 
 ## Workflow
 
-1. Copy the nearest example next to the subject's notes (see *Files*),
+1. Find the unit to show: the function or module that decides the path.
+   When the code lives in a remote repository, do not clone or build it:
+   list its paths and fetch only that unit's files (see *Working from an
+   excerpt*). Read its tests too: each one is a real case, already checked.
+2. Copy the nearest example next to the subject's notes (see *Files*),
    rename `spec.json` to `<subject>.spec.json`.
-2. Describe nodes and edges. Every sink node (an outcome) gets a `kind`;
+3. Describe nodes and edges. Every sink node (an outcome) gets a `kind`;
    kinds are the only colours, each with a legend label.
-3. Choose where the verdicts come from (see below): an `oracle` when the
-   rule exists in code, a JS `port` otherwise.
-4. Write the scenarios. Each declares its `origin`, its `inputs`, the
+4. Choose where the verdicts come from (see below). By default, an `oracle`
+   that runs the unit alone, its collaborators replaced by doubles, as a
+   unit test would (see *Running the unit, not the system*); a JS `port`
+   when the rule has no code yet.
+5. Write the scenarios. Each declares its `origin`, its `inputs`, the
    `expect`ed verdict fields, and its `steps` along real edges.
-5. Build, then open the file:
+6. Write down your doubts, then ask the user about the strongest ones,
+   before building (see *Doubts*).
+7. Build, then open the file:
 
    ```sh
    python3 <skill-dir>/scripts/build.py <subject>.spec.json
    ```
 
-6. Read the violations, fix the spec — never the check.
+8. Read the violations, fix the spec — never the check.
 
 `spec.json` builds `sim.html`, `<subject>.spec.json` builds
 `<subject>.sim.html`; `-o` names another file.
@@ -111,6 +119,81 @@ runner works: a test file of the
 project's own framework, a script, a JUnit test for Java. The footer names
 the ref and the short sha that produced the verdicts.
 
+## Running the unit, not the system
+
+The default oracle runs the unit that decides the path and nothing around
+it, the way a unit test does: one function or module of the ref, compiled
+or loaded alone, its collaborators (a database, a network client, a clock,
+a signature scheme) replaced by doubles that answer what the scenario says.
+Each scenario then shows one test path, and its verdict depends on the
+unit's code and on the scenario, not on a deployment. Building the whole
+system is the exception, for a path that crosses several units on purpose.
+
+- **The unit stays unchanged.** Take it from the snapshot as committed;
+  when it must be cut out of a larger file, cut it by markers (from the
+  first type to the end of an `impl`, say) in the glue, never by editing
+  it. What the language needs around it (types it names, a logger, an
+  error crate) is glue, brought by `oracle.files`.
+- **A double answers, it never decides.** A stub returns what the scenario's
+  `inputs` say; a fake is a working toy (a hash, a signature that binds a
+  message to a key) whose answers follow from its inputs, so a tampered
+  input still fails for the right reason; a mock records what the unit
+  asked it. Reach for the project's own test doubles first, when they come
+  without the rest of the system.
+- **What the unit asked is a verdict too.** A double that records its calls
+  turns them into fields (`checked: true`, `sync: "forced"`): the panel then
+  shows what the unit did, not only where it ended.
+- **Say what stood in.** `oracle.doubles` lists each double:
+  `{name, kind: stub|fake|mock, replaces}`. The footer names them
+  (`· doubles: runner (stub), crypto (fake)`), and a field a double decides
+  gets a `basis` that is not `code:`, so the panel marks it. A spec whose
+  `files` bring glue without `doubles` is refused (`doubles: []` when the
+  files only drive the run).
+- **Prefer a small toolchain.** The compiler alone, or the language's
+  package manager with a few small libraries the unit names (an error
+  crate, say) when rewriting them would put toy code where the real one
+  runs.
+
+## Working from an excerpt
+
+`scripts/fetch.py` reads a GitHub repository without cloning it:
+
+```sh
+python3 <skill-dir>/scripts/fetch.py tree OWNER/REPO --grep 'runtime/.*\.rs$'
+python3 <skill-dir>/scripts/fetch.py get OWNER/REPO path/a.rs path/b.rs --into excerpt
+```
+
+`tree` lists the paths at the ref (`--ref`, the default branch otherwise),
+to find the unit and its tests. `get` resolves the ref to one commit,
+downloads the files unchanged, and commits them, with an `excerpt.json`
+naming their origin, in a local git repository. That repository is the
+oracle's `repo`: the footer then reads `code of OWNER/REPO @ 1a2b3c4,
+excerpt of 2 files`, the upstream commit, not the local one. A later `get`
+into the same directory adds files of that same commit only.
+
+Fetch what the unit is, then what it needs to be read; what it needs to
+run comes from doubles, not from more files.
+
+## Doubts
+
+Before building, list what you are unsure of, and rank it by how much a
+wrong guess would change what the reader concludes:
+
+- a double's answer that decides the outcome, inferred rather than read;
+- a case no test of the project covers, so nothing confirms its path;
+- code you read but did not run (a log message, a branch the doubles never
+  reach);
+- a rule whose intent the code does not settle.
+
+Ask the user about the strongest ones, one question at a time, through the
+interactive question tool when there is one (its options are the plausible
+answers, yours first, marked recommended), at most three before the first
+build. Keep the rest in the spec. Each doubt is recorded in `doubts`:
+`{id, question, scenarios, answer?}`. C15 refuses a scenario that rests on
+an unanswered doubt, unless it is marked `undecided`, and prints the
+question to ask. The answer, with who gave it, stays in the spec: it is
+why the case reads the way it does.
+
 A test-file oracle can double as a regression suite: when
 `TRUEPATH_ORACLE_IN` is set it writes the verdicts, otherwise it reads the
 exported fixture and asserts it. The scenarios then live once, in the spec,
@@ -130,7 +213,8 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`, or `hop: [from, via…, to]` to run through a node without stopping (a loop's return); `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
 | `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
-| `oracle` | `{repo, ref, paths, link?, files?, cwd, cmd}` | see above |
+| `oracle` | `{repo, ref, paths, link?, files?, doubles?, cwd, cmd}` | see above; `doubles` is required when `files` is given |
+| `doubts` | `[{id, question, scenarios, answer?}]` | what was asked before building, and the answer: see *Doubts* |
 | `port` | path to a CommonJS file exporting `decide(inputs)` | used when there is no oracle |
 | `export` | `{dir, fixture, assert}` | `--export <worktree>` writes the fixture there |
 
@@ -198,6 +282,7 @@ serve every rule.
 | C12 | a case in no matrix section, or a section naming an unknown case |
 | C13 | a panel row, or a value of a series, set to appear at a step the scenario does not have |
 | C14 | a text over its budget (see *Text budget*) |
+| C15 | a scenario resting on an unanswered doubt, unless it is `undecided`; a doubt naming an unknown case |
 
 C3 and C4 are the point: a scenario that says something the code does not do
 cannot be published. C6 guards the layout rather than the spec: boxes are
@@ -265,6 +350,7 @@ in a `basis` text, shown on hover.
 | `scripts/build.py` | reads the spec, gets the verdicts, runs the checks, writes the page and the export |
 | `scripts/runtime.html` | the page; `build.py` gives it what it shows, already formatted, and nothing else of the spec |
 | `scripts/layout.py` | layered layout: boxes sized to their label, orthogonal edges |
+| `scripts/fetch.py` | a few files of a GitHub repository, frozen at one commit, as a local repository an oracle can read |
 | `examples/refund-window/` | a JS port and a before/after pair |
 | `examples/free-shipping/` | a grid: two open questions, each decided on the cases it changes |
 | `examples/loyalty-tier/` | an oracle on the folder's own `src/`, its glue and the fixture `--export` writes |
@@ -283,3 +369,5 @@ every commit, and it builds only inside a git repository that holds it.
   adds air.
 - Steps are declared, not derived from the logic: C3 and C4 catch a wrong
   outcome, not a wrong intermediate message.
+- `fetch.py` reads GitHub only, through `curl`; elsewhere, copy the files
+  into a local git repository with an `excerpt.json` of the same shape.

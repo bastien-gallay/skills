@@ -198,6 +198,30 @@ class Checks(Case):
         self.assertTrue(out.exists())
 
 
+class Doubts(Case):
+    def doubt(self, answer=None, undecided=False, names=None):
+        def change(s):
+            sid = s["scenarios"][0]["id"]
+            s["doubts"] = [{"id": "D1", "question": "Does the clock count the last day?",
+                            "scenarios": names or [sid], **({"answer": answer} if answer else {})}]
+            s["scenarios"][0]["undecided"] = undecided
+        return change
+
+    def test_c15_an_open_doubt_stops_the_build_and_says_what_to_ask(self):
+        with self.assertRaises(build.ChecksFailed) as cm:
+            self.build(self.spec(self.doubt()))
+        self.assertTrue(any("C15" in e and "Does the clock count the last day?" in e for e in cm.exception.args[0]))
+
+    def test_an_answered_doubt_builds(self):
+        self.build(self.spec(self.doubt(answer="yes, said the product owner on 2026-11-20")))
+
+    def test_an_open_doubt_on_an_undecided_case_builds(self):
+        self.build(self.spec(self.doubt(undecided=True)))
+
+    def test_c15_a_doubt_names_a_known_case(self):
+        self.refused(self.doubt(answer="yes", names=["nowhere"]), "C15")
+
+
 class Grid(Case):
     def grid(self, change=None):
         def apply(s):
@@ -613,9 +637,38 @@ class Oracle(Case):
         def change(s):
             self.oracle(s)
             s["oracle"]["files"] = {"src/given/extra.json": "extra.json"}
+            s["oracle"]["doubles"] = []
             s["oracle"]["cmd"] = ["node", "-e", "require('./given/extra.json');require('./run.js')"]
         *_, source, _ = self.build(self.spec(change))
         self.assertTrue(source.endswith(" + from the spec: extra.json"), source)  # not passed off as the ref's code
+
+    def test_files_must_say_what_they_stand_in_for(self):
+        (self.dir / "extra.json").write_text("{}", encoding="utf-8")
+
+        def change(s):
+            self.oracle(s)
+            s["oracle"]["files"] = {"src/given/extra.json": "extra.json"}
+        self.unreadable(change, "oracle.doubles")
+
+    def test_a_double_has_a_known_kind(self):
+        def change(s):
+            self.oracle(s)
+            s["oracle"]["doubles"] = [{"name": "clock", "kind": "spy-ish", "replaces": "the system clock"}]
+        self.unreadable(change, "expected stub, fake or mock")
+
+    def test_the_footer_names_the_doubles(self):
+        def change(s):
+            self.oracle(s)
+            s["oracle"]["doubles"] = [{"name": "clock", "kind": "stub", "replaces": "the system clock"}]
+        *_, source, _ = self.build(self.spec(change))
+        self.assertTrue(source.endswith(" · doubles: clock (stub)"), source)
+
+    def test_an_excerpt_is_named_by_its_origin_not_its_local_commit(self):
+        (self.repo / "excerpt.json").write_text(json.dumps(
+            {"repo": "someone/project", "sha": "0123456789abcdef", "files": ["src/rule.js", "src/run.js"]}), encoding="utf-8")
+        self.commit("excerpt")
+        *_, source, _ = self.build(self.spec(self.oracle))
+        self.assertTrue(source.startswith("code of someone/project @ 0123456, excerpt of 2 files"), source)
 
     def test_export_asserts_only_what_code_computed(self):
         *_, note = self.build(self.spec(self.oracle), export_to=self.dir / "wt")
@@ -643,6 +696,47 @@ class Oracle(Case):
             s["export"] = {"dir": ".", "fixture": "cases.json", "assert": ["inWindow", "outcome"]}
         *_, note = self.build(self.spec(change), export_to=self.dir / "wt")
         self.assertEqual(json.loads(note[0].read_text(encoding="utf-8"))["cases"][0]["expected"], {})
+
+
+class Fetch(unittest.TestCase):
+    """fetch.py against a GitHub stand-in served from file:// URLs, through the same curl."""
+
+    def setUp(self):
+        self.dir = pathlib.Path(tempfile.mkdtemp(prefix="truepath-fetch-"))
+        self.addCleanup(shutil.rmtree, self.dir, ignore_errors=True)
+        api, raw = self.dir / "api/repos/o/r", self.dir / "raw/o/r"
+        for sha in ("a" * 40, "b" * 40):
+            (api / "commits").mkdir(parents=True, exist_ok=True)
+            (raw / sha / "src").mkdir(parents=True)
+            (raw / sha / "src/rule.rs").write_text(f"// at {sha[0]}\n", encoding="utf-8")
+            (raw / sha / "src/other.rs").write_text("// other\n", encoding="utf-8")
+        (api / "commits/main").write_text(json.dumps({"sha": "a" * 40}), encoding="utf-8")
+        (api / "commits/next").write_text(json.dumps({"sha": "b" * 40}), encoding="utf-8")
+        import fetch
+        self.fetch = fetch
+        self.urls = (fetch.API, fetch.RAW)
+        fetch.API, fetch.RAW = f"file://{self.dir}/api", f"file://{self.dir}/raw"
+        self.addCleanup(self.restore)
+
+    def restore(self):
+        self.fetch.API, self.fetch.RAW = self.urls
+
+    def test_get_commits_the_files_unchanged_with_their_origin(self):
+        into = self.dir / "excerpt"
+        self.fetch.get("o/r", "main", ["src/rule.rs"], into)
+        self.assertEqual((into / "src/rule.rs").read_text(encoding="utf-8"), "// at a\n")
+        record = json.loads((into / "excerpt.json").read_text(encoding="utf-8"))
+        self.assertEqual(record, {"repo": "o/r", "sha": "a" * 40, "files": ["src/rule.rs"]})
+        tracked = subprocess.run(["git", "-C", str(into), "ls-files"], check=True, capture_output=True, text=True).stdout.split()
+        self.assertEqual(sorted(tracked), ["excerpt.json", "src/rule.rs"])
+
+    def test_a_second_get_adds_files_of_the_same_commit_only(self):
+        into = self.dir / "excerpt"
+        self.fetch.get("o/r", "main", ["src/rule.rs"], into)
+        self.fetch.get("o/r", "main", ["src/other.rs"], into)
+        self.assertEqual(json.loads((into / "excerpt.json").read_text())["files"], ["src/other.rs", "src/rule.rs"])
+        with self.assertRaises(self.fetch.FetchFailed):
+            self.fetch.get("o/r", "next", ["src/rule.rs"], into)
 
 
 if __name__ == "__main__":

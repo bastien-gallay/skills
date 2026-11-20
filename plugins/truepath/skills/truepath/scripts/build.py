@@ -9,7 +9,7 @@ Geometry comes from layout.py, next to this file. Python 3.9+, standard library 
 The build is a line of steps, each handing the next what it made:
 
     read -> validate -> scenarios (plain, or grid cells) -> verdicts -> templates
-         -> checks C1..C13 -> page data -> page
+         -> checks C1..C15 -> page data -> page
 
 The spec is read, never rewritten: what the page receives is built on purpose by
 `page_data`, so nothing of the spec reaches it by accident.
@@ -94,6 +94,7 @@ def validate(spec, specdir, exporting=False):
             for dest, src in (o.get("files") or {}).items() if isinstance(o.get("files"), dict) else ():
                 if not (specdir / str(src)).is_file():
                     p.append(f"oracle.files: {src} not found next to the spec")
+            validate_doubles(o, p)
     elif "port" in spec:
         if not (specdir / str(spec["port"])).is_file():
             p.append(f"port: {spec['port']} not found next to the spec")
@@ -156,7 +157,37 @@ def validate(spec, specdir, exporting=False):
         validate_grid(spec["grid"], p)
     elif not scenarios:
         p.append("spec: no scenario and no grid, so there is nothing to play")
+    validate_doubts(spec, p)
     p.raise_if_any()
+
+
+DOUBLE_KINDS = ("stub", "fake", "mock")
+
+
+def validate_doubles(o, p):
+    """What the oracle runs is a unit, its collaborators replaced: the reader is told which ones.
+
+    `files` brings code that is not the ref's; the spec says which collaborator each double
+    stands in for, or `doubles: []` when the files only drive the run."""
+    if "doubles" not in o:
+        if o.get("files"):
+            p.append("oracle.files brings code that is not the ref's: list in oracle.doubles the collaborators "
+                     "it stands in for, as [{name, kind, replaces}], or [] if it only drives the run")
+        return
+    if not isinstance(o["doubles"], list):
+        p.append("oracle.doubles: expected a list [{name, kind, replaces}]")
+        return
+    for i, d in enumerate(o["doubles"]):
+        if p.keys(d, ["name", "kind", "replaces"], f"oracle.doubles[{i}]") and d["kind"] not in DOUBLE_KINDS:
+            p.append(f"oracle.doubles[{i}]: kind is {d['kind']!r}, expected stub, fake or mock")
+
+
+def validate_doubts(spec, p):
+    if not p.typed(spec, "doubts", list, "spec", "a list [{id, question, scenarios, answer?}]") or "doubts" not in spec:
+        return
+    for i, d in enumerate(spec["doubts"]):
+        if p.keys(d, ["id", "question", "scenarios"], f"doubts[{i}]"):
+            p.typed(d, "scenarios", list, f"doubt {d['id']}", "a list of scenario or case ids")
 
 
 def validate_steps(steps, where, p):
@@ -249,12 +280,31 @@ def run_oracle(spec, scenarios, specdir):
         raise UnreadableSpec(f"oracle: cannot run {o['cmd']!r}: {e}") from e
     if run.returncode or not io_out.exists():
         raise UnreadableSpec("oracle failed:\n" + run.stdout[-3000:] + run.stderr[-3000:])
-    en = spec.get("lang", "en") == "en"
-    label = f"code of {o['ref']} @ {sha}" if en else f"code de {o['ref']} @ {sha}"
+    return read_verdicts(io_out.read_text(encoding="utf-8"), "oracle"), oracle_label(o, sha, (specdir / o["repo"]).resolve(),
+                                                                                    spec.get("lang", "en") == "en")
+
+
+def oracle_label(o, sha, repo, en):
+    """Whose code ran, at which commit, and what stood in for the rest.
+
+    A repository made by fetch.py is an excerpt of another one: its `excerpt.json` names the
+    origin, and the footer names that, not the local commit holding the copy."""
+    excerpt = subprocess.run(["git", "-C", str(repo), "show", f"{sha}:excerpt.json"], check=False,
+                             capture_output=True, text=True)
+    if excerpt.returncode == 0:
+        e = json.loads(excerpt.stdout)
+        n = len(e["files"])
+        label = (f"code of {e['repo']} @ {e['sha'][:7]}, excerpt of {n} file{'s' * (n > 1)}" if en else
+                 f"code de {e['repo']} @ {e['sha'][:7]}, extrait de {n} fichier{'s' * (n > 1)}")
+    else:
+        label = f"code of {o['ref']} @ {sha}" if en else f"code de {o['ref']} @ {sha}"
     if o.get("files"):  # what the spec brings is not the ref's code: the footer names it
         brought = ", ".join(sorted(str(src) for src in o["files"].values()))
         label += f" + from the spec: {brought}" if en else f" + apporté par le spec : {brought}"
-    return read_verdicts(io_out.read_text(encoding="utf-8"), "oracle"), label
+    if o.get("doubles"):
+        names = ", ".join(f"{d['name']} ({d['kind']})" for d in o["doubles"])
+        label += f" · doubles: {names}" if en else f" · doubles : {names}"
+    return label
 
 
 def run_port(spec, scenarios, specdir):
@@ -618,6 +668,21 @@ def c14_texts_stay_within_their_budget(b):
             yield said
 
 
+def c15_no_case_rests_on_an_open_doubt(b):
+    """A doubt is asked before the page is built: its answer shapes the case, or the case says it is undecided."""
+    known = {s["id"] for s in b.scenarios} | {s.get("case") for s in b.scenarios}
+    for d in b.spec.get("doubts", []):
+        for sid in d["scenarios"]:
+            if sid not in known:
+                yield f"doubt {d['id']} names {sid}, which is no scenario or case"
+        if d.get("answer") in (None, ""):
+            open_cases = [s["id"] for s in b.scenarios
+                          if (s["id"] in d["scenarios"] or s.get("case") in d["scenarios"]) and not s.get("undecided")]
+            if open_cases:
+                yield f"doubt {d['id']} is not answered, and {', '.join(open_cases)} rests on it: " \
+                      f"ask \"{d['question']}\", write the answer, or mark the scenario undecided"
+
+
 # The ids are the handles SKILL.md documents: stable, never renumbered.
 CHECKS = [
     ("C1", c1_hops_are_edges), ("C2", c2_path_is_unbroken_from_a_source), ("C3", c3_expect_is_what_the_logic_gives),
@@ -625,7 +690,7 @@ CHECKS = [
     ("C7", c7_scenarios_say_where_they_come_from), ("C8", c8_pairs_name_known_scenarios), ("C9", c9_panel_rows_resolve),
     ("C10", c10_matrix_shows_panel_rows), ("C11", c11_a_section_depends_on_its_question_only),
     ("C12", c12_every_case_is_in_the_matrix), ("C13", c13_panel_rows_appear_at_a_real_step),
-    ("C14", c14_texts_stay_within_their_budget),
+    ("C14", c14_texts_stay_within_their_budget), ("C15", c15_no_case_rests_on_an_open_doubt),
 ]
 
 
