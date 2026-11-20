@@ -12,7 +12,7 @@ offline `.html` — or nothing.
 
 ```text
 spec.json ──┐
-oracle/port ├─► build.py ──► checks C1–C15 ─► sim.html   (or nothing)
+oracle/port ├─► build.py ──► checks C1–C18 ─► sim.html   (or nothing)
 layout.py ──┘                                └► fixture.json (--export)
 ```
 
@@ -27,7 +27,8 @@ changes and every case walks the same path, it does not.
 | one case, before and after a fix | one `pair` |
 | one rule, a few cases | `scenarios` |
 | several cases, each under two versions, rules or answers | a `grid` with `variants` (or `questions`): one matrix, each cell opening its case |
-| every case walks the same path, only a count or a list changes | not truepath: answer with a table, and say why no page was built |
+| every case walks the same path, but its runs were timed: where does the time go, and how did it move | `scenarios` with a `measure`: one bar per case under the graph (see *Measured time*) |
+| every case walks the same path, only a count or a list changes, nothing timed per step | not truepath: answer with a table, and say why no page was built |
 
 More than two pairs comparing the same two versions is a grid: written as
 pairs, the reader gets one tab per case and no table to compare them in.
@@ -165,6 +166,45 @@ runner works: a test file of the
 project's own framework, a script, a JUnit test for Java. The footer names
 the ref and the short sha that produced the verdicts.
 
+## Measured time
+
+When the question is where a run spends its time (a CI job, a batch, a
+request), the path is the process and the logic only says how it ends; the
+times are measured on real runs. `measure` runs a command that reads them:
+
+```json
+"measure": {"cmd": ["node", "measure.js"], "stat": "mean", "unit": "s", "tolerance": 1}
+```
+
+The command runs in the spec's folder (or `cwd` under it), never on a
+snapshot: measures are data, not code under test. It reads
+`TRUEPATH_MEASURE_IN`, `[{id, inputs}]` in scenario order, and writes
+`TRUEPATH_MEASURE_OUT`, one object per scenario:
+
+```json
+{"total": 152.3, "n": 4, "failed": 1, "steps": {"WAIT": 4.5, "TOOLS": 35.3, "PLAN": 24.8},
+ "basis": "measure: CI log of week 1; each run cut by the time stamps of its log lines"}
+```
+
+`total` is what a whole run took, `n` how many runs the `stat` (`mean` or
+`median`) sums up, `failed` the runs left out, `steps` the time on each
+node, all passes through a loop together. `basis` says where the times come
+from and how a run was cut into steps; when steps run side by side, say
+which one a second counts for. Keep the script that reads the raw log next
+to the spec, so the page can be built again when the log grows.
+
+The page draws one bar per case under the graph, every case on one scale:
+the case played is in bold, the node the dot is on is filled in every bar,
+and `≠` outlines, in each bar after the first, the step that moved most
+from the first bar. Hovering a segment outlines its node; a click opens its
+case on the first step that reaches it. A panel row may read
+`measure.total` or `measure.n`, marked `◉ measured`. The footer names each
+basis.
+
+Name a case by what it measures (*Week 1*, *before the cache*), and keep
+the path faithful to the runs: a loop that turns twelve times in one week
+and twice in the next is twelve passes and two, and its badges say so.
+
 ## Running the unit, not the system
 
 The default oracle runs the unit that decides the path and nothing around
@@ -285,6 +325,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `oracle` | `{repo, ref, paths, link?, files?, doubles?, cwd, cmd}` | see above; `doubles` is required when `files` is given |
 | `doubts` | `[{id, question, scenarios, answer?, assumed?}]` | what was asked before building, and the answer: see *Doubts* |
 | `port` | path to a CommonJS file exporting `decide(inputs)` | used when there is no oracle |
+| `measure` | `{cmd, stat, unit?, tolerance?, cwd?}` | measured time per step: see *Measured time*; `stat` is `mean` or `median`, `unit` `s` by default, `tolerance` (1 by default) how far the steps may add up from the total; scenarios and pairs, not a grid |
 | `export` | `{dir, fixture, assert}` | `--export <worktree>` writes the fixture there |
 
 ## Comparing several rules: the grid
@@ -352,6 +393,9 @@ serve every rule.
 | C13 | a panel row, or a value of a series, set to appear at a step the scenario does not have |
 | C14 | a text over its budget (see *Text budget*) |
 | C15 | a scenario resting on an unanswered doubt, unless it is `undecided`; a doubt naming an unknown case |
+| C16 | measured steps that do not add up to the run's total, within `tolerance` |
+| C17 | a time measured on a node that does not exist, or that the scenario's path does not reach |
+| C18 | a measure without its `total`, its number of runs `n` (1 or more) or its `basis`; a negative time |
 
 C3 and C4 are the point: a scenario that says something the code does not do
 cannot be published. C6 guards the layout rather than the spec: boxes are
@@ -429,6 +473,7 @@ in a `basis` text, shown on hover.
 | `examples/free-shipping/` | a grid: two open questions, each decided on the cases it changes |
 | `examples/loyalty-tier/` | an oracle on the folder's own `src/`, its glue and the fixture `--export` writes |
 | `examples/payment-retry/` | an oracle running one unit alone, a stub and a mock in its glue, a loop and its passes |
+| `examples/deploy-job/` | measured time: the same run over three weeks, left to right, a script averaging a fictitious CI log |
 
 Generated files (`.truepath/`, where an oracle's snapshots live, and `*.html`
 next to a spec) are build output. The port examples keep their `sim.html`
@@ -440,8 +485,9 @@ build only inside a git repository that holds them.
 ## Limits
 
 - One diagram type: the process flow, top to bottom or left to right.
-  Sequence and architecture views are not built yet, nor measured
-  durations.
+  Sequence and architecture views are not built yet.
+- Measured time is drawn for scenarios and pairs, not yet for a grid; a
+  step's time is the sum of its passes, not one bar per pass.
 - `C6` is measured on macOS (`ui-monospace`); a narrower Windows font only
   adds air.
 - Steps are declared, not derived from the logic: C3 and C4 catch a wrong

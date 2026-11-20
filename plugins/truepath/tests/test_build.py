@@ -106,6 +106,15 @@ class Examples(unittest.TestCase):
                                            capture_output=True, text=True, check=True).stdout)
         self.assertEqual(played["tabs"], 4)  # the matrix, then one per case
 
+    def test_the_measured_example_rebuilds_into_its_committed_page(self):
+        src, work = self.copy("deploy-job")
+        out, n, _, _ = build.build(work / "spec.json", out=work / "built.html")
+        self.assertEqual(n, 3)
+        self.assertEqual(out.read_bytes(), (src / "sim.html").read_bytes())
+        played = json.loads(subprocess.run(["node", str(ROOT / "tests/play_page.js"), str(out)],
+                                           capture_output=True, text=True, check=True).stdout)
+        self.assertEqual(played["tabs"], 3)
+
     def test_the_doubles_example_runs_its_unit_alone(self):
         _, work = self.copy("payment-retry")
 
@@ -519,6 +528,74 @@ class Views(Case):
         self.unreadable(lambda s: s.update(view="sequence"), "expected one of flow, flow-lr")
         self.unreadable(lambda s: s.update(views=["flow", "radial"]), "views names 'radial'")
         self.unreadable(lambda s: s.update(views=["flow", "flow"]), "names a view twice")
+
+
+class Measure(Case):
+    """Measured time: the steps account for the whole run, on nodes the path reaches, with what they sum up."""
+    COPY = "const fs=require('fs');fs.writeFileSync(process.env.TRUEPATH_MEASURE_OUT,fs.readFileSync('measures.json'))"
+
+    def measured(self, rows=None, **measure):
+        rows = rows or [{"total": 10, "n": 3, "failed": 1, "steps": {"AGE": 4, "REQ": 1, "D": 5}, "basis": "measure: a test log"},
+                        {"total": 7, "n": 2, "steps": {"AGE": 2, "D": 5}, "basis": "measure: a test log"}]
+        (self.dir / "measures.json").write_text(json.dumps(rows), encoding="utf-8")
+
+        def change(s):
+            s["measure"] = {"cmd": ["node", "-e", self.COPY], "stat": "mean", **measure}
+        return change
+
+    def data(self, out):
+        text = out.read_text(encoding="utf-8")
+        start = text.index("const DATA=") + len("const DATA=")
+        return json.loads(text[start:text.index(";\n", start)])["page"]
+
+    def test_the_page_gets_each_case_s_time_in_path_order(self):
+        out, *_ = self.build(self.spec(self.measured()))
+        m = self.data(out)["measure"]
+        self.assertEqual((m["stat"], m["unit"]), ("mean", "s"))
+        self.assertEqual(m["rows"][0]["segs"], [["REQ", 1], ["AGE", 4], ["D", 5]])
+        self.assertEqual((m["rows"][0]["n"], m["rows"][0]["failed"], m["rows"][0]["basis"]), (3, 1, "a test log"))
+
+    def test_a_panel_row_reads_the_measure_and_says_so(self):
+        def change(s):
+            self.measured()(s)
+            s["panel"].append({"label": "Time", "value": "measure.total", "at": "last"})
+        out, *_ = self.build(self.spec(change))
+        row = next(r for r in self.data(out)["scenarios"][0]["rows"] if r["label"] == "Time")
+        self.assertEqual(row["shown"], "10")
+        self.assertEqual(row["provenance"]["kind"], "measure")
+
+    def test_c16_the_steps_add_up_to_the_total(self):
+        rows = [{"total": 20, "n": 1, "steps": {"AGE": 4, "D": 5}, "basis": "measure: log"}] * 2
+        self.refused(self.measured(rows), "C16")
+        self.build(self.spec(self.measured(rows, tolerance=11)))  # within a tolerance the spec states
+
+    def test_c17_a_measured_node_is_on_the_path(self):
+        self.refused(self.measured([{"total": 9, "n": 1, "steps": {"AGE": 4, "NOWHERE": 5}, "basis": "measure: log"}] * 2), "C17")
+        unreached = [{"total": 9, "n": 1, "steps": {"AGE": 4, "REFUND": 5}, "basis": "measure: log"},  # "old" ends on CREDIT
+                     {"total": 9, "n": 1, "steps": {"AGE": 4, "D": 5}, "basis": "measure: log"}]
+        with self.assertRaises(build.ChecksFailed) as cm:
+            self.build(self.spec(self.measured(unreached)))
+        self.assertTrue(any("REFUND, which its path does not reach" in v for v in cm.exception.args[0]), cm.exception.args[0])
+
+    def test_c18_a_measure_says_how_many_runs_and_from_where(self):
+        self.refused(self.measured([{"total": 9, "steps": {"AGE": 4, "D": 5}, "basis": "measure: log"}] * 2), "C18")
+        self.refused(self.measured([{"total": 9, "n": 2, "steps": {"AGE": 4, "D": 5}}] * 2), "C18")
+
+    def test_a_measure_is_one_object_per_scenario(self):
+        self.unreadable(self.measured([{"total": 9}]), "one per scenario")
+
+    def test_a_grid_is_not_measured_yet(self):
+        def change(s):
+            self.measured()(s)
+            del s["scenarios"], s["pairs"]
+            s["grid"] = copy.deepcopy(GRID)
+        self.unreadable(change, "not yet for a grid")
+
+    def test_an_unknown_stat_is_refused(self):
+        def change(s):
+            self.measured()(s)
+            s["measure"]["stat"] = "p95"
+        self.unreadable(change, "expected one of mean, median")
 
 
 class Unreadable(Case):

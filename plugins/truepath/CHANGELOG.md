@@ -16,6 +16,25 @@ existing spec builds as before.
 - SKILL.md picks the view from the question, after the shape, and asks
   the user when two fit.
 
+After the tag `v0.2.1`, on `main`: measured time (story S35), asked for by
+a CI job that walked the same steps every week while its time moved.
+Installed copies get it with the next release.
+
+- `measure` runs a command that reads real runs and gives each scenario
+  its time per node, the number of runs it sums up (`mean` or `median`),
+  the failed runs left out and its basis. The page draws one bar per case
+  under the graph, on one scale: the dot's node is filled in every bar,
+  `≠` outlines the step that moved most from the first bar, and a click
+  on a segment opens its case on that step. A panel row may read
+  `measure.total`, marked `◉ measured`.
+- C16 refuses steps that do not add up to the total, C17 a time on a node
+  the path does not reach, C18 a measure without its total, its number of
+  runs or its basis.
+- The shape table no longer sends a timed run to a plain table: the same
+  path, timed per step, is a page.
+- `examples/deploy-job/`: the same deploy over three weeks, its tools
+  installed by every run, then twelve modules planned each time, then two.
+
 ## 0.2.0
 
 From a design critique of a first real grid (`docs/design/story-map.md`,

@@ -1,0 +1,487 @@
+{
+ "title": "Deploy job",
+ "subtitle": "Example: the same run over three weeks, its time measured step by step",
+ "source": "truepath example, self-contained: a fictitious CI log",
+ "view": "flow-lr",
+ "views": [
+  "flow-lr",
+  "flow"
+ ],
+ "kinds": {
+  "ok": {
+   "label": "deployed",
+   "color": "#15803d"
+  }
+ },
+ "nodes": [
+  {
+   "id": "MERGE",
+   "label": "merge on main"
+  },
+  {
+   "id": "WAIT",
+   "label": "wait for a runner"
+  },
+  {
+   "id": "PREP",
+   "label": "pull the image"
+  },
+  {
+   "id": "TOOLS",
+   "label": "install the tools"
+  },
+  {
+   "id": "PICK",
+   "label": "pick changed modules"
+  },
+  {
+   "id": "PLAN",
+   "label": "plan a module"
+  },
+  {
+   "id": "APPLY",
+   "label": "apply it"
+  },
+  {
+   "id": "NEXT",
+   "label": "another module?",
+   "role": "decision"
+  },
+  {
+   "id": "DONE",
+   "label": "deployed",
+   "kind": "ok"
+  }
+ ],
+ "edges": [
+  [
+   "MERGE",
+   "WAIT",
+   ""
+  ],
+  [
+   "WAIT",
+   "PREP",
+   ""
+  ],
+  [
+   "PREP",
+   "TOOLS",
+   ""
+  ],
+  [
+   "TOOLS",
+   "PICK",
+   ""
+  ],
+  [
+   "PICK",
+   "PLAN",
+   ""
+  ],
+  [
+   "PLAN",
+   "APPLY",
+   ""
+  ],
+  [
+   "APPLY",
+   "NEXT",
+   ""
+  ],
+  [
+   "NEXT",
+   "PLAN",
+   "yes"
+  ],
+  [
+   "NEXT",
+   "DONE",
+   "no"
+  ]
+ ],
+ "panel": [
+  {
+   "label": "Tools",
+   "value": "inputs.tools",
+   "at": 2
+  },
+  {
+   "label": "Modules applied",
+   "value": "verdict.modules",
+   "at": 4
+  },
+  {
+   "label": "Run time",
+   "value": "measure.total",
+   "at": "last"
+  },
+  {
+   "label": "Runs measured",
+   "value": "measure.n",
+   "at": "last"
+  }
+ ],
+ "port": "decide.js",
+ "measure": {
+  "cmd": [
+   "node",
+   "measure.js"
+  ],
+  "stat": "mean",
+  "unit": "s",
+  "tolerance": 1
+ },
+ "scenarios": [
+  {
+   "id": "w1",
+   "tab": "Week 1",
+   "summary": "Each run installs its tools, then applies three modules",
+   "origin": {
+    "kind": "illustrative",
+    "text": "skill example"
+   },
+   "inputs": {
+    "week": 1,
+    "modules": 3,
+    "tools": "installed by the run"
+   },
+   "expect": {
+    "outcome": "DONE",
+    "modules": 3
+   },
+   "steps": [
+    {
+     "hop": [
+      "MERGE",
+      "WAIT"
+     ],
+     "message": "merged on main",
+     "caption": "The run waits for a free runner."
+    },
+    {
+     "hop": [
+      "WAIT",
+      "PREP"
+     ],
+     "message": "a runner is free",
+     "caption": "The runner pulls the run's image."
+    },
+    {
+     "hop": [
+      "PREP",
+      "TOOLS"
+     ],
+     "message": "image pulled",
+     "caption": "Every run installs its tools first."
+    },
+    {
+     "hop": [
+      "TOOLS",
+      "PICK"
+     ],
+     "message": "tools ready",
+     "caption": "The run lists the modules the merge changed."
+    },
+    {
+     "hop": [
+      "PICK",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 1 of 3",
+     "caption": "Plan, then apply, the first changed module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 2 of 3",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 3 of 3",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "DONE"
+     ],
+     "message": "3 modules applied",
+     "caption": "Done: every changed module is applied."
+    }
+   ]
+  },
+  {
+   "id": "w2",
+   "tab": "Week 2",
+   "summary": "The tools come with the image, but every run plans twelve modules",
+   "origin": {
+    "kind": "illustrative",
+    "text": "skill example"
+   },
+   "inputs": {
+    "week": 2,
+    "modules": 12,
+    "tools": "in the image"
+   },
+   "expect": {
+    "outcome": "DONE",
+    "modules": 12
+   },
+   "steps": [
+    {
+     "hop": [
+      "MERGE",
+      "WAIT"
+     ],
+     "message": "merged on main",
+     "caption": "The run waits for a free runner."
+    },
+    {
+     "hop": [
+      "WAIT",
+      "PREP"
+     ],
+     "message": "a runner is free",
+     "caption": "The runner pulls the run's image."
+    },
+    {
+     "hop": [
+      "PREP",
+      "TOOLS"
+     ],
+     "message": "image pulled",
+     "caption": "The image already holds the tools."
+    },
+    {
+     "hop": [
+      "TOOLS",
+      "PICK"
+     ],
+     "message": "tools ready",
+     "caption": "The run lists the modules the merge changed."
+    },
+    {
+     "hop": [
+      "PICK",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 1 of 12",
+     "caption": "Plan, then apply, the first changed module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 2 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 3 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 4 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 5 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 6 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 7 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 8 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 9 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 10 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 11 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 12 of 12",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "DONE"
+     ],
+     "message": "12 modules applied",
+     "caption": "Done: every changed module is applied."
+    }
+   ]
+  },
+  {
+   "id": "w3",
+   "tab": "Week 3",
+   "summary": "Only the changed modules are picked: two per run",
+   "origin": {
+    "kind": "illustrative",
+    "text": "skill example"
+   },
+   "inputs": {
+    "week": 3,
+    "modules": 2,
+    "tools": "in the image"
+   },
+   "expect": {
+    "outcome": "DONE",
+    "modules": 2
+   },
+   "steps": [
+    {
+     "hop": [
+      "MERGE",
+      "WAIT"
+     ],
+     "message": "merged on main",
+     "caption": "The run waits for a free runner."
+    },
+    {
+     "hop": [
+      "WAIT",
+      "PREP"
+     ],
+     "message": "a runner is free",
+     "caption": "The runner pulls the run's image."
+    },
+    {
+     "hop": [
+      "PREP",
+      "TOOLS"
+     ],
+     "message": "image pulled",
+     "caption": "The image already holds the tools."
+    },
+    {
+     "hop": [
+      "TOOLS",
+      "PICK"
+     ],
+     "message": "tools ready",
+     "caption": "The run lists the modules the merge changed."
+    },
+    {
+     "hop": [
+      "PICK",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 1 of 2",
+     "caption": "Plan, then apply, the first changed module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "PLAN",
+      "APPLY",
+      "NEXT"
+     ],
+     "message": "module 2 of 2",
+     "caption": "One more pass: plan, then apply, the next module."
+    },
+    {
+     "hop": [
+      "NEXT",
+      "DONE"
+     ],
+     "message": "2 modules applied",
+     "caption": "Done: every changed module is applied."
+    }
+   ]
+  }
+ ]
+}

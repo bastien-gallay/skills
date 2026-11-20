@@ -78,12 +78,14 @@ def validate(spec, specdir, exporting=False):
         p.raise_if_any()
     for key, kind, name in (("nodes", list, "a list"), ("edges", list, "a list"), ("kinds", dict, "an object"),
                             ("panel", list, "a list"), ("scenarios", list, "a list"), ("pairs", list, "a list"),
-                            ("grid", dict, "an object"), ("oracle", dict, "an object"), ("export", dict, "an object")):
+                            ("grid", dict, "an object"), ("oracle", dict, "an object"), ("export", dict, "an object"),
+                            ("measure", dict, "an object {cmd, stat, unit?, tolerance?, cwd?}")):
         p.typed(spec, key, kind, "spec", name)
     p.raise_if_any()
 
     p.typed(spec, "credit", bool, "spec", "true or false")
     validate_views(spec, p)
+    validate_measure(spec, specdir, p)
     if spec.get("lang", "en") not in ("en", "fr"):
         p.append(f"spec: lang is {spec['lang']!r}, expected en or fr")
     if "oracle" in spec:
@@ -187,6 +189,28 @@ def validate_views(spec, p):
                 p.append(f"spec: views names {v!r}, expected one of {', '.join(VIEWS)}")
         if len(set(map(str, spec["views"]))) < len(spec["views"]):
             p.append("spec: views names a view twice")
+
+
+STATS = ("mean", "median")  # what one case's measures sum up: several runs read as one
+
+
+def validate_measure(spec, specdir, p):
+    if "measure" not in spec:
+        return
+    m = spec["measure"]
+    if "grid" in spec:
+        p.append("measure: measured time is drawn for scenarios and pairs, not yet for a grid")
+    if p.keys(m, ["cmd", "stat"], "measure"):
+        if not isinstance(m["cmd"], list) or not m["cmd"] or not all(isinstance(a, str) for a in m["cmd"]):
+            p.append("measure.cmd: expected a command as a list of words, run without a shell")
+        if m["stat"] not in STATS:
+            p.append(f"measure.stat is {m['stat']!r}, expected one of {', '.join(STATS)}")
+    p.typed(m, "unit", str, "measure", "a unit, such as s or ms")
+    if "tolerance" in m and (isinstance(m["tolerance"], bool) or not isinstance(m["tolerance"], (int, float))
+                             or m["tolerance"] < 0):
+        p.append("measure.tolerance: expected a number of units, 0 or more")
+    if "cwd" in m and not (specdir / str(m["cwd"])).is_dir():
+        p.append(f"measure.cwd: {m['cwd']} is not a folder next to the spec")
 
 
 def validate_doubles(o, p):
@@ -351,6 +375,35 @@ def run_port(spec, scenarios, specdir):
     return read_verdicts(run.stdout, "port"), label
 
 
+def run_measure(spec, scenarios, specdir):
+    """The measured time of each scenario: what its runs took, step by step, summed up by `stat`.
+
+    Measures are data, not code under test: the command runs in the spec's folder (or `cwd` under
+    it), never on a snapshot. It reads TRUEPATH_MEASURE_IN, [{id, inputs}] in scenario order, and
+    writes TRUEPATH_MEASURE_OUT, one object per scenario: {total, n, failed?, steps: {node: time}, basis}."""
+    m = spec["measure"]
+    workdir = specdir / WORKDIR
+    workdir.mkdir(exist_ok=True)
+    io_in, io_out = workdir / "measure-in.json", workdir / "measure-out.json"
+    io_in.write_text(json.dumps([{"id": s["id"], "inputs": s["inputs"]} for s in scenarios]), encoding="utf-8")
+    io_out.unlink(missing_ok=True)
+    try:
+        run = subprocess.run(m["cmd"], cwd=specdir / m.get("cwd", "."), check=False, capture_output=True, text=True,
+                             env={**os.environ, "TRUEPATH_MEASURE_IN": str(io_in), "TRUEPATH_MEASURE_OUT": str(io_out),
+                                  "TRUEPATH_SPEC_DIR": str(specdir)})
+    except OSError as e:
+        raise UnreadableSpec(f"measure: cannot run {m['cmd']!r}: {e}") from e
+    if run.returncode or not io_out.exists():
+        raise UnreadableSpec("measure failed:\n" + run.stdout[-3000:] + run.stderr[-3000:])
+    try:
+        out = json.loads(io_out.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise UnreadableSpec(f"measure: the measures are not JSON ({e})") from e
+    if not isinstance(out, list) or len(out) != len(scenarios) or not all(isinstance(x, dict) for x in out):
+        raise UnreadableSpec(f"measure: expected a JSON array of {len(scenarios)} objects, one per scenario")
+    return out
+
+
 def read_verdicts(text, who):
     try:
         verdicts = json.loads(text)
@@ -365,7 +418,7 @@ def provenance(basis):
     """What a `basis` text claims: `code: …`, `port: …`, `double: …` (a stub or a fake answered), or anything else, a definition.
 
     The word before the colon decides, not a prefix: "code of conduct" is a definition."""
-    m = re.match(r"\s*(code|port|double)\s*:", str(basis))
+    m = re.match(r"\s*(code|port|double|measure)\s*:", str(basis))
     return m.group(1) if m else "definition"
 
 
@@ -510,6 +563,8 @@ def panel_rows(scenario, panel, in_grid):
                 out["shown"] = None  # C9 says so
             head, _, rest = row["value"].partition(".")
             said = basis.get(rest.split(".")[0]) if head == "verdict" else None
+            if head == "measure" and isinstance(scenario.get("measure"), dict):
+                said = "measure: " + str(scenario["measure"].get("basis", "")).removeprefix("measure:").strip()
             if said:
                 out["provenance"] = {"kind": provenance(said), "text": str(said)}
         rows.append(out)
@@ -716,6 +771,63 @@ def c15_no_case_rests_on_an_open_doubt(b):
                       f"ask \"{d['question']}\", write the answer, write what you assumed, or mark the scenario undecided"
 
 
+def number(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def c16_measured_steps_add_up_to_the_total(b):
+    """A step's share of the time is only worth showing if the steps account for the whole run."""
+    if "measure" not in b.spec:
+        return
+    tol = b.spec["measure"].get("tolerance", 1)
+    unit = b.spec["measure"].get("unit", "s")
+    for s in b.scenarios:
+        m = s["measure"]
+        steps = m.get("steps") if isinstance(m.get("steps"), dict) else {}
+        if number(m.get("total")) and all(number(v) for v in steps.values()):
+            gap = sum(steps.values()) - m["total"]
+            if abs(gap) > tol:
+                yield f"{s['id']}: its measured steps add up to {sum(steps.values()):g} {unit}, " \
+                      f"its total is {m['total']:g} {unit} ({gap:+g}, tolerance {tol:g}): " \
+                      "a step is missing, counted twice, or the runs overlap"
+
+
+def c17_measured_nodes_are_on_the_path(b):
+    if "measure" not in b.spec:
+        return
+    ids = {n["id"] for n in b.spec["nodes"]}
+    for s in b.scenarios:
+        steps = s["measure"].get("steps")
+        if not isinstance(steps, dict) or not steps:
+            yield f"{s['id']}: its measure has no `steps` {{node: time}}"
+            continue
+        walked = {n for h in b.hops(s) for n in h}
+        for node in steps:
+            if node not in ids:
+                yield f"{s['id']}: a time is measured on {node}, which is no node"
+            elif node not in walked:
+                yield f"{s['id']}: a time is measured on {node}, which its path does not reach"
+
+
+def c18_a_measure_says_what_it_sums_up(b):
+    if "measure" not in b.spec:
+        return
+    for s in b.scenarios:
+        m = s["measure"]
+        if not number(m.get("total")) or m["total"] < 0:
+            yield f"{s['id']}: its measure gives no `total`, the time a whole run took"
+        if not isinstance(m.get("n"), int) or isinstance(m.get("n"), bool) or m["n"] < 1:
+            yield f"{s['id']}: its measure gives no `n`, the number of runs it sums up (1 or more)"
+        if "failed" in m and (not isinstance(m["failed"], int) or isinstance(m["failed"], bool) or m["failed"] < 0):
+            yield f"{s['id']}: `failed` is the number of failed runs left out, 0 or more"
+        steps = m.get("steps") if isinstance(m.get("steps"), dict) else {}
+        for node, v in steps.items():
+            if not number(v) or v < 0:
+                yield f"{s['id']}: the time measured on {node} is {v!r}, expected a number, 0 or more"
+        if not str(m.get("basis", "")).strip():
+            yield f"{s['id']}: its measure gives no `basis`: where the times come from, and how runs were cut into steps"
+
+
 # The ids are the handles SKILL.md documents: stable, never renumbered.
 CHECKS = [
     ("C1", c1_hops_are_edges), ("C2", c2_path_is_unbroken_from_a_source), ("C3", c3_expect_is_what_the_logic_gives),
@@ -724,11 +836,13 @@ CHECKS = [
     ("C10", c10_matrix_shows_panel_rows), ("C11", c11_a_section_depends_on_its_question_only),
     ("C12", c12_every_case_is_in_the_matrix), ("C13", c13_panel_rows_appear_at_a_real_step),
     ("C14", c14_texts_stay_within_their_budget), ("C15", c15_no_case_rests_on_an_open_doubt),
+    ("C16", c16_measured_steps_add_up_to_the_total), ("C17", c17_measured_nodes_are_on_the_path),
+    ("C18", c18_a_measure_says_what_it_sums_up),
 ]
 
 
 # What the logic must have run for: a verdict to compare (C3, C4), panel rows filled from it (C9, C11, C13).
-NEEDS_LOGIC = {"C3", "C4", "C9", "C11", "C13"}
+NEEDS_LOGIC = {"C3", "C4", "C9", "C11", "C13", "C16", "C17", "C18"}  # C16–C18: the measures, run with it
 
 
 def check(subject, without_logic=False):
@@ -782,10 +896,26 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
             "cases": [{k: c[k] for k in ("id", "label", "summary", "origin")} for c in grid["cases"]],
         },
     }
+    if "measure" in spec:
+        m = spec["measure"]
+        page["measure"] = {"stat": m["stat"], "unit": m.get("unit", "s"), "tolerance": m.get("tolerance", 1),
+                           "rows": [measure_row(s) for s in scenarios]}
     data = {"page": page, "geo": geo[views_of(spec)[0]]}
     if len(geo) > 1:  # the page offers to switch: every view's geometry, in the spec's order
         data["views"] = {v: geo[v] for v in views_of(spec)}
     return data
+
+
+def measure_row(s):
+    """One case's time, step by step in the order its path first reaches each node."""
+    m, order = s["measure"], []
+    for st in s["steps"]:
+        for n in st["hop"]:
+            if n in m["steps"] and n not in order:
+                order.append(n)
+    return {"scenario": s["id"], "total": m["total"], "n": m["n"], "failed": m.get("failed", 0),
+            "basis": str(m.get("basis", "")).removeprefix("measure:").strip(),
+            "segs": [[n, m["steps"][n]] for n in order]}
 
 
 def plain(text):
@@ -848,6 +978,9 @@ def build(specpath, out=None, export_to=None, check_only=False, dry_run=False):
         raise UnreadableSpec(f"the logic returned {len(verdicts)} verdicts for {len(scenarios)} scenarios")
     for s, v in zip(scenarios, verdicts):
         s["verdict"] = v
+    if "measure" in spec:
+        for s, m in zip(scenarios, run_measure(spec, scenarios, specdir)):
+            s["measure"] = m
     fill_templates(scenarios, spec.get("panel", []))
     for s in scenarios:
         s["rows"] = panel_rows(s, spec.get("panel", []), in_grid=bool(grid))
