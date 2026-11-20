@@ -3,7 +3,34 @@
 ## Unreleased
 
 From a design critique of a first real grid (`docs/design/story-map.md`,
-stories S10–S13).
+stories S10–S13), then a second critique (S22–S27), then a first loop, a
+line-by-line file parser (S28–S31).
+
+- A loop leaving a box with neighbours on its right runs under their row,
+  each loop in a corridor of its own, before it climbs: at mid-height it ran
+  through the boxes beside it and seemed to chain them.
+- A step may run through a node without stopping: `hop: [from, via…, to]`.
+  A loop's return was a step of its own that said nothing new, and doubled
+  the reading; one line of the parser is now one step. The dot takes the
+  time of each edge it runs.
+- The first divergence of a pair is also where the paths fork, on the last
+  node both share: two parser runs that part at line 3 were marked only at
+  the verdict, where the panel values first differ.
+
+- A matrix cell says how its case ends, the outcome's label beside its
+  colour, then the value: `rien` read the same for a value lost, dropped on
+  purpose, or lost again. The highlight of a split case is gone; `≠` is the
+  only mark of change. The cell legend is a line of short keys.
+- A case opens on the whole graph, the fork and both outcomes in sight and
+  outlined; the readable zoom waits for the first Play or step, and is
+  measured again when the window changes size.
+- Keyboard: the focus stays on a cell picked with Enter, is drawn dashed so
+  it never looks like a picked side, and Escape goes back to the matrix on
+  the cell the case came from. Steps are buttons. The row says on screen
+  that Shift picks `−`. Table headers carry `scope`. A change of the
+  reduced-motion setting applies without a reload.
+- The matrix hint is a muted caption, quieter than the verdict above it; a
+  grid case's panel no longer repeats the answer its row already shows.
 
 - C14 refuses a text over its budget: a subtitle over 90 characters, a
   summary over 110, a caption over 70, a step message over 40. `SKILL.md`
@@ -17,13 +44,9 @@ stories S10–S13).
   for 9 s, half the playback, on a step that decided nothing.
 - An edge that would cross a box steps aside just past the boxes in its
   way, on the nearer side, instead of running around the whole drawing.
-- The matrix highlights a case where the section's answers disagree with
-  one another, not every cell that differs from today: a summary saying
-  "D1 changes one case" no longer sits above three highlighted cells. A
-  difference from today keeps its `≠`, in muted ink.
 - The matrix has the graph beside it: the cell under the pointer or the
-  focus lights its path, the first highlighted case lit when the page
-  opens.
+  focus lights its path, the first case where the answers disagree lit
+  when the page opens.
 - An open grid case keeps its row of the matrix above the diagrams, the
   compared cells marked `−` and `+`; a click on another cell compares it.
 - Two sides compared (a pair, a grid case) walk one full-size graph, a dot
@@ -31,8 +54,8 @@ stories S10–S13).
   side's colour, so the divergence is a fork in one drawing. Two
   half-width diagrams drew node labels at 5px on a laptop.
 - The case's diagram takes the height left below what sits above it; step
-  by step, a view whose labels would be under 12px starts zoomed to 12px
-  and follows the dots. *Fit* and the overview show the whole graph.
+  by step, a view whose labels would be under 12px zooms to 12px and
+  follows the dots. *Fit* and the overview show the whole graph.
 - A straight edge's label sits below the junction it leaves from, on the
   part only that edge draws.
 - Play, steps, speed and zoom sit under the diagram, with the keys that

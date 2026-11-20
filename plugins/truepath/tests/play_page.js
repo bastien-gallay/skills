@@ -33,7 +33,7 @@ const env = {
   document, localStorage: { getItem: () => null, setItem() {} }, matchMedia: () => ({ matches: process.argv[3] === 'reduced' }),
   requestAnimationFrame: () => 0, cancelAnimationFrame() {}, setTimeout: () => 0, clearTimeout() {},
 };
-const run = new Function(...Object.keys(env), script + '\nreturn {TABS, openTab, go, nSteps, st, grid};');
+const run = new Function(...Object.keys(env), script + '\nreturn {TABS, openTab, go, nSteps, st, grid, divergence, sidesOf};');
 const p = run(...Object.values(env));
 const playingOnLoad = p.st.playing, playMarkedOnLoad = byId.play.classList.contains('go');
 const pairTab = p.TABS.findIndex(t => t.pair);
@@ -49,4 +49,5 @@ p.TABS.forEach((t, i) => {
     }
   }
 });
-process.stdout.write(JSON.stringify({ tabs: p.TABS.length, steps, pairSteps, playingOnLoad, playMarkedOnLoad, html }));
+const parted = pairTab < 0 ? null : p.divergence(...p.sidesOf(p.TABS[pairTab]));
+process.stdout.write(JSON.stringify({ parted, tabs: p.TABS.length, steps, pairSteps, playingOnLoad, playMarkedOnLoad, html }));

@@ -5,7 +5,8 @@
                              edges: [{from, to, d, label, labelPos}]}
 
 A node's rank is its longest path from the sources; a rank is drawn as one layer. An edge that
-climbs back (a loop) runs in a lane of its own to the right of every box. An edge that would
+climbs back (a loop) runs in a lane of its own to the right of every box; when other boxes
+stand beside its source, it first runs under their row in a corridor of its own. An edge that would
 cross a box on its way down steps aside just past the boxes in its way, on the nearer side:
 sent around the whole drawing, it was the longest line on the page and widened it for nothing.
 Pure stdlib, deterministic: the same graph gives the same file.
@@ -128,13 +129,67 @@ def detour(tx, passed, taken):
     return right, 1
 
 
+def loop_lanes(loops, ids, box, rank, right):
+    """Where each loop climbs, and the corridor it takes past the boxes beside its two ends.
+
+    A loop leaves its source's side and enters its target's side. When another box of the same
+    row stands further right, a line at mid-height would run through it and seem to chain the
+    boxes together, so the loop drops into the gap beside its source and runs under the row
+    (or above the target's row) in a corridor of its own. The shortest loops climb nearest the
+    boxes, and under one row the outer lane takes the lower corridor, so no two loops cross."""
+    def mid(n):
+        return box[n]["y"] + box[n]["h"] / 2
+
+    def gap_right(n):
+        """The middle of the gap after n in its row, or None when n is the last of its row."""
+        after = [box[m]["x"] for m in ids if rank[m] == rank[n] and box[m]["x"] > box[n]["x"]]
+        return (box[n]["x"] + box[n]["w"] + min(after)) / 2 if after else None
+
+    order = sorted(loops, key=lambda e: (mid(e[0]) - mid(e[1]), -box[e[0]]["x"]))
+    lane = {e: right + LANE * (k + 1) for k, e in enumerate(order)}
+    under, over = {}, {}
+    for e in order:  # inner lane first: nearest the row
+        if gap_right(e[0]) is not None:
+            under.setdefault(rank[e[0]], []).append(e)
+        if gap_right(e[1]) is not None:
+            over.setdefault(rank[e[1]], []).append(e)
+    corridor = {}
+    for r, es in under.items():
+        bottom = max(box[n]["y"] + box[n]["h"] for n in ids if rank[n] == r)
+        for k, e in enumerate(es):  # between the row and its rail
+            corridor[e, "under"] = round(bottom + (k + 1) * GAP_Y / 2 / (len(es) + 1))
+    for r, es in over.items():
+        top = min(box[n]["y"] for n in ids if rank[n] == r)
+        for k, e in enumerate(es):
+            corridor[e, "over"] = round(top - (k + 1) * GAP_Y / 2 / (len(es) + 1))
+
+    paths = {}
+    for e in order:
+        a, b = e
+        s, t, x = box[a], box[b], round(lane[e])
+        sy, ty = round(mid(a)), round(mid(b))
+        if (e, "under") in corridor:
+            out = f"M{s['x'] + s['w']:.0f} {sy} H{gap_right(a):.0f} V{corridor[e, 'under']} H{x}"
+            low = corridor[e, "under"]
+        else:
+            out, low = f"M{s['x'] + s['w']:.0f} {sy} H{x}", sy
+        if (e, "over") in corridor:
+            back_in = f" V{corridor[e, 'over']} H{gap_right(b):.0f} V{ty} H{t['x'] + t['w'] + STUB:.0f}"
+            high = corridor[e, "over"]
+        else:
+            back_in, high = f" V{ty} H{t['x'] + t['w'] + STUB:.0f}", ty
+        paths[e] = (out + back_in, x, (low + high) / 2)
+    return paths
+
+
 def route(edges, ids, box, rank, back):
     """One orthogonal path per edge, and how far right the drawing now reaches."""
     def cx(n):
         return box[n]["x"] + box[n]["w"] / 2
 
     right = max(b["x"] + b["w"] for b in box.values())
-    out, lanes, reach, taken = [], 0, right, []
+    loops = loop_lanes([(a, b) for a, b, _ in edges if (a, b) in back], ids, box, rank, right)
+    out, reach, taken = [], right, []
     for a, b, label in edges:
         s, t = box[a], box[b]
         sx, tx = round(cx(a)), round(cx(b))
@@ -142,12 +197,9 @@ def route(edges, ids, box, rank, back):
         rail = round(y1 + GAP_Y / 2)
         passed = [box[n] for n in ids if rank[a] < rank[n] < rank[b]]
         lane = None
-        if (a, b) in back:  # out of the source's side, up the lane, into the target's side
-            lanes += 1
-            lane = right + LANE * lanes
-            sy, ty = round(s["y"] + s["h"] / 2), round(t["y"] + t["h"] / 2)
-            d = f"M{s['x'] + s['w']:.0f} {sy} H{lane:.0f} V{ty} H{t['x'] + t['w'] + STUB:.0f}"
-            pos = [lane + LABEL_GAP, (sy + ty) / 2]
+        if (a, b) in back:  # out of the source's side, up its lane, into the target's side
+            d, lane, climb = loops[a, b]
+            pos = [lane + LABEL_GAP, climb]
         elif any(o["x"] - CLEARANCE <= tx <= o["x"] + o["w"] + CLEARANCE for o in passed):  # a box is in the way
             lane, side = detour(tx, passed, taken)
             lane = round(lane)

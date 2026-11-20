@@ -164,8 +164,8 @@ def validate_steps(steps, where, p):
         return
     for i, st in enumerate(steps):
         if p.keys(st, ["hop", "message", "caption"], f"{where}, step {i}"):
-            if not (isinstance(st["hop"], list) and len(st["hop"]) == 2 and all(isinstance(h, str) for h in st["hop"])):
-                p.append(f"{where}, step {i}: hop must be [from, to], two node ids")
+            if not (isinstance(st["hop"], list) and len(st["hop"]) >= 2 and all(isinstance(h, str) for h in st["hop"])):
+                p.append(f"{where}, step {i}: hop must be [from, to], two node ids, or [from, via…, to]")
             if not isinstance(st["message"], str) or not isinstance(st["caption"], str):
                 p.append(f"{where}, step {i}: message and caption must be text")
 
@@ -450,7 +450,8 @@ class Subject:
         return self.spec.get("panel", [])
 
     def hops(self, s):
-        return [tuple(st["hop"]) for st in s["steps"]]
+        """Every edge the path takes, in order: a step through [a, b, c] takes a->b, then b->c."""
+        return [(h[k], h[k + 1]) for st in s["steps"] for h in [st["hop"]] for k in range(len(h) - 1)]
 
 
 def c1_hops_are_edges(b):
@@ -654,7 +655,8 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
         "title": spec["title"], "subtitle": spec.get("subtitle", ""), "source": spec.get("source", ""),
         "lang": spec.get("lang", "en"), "verdictSource": verdict_source, "credit": spec.get("credit", True),
         "kinds": {k: {"label": v["label"], "color": v["color"]} for k, v in spec.get("kinds", {}).items()},
-        "nodes": {n["id"]: {"kind": n.get("kind"), "role": n.get("role") or ("start" if n["id"] not in entered else None)}
+        "nodes": {n["id"]: {"label": n["label"], "kind": n.get("kind"),
+                            "role": n.get("role") or ("start" if n["id"] not in entered else None)}
                   for n in spec["nodes"]},
         "scenarios": [{"id": s["id"], "tab": s["tab"], "summary": s["summary"], "origin": s["origin"],
                        "undecided": bool(s.get("undecided")), "case": s.get("case"), "variant": s.get("variant"),

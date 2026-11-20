@@ -25,6 +25,8 @@ flowchart LR
     S9["✓ Matrice visible, cas ouvert"]
     S10["✓ Codes de variante expliqués"]
     S11["✓ Prose ≤ 75 caractères"]
+    S22["✓ Cellule dit son issue"]
+    S23["✓ Un seul codage du changement"]
   end
   subgraph step4["4"]
     direction TB
@@ -38,6 +40,8 @@ flowchart LR
     S4["✓ Commandes sous le diagramme"]
     S5["✓ Raccourcis clavier affichés"]
     S6["✓ Liste d'étapes sans spoiler"]
+    S25["✓ Focus gardé après un choix"]
+    S26["✓ Échap revient à la matrice"]
   end
   subgraph step6["6"]
     direction TB
@@ -58,6 +62,7 @@ flowchart LR
     direction TB
     T8["Lire les deux diagrammes"]
     S15["✓ Libellés ≥ 12 px à l'écran"]
+    S24["✓ Cas ouvert montre la fourche"]
   end
   subgraph step9["9"]
     direction TB
@@ -71,17 +76,17 @@ flowchart LR
     T10["Lire sans animation"]
     S20["✓ Chemin visible sans animation"]
     S21["✓ Valeurs de survol visibles"]
+    S27["✓ Étapes et Maj+clic au clavier"]
   end
   classDef activity fill:#1A6FAE,color:#FFFFFF,stroke:#00000033
   class A1,A2,A3,A4,A5 activity
   classDef task fill:#6FCF97,color:#1F2328,stroke:#00000033
   class T1,T3,T5,T7,T9,T2,T4,T6,T8,T10 task
   classDef story fill:#FCEFA1,color:#1F2328,stroke:#00000033
-  class S4,S5,S6,S7,S9,S10,S11,S12,S14,S16,S17,S18,S19,S13,S8,S1,S2,S3,S15,S20,S21 story
+  class S4,S5,S6,S7,S9,S10,S11,S12,S14,S16,S17,S18,S19,S13,S8,S1,S2,S3,S15,S20,S21,S22,S23,S24,S25,S26,S27 story
 ```
 
-Source: Sideco journal, board `truepath-parcours-lecteur`, seq 718,
-exported on 2026-11-19.
+Source: Sideco journal, board `truepath-parcours-lecteur`, seq 1052, exported on 2026-11-19.
 
 ## Elements
 
@@ -98,6 +103,8 @@ exported on 2026-11-19.
 | S9 | Story | ✓ Matrice visible, cas ouvert | 3 | Fait (tranche 4). Un cas ouvert garde sa ligne de matrice au-dessus des diagrammes, cellules − et + marquées ; un clic sur une autre cellule la compare. Rend les 6 boutons de variante redondants : S16 peut les retirer. | agent |
 | S10 | Story | ✓ Codes de variante expliqués | 3 | Fait (tranche 6). Les codes ne sont plus nus nulle part : la ligne du cas et l'en-tête du graphe donnent code et libellé. | agent |
 | S11 | Story | ✓ Prose ≤ 75 caractères | 3 | Fait (tranche 1). Sous-titre, résumé, consigne et légende de la matrice plafonnés à 38em (~75 caractères réels ; 75ch en laissait passer ~95). | agent |
+| S22 | Story | ✓ Cellule dit son issue | 3 | Fait (tranche 9, non commité). Chaque cellule dit l'issue (libellé du nœud de sortie + pastille de sa couleur), puis la valeur ; ≠ sur la ligne qui diffère d'avant. Une valeur perdue et une valeur écartée exprès ne se lisent plus pareil. build.py passe le libellé des nœuds à la page. | agent |
+| S23 | Story | ✓ Un seul codage du changement | 3 | Fait (tranche 9). Plus de fond surligné : ≠ est la seule marque de changement. Légende en une ligne de repères (issues, ≠, réel/illustratif, survol). Bandeau d'aide en légende discrète. | agent |
 | T4 | Task | Relier cellule et chemin | 4 | | agent |
 | S8 | Story | ✓ Survol cellule allume son chemin | 4 | Fait (tranche 4, non commité). Vue matrice : le graphe complet à droite ; la cellule survolée ou focalisée allume son chemin et prend un liseré ; au chargement, le premier cas surligné est allumé. | agent |
 | A3 | Activity | Suivre un cas | 5 | Dev qui corrige un bug : le point parcourt le vrai chemin, le panneau montre ce qui change. | agent |
@@ -105,6 +112,8 @@ exported on 2026-11-19.
 | S4 | Story | ✓ Commandes sous le diagramme | 5 | Fait (tranche 6, non commité). Lecture, pas à pas, vitesse et zoom sous le diagramme ; la barre du haut ne garde que les onglets ou « ← matrice ». | agent |
 | S5 | Story | ✓ Raccourcis clavier affichés | 5 | Fait (tranche 6). Raccourcis affichés à côté des commandes (← → étape, Espace lecture, + − 0 zoom). | agent |
 | S6 | Story | ✓ Liste d'étapes sans spoiler | 5 | Fait (tranche 6). Une étape se lit une fois atteinte ; les suivantes sont des « … » numérotés, toujours cliquables. | agent |
+| S25 | Story | ✓ Focus gardé après un choix | 5 | Fait (tranche 9). Entrée / Maj+Entrée sur la ligne du cas : le focus reste sur la cellule (vérifié). Focus en tirets couleur encre, distinct du bleu plein d'un côté choisi. | agent |
+| S26 | Story | ✓ Échap revient à la matrice | 5 | Fait (tranche 9). Échap revient à la matrice, focus sur la cellule d'origine (vérifié) ; affiché dans les raccourcis. | agent |
 | T6 | Task | Voir où le point s'attarde | 6 | | agent |
 | S1 | Story | ✓ Durée fixe par saut | 6 | Fait (tranche 2, non commité). Chaque saut dure 0,65 s quelle que soit sa longueur, avec un easing in-out (runtime.html, HOP_MS). Sur la grille réelle, le saut le plus long passe de 8,95 s à 2,35 s, en comptant la pause sur la décision. | agent |
 | S2 | Story | ✓ Pause sur décisions et issues | 6 | Fait (tranche 2). Pause de 1,7 s sur une décision, la première divergence ou une issue ; 0,45 s ailleurs (dwellAfter). Règle réécrite dans SKILL.md, Design rules. | agent |
@@ -116,6 +125,7 @@ exported on 2026-11-19.
 | S17 | Story | ✓ Libellé d'arête à son départ | 7 | Fait (tranche 5). Le libellé d'une arête droite se place sous la jonction, sur la partie qu'elle seule dessine. | agent |
 | T8 | Task | Lire les deux diagrammes | 8 | | agent |
 | S15 | Story | ✓ Libellés ≥ 12 px à l'écran | 8 | Fait (tranche 5). Le diagramme prend la hauteur restante ; en pas à pas, si les libellés tomberaient sous 12 px, la vue démarre zoomée à 12 px et suit les points (mesuré : 14 px en 1440×900 et 1280×720, contre 5,9 et 4,9 avant). Ajuster et la vue d'ensemble montrent tout. | agent |
+| S24 | Story | ✓ Cas ouvert montre la fourche | 8 | Fait (tranche 9). Le cas s'ouvre sur tout le graphe, issues des deux côtés cerclées ; mesuré en 1280×720 : les deux issues visibles. Le premier Lecture ou pas passe à 14 px et suit les points ; zoom remesuré au redimensionnement. | agent |
 | A5 | Activity | Présenter et partager | 9 | Présentation technique, support : page projetée, envoyée, relue hors ligne. | agent |
 | T9 | Task | Projeter en atelier | 9 | | agent |
 | S18 | Story | ✓ Lisible projeté en 1280×720 | 9 | Fait (tranche 7, non commité). 1280×720 mesuré : diagramme à 295 px du haut au lieu de 366, commandes visibles (bas à 655), étape courante visible, panneau latéral défilant dans l'écran. Barre masquée en grille, « ← matrice » à côté de la ligne du cas, origine sur une ligne (complète au survol). Reste 51 px de défilement : la fin de la légende. | agent |
@@ -123,6 +133,7 @@ exported on 2026-11-19.
 | T10 | Task | Lire sans animation | 10 | Reduced motion, clavier, lecteur d'écran (WCAG AA). | agent |
 | S20 | Story | ✓ Chemin visible sans animation | 10 | Fait (tranche 8, non commité). Animations réduites : les points ne disparaissent plus, ils se posent sur leur nœud ; nœuds hors chemin à 0,55 d'opacité au lieu de 0,38. | agent |
 | S21 | Story | ✓ Valeurs de survol visibles | 10 | Fait (tranche 8). Les valeurs de survol sont écrites sous l'aperçu de la matrice, mises à jour au survol comme au focus clavier (aria-live). | agent |
+| S27 | Story | ✓ Étapes et Maj+clic au clavier | 10 | Fait (tranche 9). Étapes en boutons ; « Clic ou Entrée : comparer en +. Avec Maj : en −. » écrit sous la ligne ; th avec scope ; réglage d'animations réduites suivi sans recharger. Le panneau d'un cas ne répète plus la ligne « Réponse ». | agent |
 
 ## Resolved notes
 

@@ -56,6 +56,11 @@ class Case(unittest.TestCase):
         path.write_text(json.dumps(spec), encoding="utf-8")
         return build.build(path, **kw)
 
+    def page(self, out):
+        text = out.read_text(encoding="utf-8")
+        start = text.index("const DATA=") + len("const DATA=")
+        return json.loads(text[start:text.index(";\n", start)])["page"]
+
     def refused(self, change, check):
         """The build refuses, names the check, and writes no page."""
         with self.assertRaises(build.ChecksFailed) as cm:
@@ -234,11 +239,6 @@ class Contract(Case):
         documented = re.findall(r"^\| (C\d+) \|", skill, flags=re.MULTILINE)
         self.assertEqual(documented, [cid for cid, _ in build.CHECKS])
 
-    def page(self, out):
-        text = out.read_text(encoding="utf-8")
-        start = text.index("const DATA=") + len("const DATA=")
-        return json.loads(text[start:text.index(";\n", start)])["page"]
-
     def test_the_page_receives_what_it_shows_and_nothing_else(self):
         page = self.page(self.build(self.spec())[0])
         self.assertEqual(sorted(page), ["credit", "grid", "kinds", "lang", "nodes", "pairs", "scenarios", "source",
@@ -286,6 +286,32 @@ class Layout(unittest.TestCase):
         geo = build.layout([{"id": i, "label": i} for i in "AB"], [["A", "B", ""], ["B", "A", label]])
         loop = geo["edges"][1]
         self.assertLessEqual(loop["labelPos"][0] + len(label) * layout.EDGE_CHAR_W, geo["width"])
+
+    def test_loops_out_of_a_row_cross_no_box_and_share_no_line(self):
+        """A parser loop: four boxes of one row return to the decision above them, beside a fifth that does not."""
+        ids = ["N", "W", "P", "E", "I", "F"]
+        edges = [["N", i, i] for i in ids[1:]] + [[i, "N", ""] for i in "WPEI"]
+        geo = build.layout([{"id": i, "label": f"box {i}"} for i in ids], edges)
+        segs = []
+        for e in geo["edges"][5:]:
+            tok = e["d"].split()
+            x, y = float(tok[0][1:]), float(tok[1])
+            for raw in tok[2:]:
+                nx, ny = (float(raw[1:]), y) if raw[0] == "H" else (x, float(raw[1:]))
+                segs.append(((x, y), (nx, ny), e["from"]))
+                x, y = nx, ny
+        for (x1, y1), (x2, y2), src in segs:
+            for n, b in geo["nodes"].items():
+                inside_x = min(x1, x2) < b["x"] + b["w"] and max(x1, x2) > b["x"]
+                inside_y = min(y1, y2) < b["y"] + b["h"] and max(y1, y2) > b["y"]
+                self.assertFalse(inside_x and inside_y and n != src, f"{src}->N crosses {n}")
+        # before they meet at their target's side, no two loops run along the same stretch
+        ends = {seg for seg in segs if seg[1][0] == geo["nodes"]["N"]["x"] + geo["nodes"]["N"]["w"] + 4}
+        flats = [(y1, min(x1, x2), max(x1, x2), s) for (x1, y1), (x2, y2), s in segs
+                 if y1 == y2 and ((x1, y1), (x2, y2), s) not in ends]
+        for y, lo, hi, s in flats:
+            for y_, lo_, hi_, s_ in flats:
+                self.assertFalse(s != s_ and y == y_ and lo < hi_ and lo_ < hi, f"{s} and {s_} share y={y}")
 
     def test_a_loop_is_found_from_the_sources_whatever_the_declaration_order(self):
         edges = [["A", "B", ""], ["B", "C", ""], ["C", "B", "again"]]
@@ -376,6 +402,43 @@ class Page(Case):
             played = self.play(EXAMPLE / "sim.html", *mode)
             self.assertEqual((played["playingOnLoad"], played["playMarkedOnLoad"]), (False, True), mode)
 
+    def test_a_step_through_a_node_builds_and_plays_through(self):
+        """A loop's return says nothing: the step runs on through the node it passes, without a stop of its own."""
+        def change(s):
+            for sc in s["scenarios"]:
+                first, second = sc["steps"][:2]
+                sc["steps"][:2] = [{**second, "hop": [first["hop"][0], *second["hop"]]}]
+            for row in s.get("panel", []):
+                row["at"] = max(0, row["at"] - 1)
+        out, n, *_ = self.build(self.spec(change))
+        self.assertEqual(n, 2)
+        page = self.page(out)
+        self.assertEqual(page["scenarios"][0]["steps"][0]["hop"], ["REQ", "AGE", "D"])
+        self.play(out)
+
+    def test_two_paths_that_part_mark_the_fork_even_when_no_value_differs(self):
+        """The data the panel compares may differ only at the end, or not at all: the fork is a difference too."""
+        def change(s):
+            s["panel"] = [r for r in s["panel"] if r["label"] != "In the window"]
+        out, *_ = self.build(self.spec(change))
+        self.assertEqual(self.play(out)["parted"], {"step": 2, "node": "D"})
+
+    def test_a_fork_inside_a_step_through_a_node_is_marked_on_the_node_both_share(self):
+        """[A, D, X] against [A, D, Y]: the paths share D, so D is where they part, not A."""
+        def change(s):
+            for sc in s["scenarios"]:
+                first, *rest = sc["steps"][1:]
+                sc["steps"][1:] = [{**rest[0], "hop": [first["hop"][0], *rest[0]["hop"]]}]
+            s["panel"] = [r for r in s["panel"] if r["at"] == 0]
+        out, *_ = self.build(self.spec(change))
+        self.assertEqual(self.play(out)["parted"], {"step": 1, "node": "D"})
+
+    def test_c1_a_step_through_a_node_takes_only_edges(self):
+        self.refused(lambda s: s["scenarios"][0]["steps"].__setitem__(
+            slice(0, 2), [{"hop": ["REQ", "D"], "message": "m", "caption": "c"}]), "C1")
+        self.refused(lambda s: s["scenarios"][0]["steps"].__setitem__(
+            slice(0, 2), [{"hop": ["REQ", "AGE", "REFUND"], "message": "m", "caption": "c"}]), "C1")
+
     def test_a_pair_of_unequal_length_builds_and_plays_through(self):
         """The shorter side stays on its outcome while the longer one goes on."""
         def change(s):
@@ -390,7 +453,7 @@ class Page(Case):
         self.assertEqual(n, 2)
         played = self.play(out)
         self.assertEqual(played["pairSteps"], 4)  # the longer side's count
-        self.assertTrue(any('data-i="3">+ paid out</li>' in h for h in played["html"]))  # the arrived side says nothing
+        self.assertTrue(any('data-i="3"><button type="button" aria-current="step">+ paid out</button></li>' in h for h in played["html"]))  # the arrived side says nothing
 
     def test_hostile_spec_text_stays_text(self):
         tag = "<img src=x onerror=alert(1)>"
@@ -459,10 +522,14 @@ class Page(Case):
         self.assertEqual(mx.count('<td tabindex="0" role="button"'), 6)  # every cell: 2 cases x (today, 1A, 1B)
         self.assertEqual(mx.count(' class="pulse hit"'), 1)  # one cell rings, the first where the answers disagree
         self.assertEqual(mx.count('<tr class="split">'), 1)  # day 30 splits the answers, day 31 does not
-        self.assertEqual(mx.count('hit" aria-label'), 2)  # both answers of the split case are highlighted, not today
+        self.assertEqual(mx.count('hit" aria-label'), 2)  # both answers of the split case are marked, not today
+        self.assertEqual(mx.count('<span class="out">'), 6)  # every cell says how its case ends, then its value
+        self.assertEqual(mx.count('scope="row"'), 2)  # a case heads its row for a screen reader
+        self.assertIn('<p class="mxkey">', mx)  # the keys sit in one line of short items, not a paragraph
         minis = [h for h in played["html"] if 'class="mx mini"' in h]  # an open case keeps its row of the matrix
         marks = {h.count('aria-current="true"') for h in minis}
         self.assertEqual(marks, {1, 2})  # today alone marks one cell; a comparison marks two, − and +
+        self.assertTrue(all('class="pickhint"' in h for h in minis))  # Shift is said on screen, not only on hover
         for h in played["html"]:
             self.assertNotIn("<img", h)
 

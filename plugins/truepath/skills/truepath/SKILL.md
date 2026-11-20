@@ -64,9 +64,9 @@ The diagram zooms with `−`, `+`, Ctrl/Cmd + wheel, a trackpad or two-finger
 pinch, and the keys `+`, `-`, `0`; *Fit* (or `0`) shows it whole again. Once
 zoomed, a drag or the wheel pans, and the view glides after the moving dot so
 the current hop stays in sight. A pan stops that following; Play, Restart and
-*Fit* resume it. Step by step, when the whole graph would draw its labels
-under 12px, the view starts zoomed to that size and follows the dots; *Fit*
-and the overview show the whole graph.
+*Fit* resume it. A case opens on the whole graph; when that draws its labels
+under 12px, the first Play or step zooms to that size and follows the dots;
+*Fit* and the overview show the whole graph.
 
 ## Where verdicts come from
 
@@ -80,8 +80,15 @@ the live checkout: a branch under work may move during the build), extracts
 `oracle.paths`, links `oracle.link` (typically `node_modules`) and copies
 `oracle.files` into it, then runs `oracle.cmd` in `oracle.cwd` with:
 
-- `TRUEPATH_ORACLE_IN`: a JSON array of every scenario's `inputs`;
-- `TRUEPATH_ORACLE_OUT`: where to write a JSON array of verdicts, same order.
+- `TRUEPATH_ORACLE_IN`: the path of a file holding a JSON array of every
+  scenario's `inputs`;
+- `TRUEPATH_ORACLE_OUT`: the path where to write a JSON array of verdicts,
+  same order.
+
+`cmd` is an argument list, run without a shell: to pin a toolchain, start it
+with `env`, as in `["env", "JAVA_HOME=…", "mvn", "-o", "-q", "-Dtest=…",
+"test"]` (a Java project's annotation processors, Lombok among them, may
+fail on a JDK newer than the one the project targets).
 
 `oracle.repo` is read from the spec's folder when it is relative. `link` and
 `files` are both written `{path in the snapshot: where it comes from}`: a
@@ -120,7 +127,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `nodes` | `[{id, label, role?, kind?}]` | `role: "decision"` marks a branching point; where a path starts is found, and drawn round; sinks need `kind` |
 | `edges` | `[[from, to, label]]` | label `""` for none |
 | `panel` | `[{label, value, at, labels?, digits?, compared?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search |
-| `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`; `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
+| `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`, or `hop: [from, via…, to]` to run through a node without stopping (a loop's return); `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
 | `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
 | `oracle` | `{repo, ref, paths, link?, files?, cwd, cmd}` | see above |
@@ -150,20 +157,23 @@ A flat `variants: [{id, label, short?, note?, inputs}]` with `baseline` as
 an id still works: the matrix then has one section, every case against every variant.
 
 The page opens on the matrix: one table per question, its cases against today
-and each answer. A case where the answers disagree with one another is
-highlighted: that is what the reader decides on. A value that differs from
-today is marked `≠`, quietly, since a change every answer brings is not a
-choice.
+and each answer. A cell says how its case ends first, the outcome node's
+label beside its kind's colour (`valeur perdue`, `stockée hors spec`), then
+the value of the `show` field: a decision-maker reads the outcome, a
+developer the value. `≠` marks the line that differs from today. Nothing else
+is highlighted: one mark for change, so the eye lands on what changed.
 
 Beside the matrix, the whole graph is drawn still: the cell under the
 pointer or the keyboard focus lights its path there, so a row reads as a
 route, not only as a value. There is no tab per case: a click on a cell
 opens it, today next to that answer, with the first divergence marked. The
 case keeps its row of the matrix above the diagrams, the two cells it
-compares marked `−` and `+`: a click on another cell puts it on `+`,
-Shift + click on `−`, so 1A plays next to 1B, not only next to today.
-`← matrix` goes back. In the panel, a row
-with `"value": "answer"` and `"compared": true` names the answer played.
+compares marked `−` and `+`: a click (or Enter) on another cell puts it on
+`+`, with Shift on `−`, so 1A plays next to 1B, not only next to today; the
+row says so on screen. `← matrix` or Escape goes back, the focus on the cell
+the case was opened from. A row with `"value": "answer"` and
+`"compared": true` names the answer played; in a grid the case's row already
+says it, so the panel leaves it out.
 
 **Step templates.** `message`, `caption` and `hop` may quote `{inputs.x}` or
 `{verdict.y}`: they are filled after the logic ran, formatted like the panel
@@ -220,23 +230,28 @@ in a `basis` text, shown on hover.
 
 ## Design rules
 
-- One moving element per diagram: a single dot, one hop at a time. Every
-  hop takes the same time, however long it is drawn; the dot then stays
-  long where the story is (a decision, the first divergence, an outcome)
-  and briefly where it only passes. Time on screen follows meaning, not
-  ink. Two sides compared walk one graph, a dot each, marked `−` and `+`
-  and moving in step; when one has fewer steps, its dot waits on its
-  outcome while the other goes on. An edge both take is the path colour,
-  an edge only one takes is that side's colour: the divergence is a fork
-  in one drawing, not a difference between two thumbnails.
+- One moving element per diagram: a single dot, one hop at a time. Every hop
+  takes the same time, however long it is drawn; the dot then stays long where
+  the story is (a decision, the first divergence, an outcome) and briefly where
+  it only passes. Time on screen follows meaning, not ink. A node the dot only
+  passes through, a loop's return say, is a `via` of the step, not a step of its
+  own. Two sides compared walk one graph, a dot each, marked `−` and `+` and
+  moving in step; when one has fewer steps, its dot waits on its outcome while
+  the other goes on. An edge both take is the path colour, an edge only one
+  takes is that side's colour: the divergence is a fork in one drawing, not a
+  difference between two thumbnails.
 - Taken edges are solid, untaken ones dashed and grey; nodes off the path fade.
-- Colour encodes the outcome kind only. In a pair, the first divergence (the
-  first step where a panel value differs) is outlined amber and marked `≠` on
-  both sides, and the panel shows `−` / `+` columns.
+- Colour encodes the outcome kind only. In a pair, the first divergence is
+  outlined amber and marked `≠`: the first step where the paths fork, on the
+  last node both still share, or where a panel value differs, whichever comes
+  first. The panel shows `−` / `+` columns.
 - Illustrative scenarios only where no real case reaches that outcome; say
   where the real case comes from (ticket, record, measure, date).
-- A grid shows one field per cell; three fields per cell made the matrix
-  unreadable.
+- A grid shows one field per cell, under its outcome; three fields per cell
+  made the matrix unreadable.
+- A case opens on the whole graph, the fork and each side's outcome in
+  sight; the first Play or step zooms to readable labels and follows the
+  dots.
 - Light theme by default, dark under `prefers-color-scheme`; no web font, so
   the file works offline.
 - Under `prefers-reduced-motion` nothing glides or rings: the dots land on
