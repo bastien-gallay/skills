@@ -46,7 +46,13 @@ changelog, with the old and the new key; anything else bumps the patch.
 
 ## What users get
 
-- **Claude Code plugin**, from this repository or from the hub:
-  `/plugin marketplace update` then `/plugin update` picks up the new
-  `plugin.json` version.
+- **Claude Code plugin**, from this repository or from the hub: in
+  `/plugin`, tab *Marketplaces*, the marketplace, *Update marketplace*
+  refreshes its listing and updates the plugins installed from it; one
+  plugin alone is *Installed*, the plugin, *Update now*, or
+  `claude plugin update truepath@skills` in a shell. There is no
+  `/plugin update`. `/reload-plugins` loads the new version in an open
+  session. Auto-update is off by default for a marketplace of one's own;
+  it is turned on in the same *Marketplaces* menu. Source: the plugin
+  install page of the Claude Code docs, read 2026-11-20.
 - **A copied `skills/truepath/` folder**: nothing updates it; copy it again.
