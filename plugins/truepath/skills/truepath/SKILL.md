@@ -49,9 +49,11 @@ pairs, the reader gets one tab per case and no table to compare them in.
 5. Write the scenarios. Each declares its `origin`, its `inputs`, the
    `expect`ed verdict fields, and its `steps` along real edges.
 6. Run `build.py --check`: the checks that need no verdict (paths, layout,
-   texts, doubts), without the logic, nothing written. Then write down your
-   doubts and ask the user about the strongest ones, before building (see
-   *Doubts*).
+   texts), without the logic, nothing written. Write down your doubts: an
+   open one is printed `?`, a question to ask, not a violation. Ask the
+   user about the strongest ones before building (see *Doubts*);
+   `build.py --dry-run` meanwhile runs the logic and every check, and
+   still writes nothing, so the glue can be tried before the answers.
 7. Build, then open the file:
 
    ```sh
@@ -69,9 +71,10 @@ first and last step, `Space` play or pause; on the tab row `↑` `↓` change
 tab, and `1`…`9` open the tab of that rank.
 
 When a path comes back to a node (a loop), each branch leaving that node
-gets a numbered badge per pass, once the dot has taken it: `① ②` on
-*timeout*, `③` on *ok* says the third try got through. Up to three badges
-sit side by side, more read as a range (`1–11`) and the last pass. The pass
+gets a numbered badge per pass, once the dot has taken it, right after the
+branch's label: *timeout* `① ②`, *ok* `③` says the third try got
+through. Up to three badges sit side by side, more read as a range
+(`1–11`) and the last pass. The pass
 under way is filled; a badge names its step on hover or focus, and a click
 or `Enter` takes the cursor there. Nodes passed once get none: there the
 order is the path itself.
@@ -111,6 +114,9 @@ the live checkout: a branch under work may move during the build), extracts
 `TRUEPATH_SPEC_DIR` holds the spec's folder: a dependency cache kept next
 to the spec (`CARGO_HOME`, an npm cache) is reached from it, never by
 counting `../` out of the snapshot, whose depth is the build's business.
+`cmd` runs without a shell, so `build.py` itself replaces
+`$TRUEPATH_SPEC_DIR` in its arguments: `["env",
+"CARGO_HOME=$TRUEPATH_SPEC_DIR/.cargo", "cargo", "run", "--offline", "-q"]`.
 
 `cmd` is an argument list, run without a shell: to pin a toolchain, start it
 with `env`, as in `["env", "JAVA_HOME=…", "mvn", "-o", "-q", "-Dtest=…",
@@ -182,7 +188,10 @@ system is the exception, for a path that crosses several units on purpose.
 - **Cut the unit by markers, include it by path.** In Rust, `#[path]` on a
   module declared in its own file (`src/unit.rs` holding
   `#[path = "../excerpt/x.rs"] mod x;`), not in an inline module, whose
-  path resolves under a folder `files` does not create.
+  path resolves under a folder `files` does not create. The glue's crate
+  root then provides every `crate::…` the unit imports, as the project's
+  own root did. `files` copies bytes: a lockfile or a binary fixture is
+  brought as it is.
 
 `examples/payment-retry/` is the pattern: `src/pay.js` unchanged, a stub
 gateway and a mock clock in `glue/oracle.js`, a retry loop.
@@ -224,11 +233,13 @@ wrong guess would change what the reader concludes:
 Ask the user about the strongest ones, one question at a time, through the
 interactive question tool when there is one (its options are the plausible
 answers, yours first, marked recommended), at most three before the first
-build. Keep the rest in the spec. Each doubt is recorded in `doubts`:
-`{id, question, scenarios, answer?}`. C15 refuses a scenario that rests on
-an unanswered doubt, unless it is marked `undecided`, and prints the
-question to ask. The answer, with who gave it, stays in the spec: it is
-why the case reads the way it does.
+build. Keep the rest in the spec, with what you assumed instead. Each
+doubt is recorded in `doubts`: `{id, question, scenarios, answer?,
+assumed?}`. C15 refuses a scenario that rests on a doubt with neither an
+`answer` nor an `assumed` text, unless it is marked `undecided`, and prints
+the question to ask. The answer, with who gave it, or the assumption, with
+why it was not asked, stays in the spec: it is why the case reads the way
+it does.
 
 A test-file oracle can double as a regression suite: when
 `TRUEPATH_ORACLE_IN` is set it writes the verdicts, otherwise it reads the
@@ -244,7 +255,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `credit` | `true` (default) or `false` | `false` removes the *made with truepath* link at the end of the footer |
 | `kinds` | `{id: {label, color}}` | at most 4 |
 | `nodes` | `[{id, label, role?, kind?}]` | `role: "decision"` marks a branching point; where a path starts is found, and drawn round; sinks need `kind` |
-| `edges` | `[[from, to, label]]` | label `""` for none |
+| `edges` | `[[from, to, label]]` | label `""` for none; one edge per pair of nodes, its label naming every case it carries (`same or absent`) |
 | `panel` | `[{label, value, at, labels?, digits?, compared?, series?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first), or `"last"` for each scenario's own last step (a result, in scenarios of different lengths); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search and never marked `≠`; `series: true` when `value` is a list with one value per step from `at`, the last one kept: what a loop builds up line by line |
 | `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`, or `hop: [from, via…, to]` to run through a node without stopping (a loop's return); `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
 | `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
@@ -412,5 +423,8 @@ build only inside a git repository that holds them.
   adds air.
 - Steps are declared, not derived from the logic: C3 and C4 catch a wrong
   outcome, not a wrong intermediate message.
+- A `series` row needs one value per step, and the logic does not know the
+  steps: a list a loop builds (certificates verified one by one) is shown
+  whole, `at: "last"`, unless the glue maps each pass to its step.
 - `fetch.py` reads GitHub only, through `curl`; elsewhere, copy the files
   into a local git repository with an `excerpt.json` of the same shape.

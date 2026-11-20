@@ -238,6 +238,31 @@ class CheckOnly(Case):
         self.build(self.spec(change), check_only=True)
 
 
+class Leniency(Case):
+    def test_a_null_on_the_way_reads_as_null(self):
+        def change(s):
+            for sc in s["scenarios"]:
+                sc["inputs"]["local"] = None
+            s["panel"].append({"label": "Local genesis", "value": "inputs.local.epoch", "at": 0, "labels": {"null": "none"}})
+        out, *_ = self.build(self.spec(change))
+        row = next(r for r in self.page(out)["scenarios"][0]["rows"] if r["label"] == "Local genesis")
+        self.assertEqual(row["shown"], "none")
+
+    def test_one_edge_per_pair_of_nodes(self):
+        def change(s):
+            s["edges"].append(list(s["edges"][0][:2]) + ["again"])
+        self.unreadable(change, "declared twice")
+
+    def test_dry_run_runs_the_logic_and_writes_nothing(self):
+        def change(s):
+            s["scenarios"][0]["expect"]["outcome"] = "NOWHERE"
+        with self.assertRaises(build.ChecksFailed):  # C3 and C4 need the logic: a dry run has it
+            self.build(self.spec(change), dry_run=True)
+        out, *_ = self.build(self.spec(), dry_run=True)
+        self.assertIsNone(out)
+        self.assertEqual(list(self.dir.glob("*.html")), [])
+
+
 class Doubts(Case):
     def doubt(self, answer=None, undecided=False, names=None):
         def change(s):
@@ -254,6 +279,21 @@ class Doubts(Case):
 
     def test_an_answered_doubt_builds(self):
         self.build(self.spec(self.doubt(answer="yes, said the product owner on 2026-11-20")))
+
+    def test_an_assumed_doubt_builds(self):
+        def change(s):
+            self.doubt()(s)
+            s["doubts"][0]["assumed"] = "yes: the code reads that way; not asked, too weak to"
+        self.build(self.spec(change))
+
+    def test_check_says_an_open_doubt_is_a_question_to_ask(self):
+        path = self.dir / "case.spec.json"
+        path.write_text(json.dumps(self.spec(self.doubt())), encoding="utf-8")
+        said = io.StringIO()
+        with contextlib.redirect_stdout(said):
+            build.main([str(path), "--check"])  # no exit: a question is not a violation yet
+        self.assertIn("? doubt D1 is not answered", said.getvalue())
+        self.assertIn("1 question(s) to ask before building", said.getvalue())
 
     def test_an_open_doubt_on_an_undecided_case_builds(self):
         self.build(self.spec(self.doubt(undecided=True)))
@@ -695,6 +735,15 @@ class Oracle(Case):
             self.oracle(s)
             s["oracle"]["doubles"] = [{"name": "clock", "kind": "spy-ish", "replaces": "the system clock"}]
         self.unreadable(change, "expected stub, fake or mock")
+
+    def test_the_spec_dir_reaches_the_command(self):
+        (self.dir / "cache").mkdir()
+
+        def change(s):
+            self.oracle(s)
+            s["oracle"]["cmd"] = ["node", "-e", "require('fs').statSync(process.argv[1]+'/cache');require('./run.js')",
+                                  "$TRUEPATH_SPEC_DIR"]
+        self.build(self.spec(change))
 
     def test_the_footer_names_the_doubles(self):
         def change(s):

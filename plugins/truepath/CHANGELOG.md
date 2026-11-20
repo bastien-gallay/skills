@@ -64,6 +64,23 @@ and from the author driving the page.
 - `examples/payment-retry/`: a unit run alone, a stub and a mock in its
   glue, a retry loop and its passes.
 
+From a third run, the agent again with only the skill, on a loop of three
+passes.
+
+- A pass badge sits after its branch's label (*parent returned* `①②③`):
+  set at the end of the edge, it read as the next node's. A click on it now
+  goes to its step: the pan gesture captured the pointer and swallowed the
+  click. The diagram is a group, not an image, so a screen reader reaches
+  the badges, which are buttons.
+- `--check` prints an open doubt as a question to ask (`?`), not a
+  violation; `--dry-run` runs the logic and every check, and writes
+  nothing; a doubt may hold what was `assumed` instead of asked.
+- `$TRUEPATH_SPEC_DIR` in `oracle.cmd` is replaced by the spec's folder,
+  since the command runs without a shell; `files` are copied as bytes.
+- A null on a panel row's way (`inputs.a.b`, `a` null) reads as null; two
+  edges between the same nodes are refused, where the second silently
+  replaced the first in the drawing.
+
 - A matrix cell says how its case ends, the outcome's label beside its
   colour, then the value: `rien` read the same for a value lost, dropped on
   purpose, or lost again. The highlight of a split case is gone; `≠` is the

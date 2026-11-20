@@ -126,6 +126,10 @@ def validate(spec, specdir, exporting=False):
         for end in e[:2]:
             if end not in ids:
                 p.append(f"edges[{i}]: {end} is not a node")
+    pairs = [tuple(e[:2]) for e in spec["edges"] if isinstance(e, list) and len(e) in (2, 3)]
+    for a, b in sorted({x for x in pairs if pairs.count(x) > 1}):
+        p.append(f"edges: {a} -> {b} is declared twice; one edge per pair of nodes, its label naming every case "
+                 "(\"same or absent\")")
     for k, v in spec.get("kinds", {}).items():
         p.keys(v, ["label", "color"], f"kinds.{k}")
     for i, r in enumerate(spec.get("panel", [])):
@@ -183,7 +187,7 @@ def validate_doubles(o, p):
 
 
 def validate_doubts(spec, p):
-    if not p.typed(spec, "doubts", list, "spec", "a list [{id, question, scenarios, answer?}]") or "doubts" not in spec:
+    if not p.typed(spec, "doubts", list, "spec", "a list [{id, question, scenarios, answer?, assumed?}]") or "doubts" not in spec:
         return
     for i, d in enumerate(spec["doubts"]):
         if p.keys(d, ["id", "question", "scenarios"], f"doubts[{i}]"):
@@ -261,7 +265,7 @@ def snapshot(o, workdir, specdir):
             (snap / dest).symlink_to(repo / src)
     for dest, src in o.get("files", {}).items():
         (snap / dest).parent.mkdir(parents=True, exist_ok=True)
-        (snap / dest).write_text((specdir / src).read_text(encoding="utf-8"), encoding="utf-8")
+        (snap / dest).write_bytes((specdir / src).read_bytes())  # a lockfile, a binary fixture: copied as they are
     return sha, snap
 
 
@@ -274,7 +278,9 @@ def run_oracle(spec, scenarios, specdir):
     io_in.write_text(json.dumps([s["inputs"] for s in scenarios]), encoding="utf-8")
     io_out.unlink(missing_ok=True)
     try:
-        run = subprocess.run(o["cmd"], cwd=snap / o["cwd"], check=False, capture_output=True, text=True,
+        # cmd runs without a shell: build.py itself puts the spec's folder where an argument names it
+        cmd = [str(a).replace("$TRUEPATH_SPEC_DIR", str(specdir)) for a in o["cmd"]]
+        run = subprocess.run(cmd, cwd=snap / o["cwd"], check=False, capture_output=True, text=True,
                              env={**os.environ, "TRUEPATH_ORACLE_IN": str(io_in), "TRUEPATH_ORACLE_OUT": str(io_out),
                                   "TRUEPATH_SPEC_DIR": str(specdir)})  # a dependency cache lives there, not in the snapshot
     except OSError as e:
@@ -414,8 +420,11 @@ def expand_grid(g):
 # ---- what a value looks like
 
 def resolve(path, scenario):
+    """inputs.a.b: a null on the way reads as null (shown "null"), a missing key is C9's to report."""
     cur = scenario
     for part in path.split("."):
+        if cur is None:
+            return None
         if not isinstance(cur, dict) or part not in cur:
             raise KeyError(path)
         cur = cur[part]
@@ -678,12 +687,12 @@ def c15_no_case_rests_on_an_open_doubt(b):
         for sid in d["scenarios"]:
             if sid not in known:
                 yield f"doubt {d['id']} names {sid}, which is no scenario or case"
-        if d.get("answer") in (None, ""):
+        if d.get("answer") in (None, "") and d.get("assumed") in (None, ""):
             open_cases = [s["id"] for s in b.scenarios
                           if (s["id"] in d["scenarios"] or s.get("case") in d["scenarios"]) and not s.get("undecided")]
             if open_cases:
                 yield f"doubt {d['id']} is not answered, and {', '.join(open_cases)} rests on it: " \
-                      f"ask \"{d['question']}\", write the answer, or mark the scenario undecided"
+                      f"ask \"{d['question']}\", write the answer, write what you assumed, or mark the scenario undecided"
 
 
 # The ids are the handles SKILL.md documents: stable, never renumbered.
@@ -780,11 +789,12 @@ def render(data):
     return shell.replace("/*__DATA__*/null", payload, 1)
 
 
-def build(specpath, out=None, export_to=None, check_only=False):
+def build(specpath, out=None, export_to=None, check_only=False, dry_run=False):
     """Returns (page path, scenario count, verdict source, exported). Raises UnreadableSpec or ChecksFailed.
 
     `exported` is (fixture path, case count), or None without `export_to`. `check_only` runs the checks
-    that need no verdict, without the logic, and writes nothing: the page path is then None."""
+    that need no verdict, without the logic, and writes nothing: the page path is then None. `dry_run`
+    runs the logic and every check, and writes nothing either."""
     specpath = pathlib.Path(specpath).resolve()
     specdir = specpath.parent
     try:
@@ -820,6 +830,8 @@ def build(specpath, out=None, export_to=None, check_only=False):
     if violations:
         raise ChecksFailed(violations)
 
+    if dry_run:
+        return None, len(scenarios), verdict_source, None
     # everything is computed before anything is written: a page without its fixture is not "or nothing"
     page = render(page_data(spec, scenarios, grid, geo, verdict_source))
     fixture = export_fixture(spec, scenarios, from_code) if export_to else None
@@ -841,9 +853,19 @@ def main(argv=None):
     ap.add_argument("--export", metavar="WORKTREE")
     ap.add_argument("--check", action="store_true",
                     help="run the checks that need no verdict, without the logic, and write nothing")
+    ap.add_argument("--dry-run", action="store_true", help="run the logic and every check, and write nothing")
     args = ap.parse_args(argv)
+    asks = []
     try:
-        out, n, verdict_source, exported = build(args.spec, args.out, args.export, check_only=args.check)
+        try:
+            out, n, verdict_source, exported = build(args.spec, args.out, args.export, check_only=args.check,
+                                                     dry_run=args.dry_run)
+        except ChecksFailed as e:
+            # before the first build, an open doubt is a question to ask, not a mistake in the spec
+            asks = [v for v in e.args[0] if args.check and v.startswith("C15 ") and " is not answered" in v]
+            if len(asks) < len(e.args[0]):
+                raise ChecksFailed([v for v in e.args[0] if v not in asks]) from e
+            n = None
     except UnreadableSpec as e:
         sys.exit(f"✗ {e}\nnothing written")
     except ChecksFailed as e:
@@ -851,8 +873,14 @@ def main(argv=None):
             print("✗", line)
         sys.exit(f"{len(e.args[0])} violation(s), nothing written")
     if args.check:
-        print(f"✓ 0 violation without the logic · {n} scenarios · "
-              f"{', '.join(sorted(NEEDS_LOGIC, key=lambda c: int(c[1:])))} wait for it · nothing written")
+        for a in asks:
+            print("?", a[len("C15 "):])
+        print(f"✓ 0 violation without the logic · "
+              f"{', '.join(sorted(NEEDS_LOGIC, key=lambda c: int(c[1:])))} wait for it"
+              f"{f' · {len(asks)} question(s) to ask before building' if asks else ''} · nothing written")
+        return
+    if args.dry_run:
+        print(f"✓ 0 violation · {n} scenarios · logic: {verdict_source} · dry run, nothing written")
         return
     if exported:
         print(f"✓ exported {exported[1]} cases to {exported[0]}")

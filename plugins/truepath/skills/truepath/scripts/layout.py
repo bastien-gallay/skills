@@ -10,8 +10,9 @@ stand beside its source, it first runs under their row in a corridor of its own.
 cross a box on its way down steps aside just past the boxes in its way, on the nearer side:
 sent around the whole drawing, it was the longest line on the page and widened it for nothing.
 `pass` is where the page writes, along an edge, which visits of a node revisited by a loop left
-by it: [x, y, side], the badges laid from (x, y) towards side (-1 left, 1 right), on a stretch
-of the edge no other edge leaving the same node shares.
+by it: [x, y, side], the badges laid from (x, y) towards side (-1 left, 1 right). A labelled
+edge has them right after its label, which already names the branch ("no 1 2", "yes 3"); an
+unlabelled one, on a stretch of the edge no other edge leaving the same node shares.
 Pure stdlib, deterministic: the same graph gives the same file.
 
 The page draws with the fonts these widths assume: node labels in 13px monospace, edge
@@ -34,6 +35,8 @@ LANE = 2 * GRID     # between two lanes, and between the boxes and the first lan
 STUB = 4            # an edge stops this short of the box it enters, so the arrowhead does not pierce it
 LABEL_GAP = 4       # between an edge and its label
 CLEARANCE = 6       # how near a box side an edge may pass before it is sent around
+PASS_ROOM = 3       # between an edge label and the first pass badge after it
+PASS_W = 19         # a pass badge and the gap after it, in the page's units (runtime.html PASS_R, PASS_GAP)
 
 
 def wrap(label):
@@ -203,27 +206,29 @@ def route(edges, ids, box, rank, back):
         if (a, b) in back:  # out of the source's side, up its lane, into the target's side
             d, lane, climb, low = loops[a, b]
             pos = [lane + LABEL_GAP, climb]
-            badge = [lane, low - LANE, 1]  # at the foot of its own lane, which no other edge climbs
+            badge = [lane + PASS_ROOM * 2, low - LANE, 1]  # at the foot of its own lane, which no other edge climbs
         elif any(o["x"] - CLEARANCE <= tx <= o["x"] + o["w"] + CLEARANCE for o in passed):  # a box is in the way
             lane, side = detour(tx, passed, taken)
             lane = round(lane)
             taken.append(lane)
             low = round(t["y"] - GAP_Y / 2)
             d = f"M{sx} {y1} V{rail} H{lane} V{low} H{tx} V{y2}"
-            badge = [tx, (low + y2) / 2, -1]
+            badge = [tx - PASS_ROOM * 2, (low + y2) / 2, -1]
             # the label sits on the outer side of the detour, away from the boxes it steps around
             pos = [lane + LABEL_GAP if side > 0 else lane - LABEL_GAP - len(label) * EDGE_CHAR_W, (rail + low) / 2]
         elif sx == tx:
             d = f"M{sx} {y1} V{y2}"
-            badge = [sx, (rail + y2) / 2, -1]  # past the rail: above it, the stub is shared with the source's other edges
+            badge = [sx - PASS_ROOM * 2, (rail + y2) / 2, -1]  # past the rail: above it, the stub is shared with the source's other edges
             # below the rail: above it, the stub is shared with the source's other edges, and a label there names them all
             pos = [sx + CLEARANCE, (rail + y2) / 2 + LABEL_GAP]
         else:
             d = f"M{sx} {y1} V{rail} H{tx} V{y2}"
-            badge = [tx, (rail + y2) / 2, -1]
+            badge = [tx - PASS_ROOM * 2, (rail + y2) / 2, -1]
             pos = [(sx + tx) / 2 - len(label) * EDGE_CHAR_W / 2, rail - LABEL_GAP]  # centred on the rail
+        if label:  # after the branch's name, on its baseline's middle: the badges read as part of the label
+            badge = [pos[0] + len(label) * EDGE_CHAR_W + PASS_ROOM, pos[1] - 4, 1]
         if lane is not None:
-            reach = max(reach, lane, lane + LABEL_GAP + len(label) * EDGE_CHAR_W if label else lane)
+            reach = max(reach, lane, lane + LABEL_GAP + len(label) * EDGE_CHAR_W + 3 * PASS_W if label else lane)
         out.append({"from": a, "to": b, "d": d, "label": label or None, "pass": [round(badge[0], 1), round(badge[1], 1), badge[2]],
                     "labelPos": [round(pos[0], 1), round(pos[1], 1)] if label else None})
     return out, reach
