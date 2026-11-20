@@ -14,7 +14,8 @@ import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-EXAMPLE = ROOT / "skills/truepath/examples/refund-window"
+EXAMPLES = ROOT / "skills/truepath/examples"
+EXAMPLE = EXAMPLES / "refund-window"
 sys.path.insert(0, str(ROOT / "skills/truepath/scripts"))
 import build  # noqa: E402
 
@@ -427,6 +428,97 @@ class Layout(unittest.TestCase):
             self.assertLess(ys["B"], ys["C"], order)
             tops.add(min(ys, key=ys.get))
         self.assertEqual(tops, {"A"})
+
+
+class Across(unittest.TestCase):
+    """The same layout left to right: boxes keep their size, every line, name and badge stays inside."""
+    PARSER = (["N", "W", "P", "E", "I", "F"],
+              [["N", i, i] for i in "WPEIF"] + [[i, "N", ""] for i in "WPEI"])
+
+    @staticmethod
+    def corners(d):
+        import layout
+        return layout.points(d)
+
+    def inside(self, geo):
+        import layout
+        for e in geo["edges"]:
+            for x, y in self.corners(e["d"]):
+                self.assertTrue(0 <= x <= geo["width"] and 0 <= y <= geo["height"], (e["from"], e["to"], e["d"]))
+            x, y, _ = e["pass"]
+            self.assertTrue(0 <= x <= geo["width"] and 0 <= y <= geo["height"], e)
+            if e["label"]:
+                lx, ly = e["labelPos"]
+                self.assertLessEqual(lx + len(e["label"]) * layout.EDGE_CHAR_W, geo["width"], e)
+                self.assertTrue(0 <= lx and 0 <= ly <= geo["height"], e)
+
+    def test_ranks_run_left_to_right_and_boxes_keep_their_size(self):
+        nodes = [{"id": i, "label": f"step {i}"} for i in "ABC"]
+        edges = [["A", "B", "go"], ["B", "C", ""]]
+        down, across = build.layout(nodes, edges), build.layout(nodes, edges, across=True)
+        xs = [across["nodes"][i]["x"] for i in "ABC"]
+        self.assertEqual(xs, sorted(xs))
+        for i in "ABC":
+            self.assertEqual((down["nodes"][i]["w"], down["nodes"][i]["h"]), (across["nodes"][i]["w"], across["nodes"][i]["h"]))
+        self.assertTrue(across["across"])
+        self.assertNotIn("across", down)
+        self.inside(across)
+
+    def test_a_branch_name_is_written_on_the_run_entering_its_target(self):
+        import layout
+        geo = build.layout([{"id": i, "label": i} for i in "DYN"], [["D", "Y", "yes"], ["D", "N", "no"]], across=True)
+        for e in geo["edges"]:
+            t = geo["nodes"][e["to"]]
+            lx, ly = e["labelPos"]
+            self.assertLessEqual(lx + len(e["label"]) * layout.EDGE_CHAR_W, t["x"], e)
+            self.assertTrue(t["y"] <= ly <= t["y"] + t["h"], e)
+
+    def test_loops_cross_no_box_and_stay_inside(self):
+        ids, edges = self.PARSER
+        geo = build.layout([{"id": i, "label": f"box {i}"} for i in ids], edges, across=True)
+        self.inside(geo)
+        for e in geo["edges"]:
+            pts = self.corners(e["d"])
+            for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+                for n, b in geo["nodes"].items():
+                    if n in (e["from"], e["to"]):
+                        continue
+                    self.assertFalse(min(x1, x2) < b["x"] + b["w"] and max(x1, x2) > b["x"]
+                                     and min(y1, y2) < b["y"] + b["h"] and max(y1, y2) > b["y"], f"{e['from']}->{e['to']} crosses {n}")
+
+    def test_the_examples_lay_out_across(self):
+        for ex in ("refund-window", "free-shipping", "payment-retry"):
+            spec = json.loads((EXAMPLES / ex / "spec.json").read_text(encoding="utf-8"))
+            self.inside(build.layout(spec["nodes"], [[*e, ""][:3] for e in spec["edges"]], across=True))
+
+
+class Views(Case):
+    def data(self, out):
+        text = out.read_text(encoding="utf-8")
+        start = text.index("const DATA=") + len("const DATA=")
+        return json.loads(text[start:text.index(";\n", start)])
+
+    def test_one_view_gives_one_geometry(self):
+        out, *_ = self.build(self.spec(lambda s: s.update(view="flow-lr")))
+        data = self.data(out)
+        self.assertTrue(data["geo"]["across"])
+        self.assertNotIn("views", data)
+
+    def test_views_give_the_page_a_switch(self):
+        out, *_ = self.build(self.spec(lambda s: s.update(views=["flow", "flow-lr"])))
+        data = self.data(out)
+        self.assertEqual(list(data["views"]), ["flow", "flow-lr"])
+        self.assertNotIn("across", data["geo"])
+        self.assertEqual(data["views"]["flow"], data["geo"])
+
+    def test_the_view_opens_first(self):
+        out, *_ = self.build(self.spec(lambda s: s.update(view="flow-lr", views=["flow"])))
+        self.assertEqual(list(self.data(out)["views"]), ["flow-lr", "flow"])
+
+    def test_an_unknown_view_is_refused(self):
+        self.unreadable(lambda s: s.update(view="sequence"), "expected one of flow, flow-lr")
+        self.unreadable(lambda s: s.update(views=["flow", "radial"]), "views names 'radial'")
+        self.unreadable(lambda s: s.update(views=["flow", "flow"]), "names a view twice")
 
 
 class Unreadable(Case):

@@ -32,6 +32,24 @@ changes and every case walks the same path, it does not.
 More than two pairs comparing the same two versions is a grid: written as
 pairs, the reader gets one tab per case and no table to compare them in.
 
+## Then, the view
+
+The shape says what is compared; the view says how a path is drawn. They
+are two choices: a grid's cell, a pair, a scenario open on whichever view
+the spec names in `view`.
+
+| The question | View |
+| --- | --- |
+| where it branches, which rule decides | `flow`, top to bottom (the default) |
+| a long, nearly straight pipeline; a page to project on a wide screen | `flow-lr`, left to right |
+
+When both fit, the user decides: ask it as a doubt, one question whose
+options show each view as a small text sketch, yours first, and write the
+answer in `view`. `views` lists other views the page offers to switch to
+(`↓` `→` beside the zoom, or the key `V`), on the same step; leave it out
+when one view says it, since each one offered is one more drawing to read.
+The same spec gives every view: nodes, edges and steps are not rewritten.
+
 ## Workflow
 
 1. Find the unit to show: the function or module that decides the path.
@@ -41,7 +59,8 @@ pairs, the reader gets one tab per case and no table to compare them in.
 2. Copy the nearest example next to the subject's notes (see *Files*),
    rename `spec.json` to `<subject>.spec.json`.
 3. Describe nodes and edges. Every sink node (an outcome) gets a `kind`;
-   kinds are the only colours, each with a legend label.
+   kinds are the only colours, each with a legend label. Choose the view
+   (see *Then, the view*).
 4. Choose where the verdicts come from (see below). By default, an `oracle`
    that runs the unit alone, its collaborators replaced by doubles, as a
    unit test would (see *Running the unit, not the system*); a JS `port`
@@ -68,7 +87,8 @@ pairs, the reader gets one tab per case and no table to compare them in.
 Keys work wherever the focus is, a tab included, so a reader clicks a tab
 and drives the case from the keyboard: `←` `→` a step, `Home` `End` the
 first and last step, `Space` play or pause; on the tab row `↑` `↓` change
-tab, and `1`…`9` open the tab of that rank.
+tab, and `1`…`9` open the tab of that rank. `V` switches to the next view,
+when the spec offers more than one.
 
 When a path comes back to a node (a loop), each branch leaving that node
 gets a numbered badge per pass, once the dot has taken it, right after the
@@ -253,6 +273,8 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `title`, `subtitle`, `source` | strings | `source` lands in the footer; like every text of the spec they are shown as text, never read as HTML, except that `` `x` `` is shown as code (`` \` `` for a literal backtick; a tooltip or a tab drops the backticks) |
 | `lang` | `en` (default) or `fr` | language of the page's own words; the spec's text is written in that language |
 | `credit` | `true` (default) or `false` | `false` removes the *made with truepath* link at the end of the footer |
+| `view` | `flow` (default) or `flow-lr` | how paths are drawn: top to bottom, or left to right, where a branch's name sits on the run entering its target; see *Then, the view* |
+| `views` | a list of views | the other views the page offers to switch to; without it, no switch |
 | `kinds` | `{id: {label, color}}` | at most 4 |
 | `nodes` | `[{id, label, role?, kind?}]` | `role: "decision"` marks a branching point; where a path starts is found, and drawn round; sinks need `kind` |
 | `edges` | `[[from, to, label]]` | label `""` for none; one edge per pair of nodes, its label naming every case it carries (`same or absent`) |
@@ -261,7 +283,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
 | `oracle` | `{repo, ref, paths, link?, files?, doubles?, cwd, cmd}` | see above; `doubles` is required when `files` is given |
-| `doubts` | `[{id, question, scenarios, answer?}]` | what was asked before building, and the answer: see *Doubts* |
+| `doubts` | `[{id, question, scenarios, answer?, assumed?}]` | what was asked before building, and the answer: see *Doubts* |
 | `port` | path to a CommonJS file exporting `decide(inputs)` | used when there is no oracle |
 | `export` | `{dir, fixture, assert}` | `--export <worktree>` writes the fixture there |
 
@@ -401,7 +423,7 @@ in a `basis` text, shown on hover.
 | --- | --- |
 | `scripts/build.py` | reads the spec, gets the verdicts, runs the checks, writes the page and the export |
 | `scripts/runtime.html` | the page; `build.py` gives it what it shows, already formatted, and nothing else of the spec |
-| `scripts/layout.py` | layered layout: boxes sized to their label, orthogonal edges |
+| `scripts/layout.py` | layered layout, top to bottom or left to right: boxes sized to their label, orthogonal edges |
 | `scripts/fetch.py` | a few files of a GitHub repository, frozen at one commit, as a local repository an oracle can read |
 | `examples/refund-window/` | a JS port and a before/after pair |
 | `examples/free-shipping/` | a grid: two open questions, each decided on the cases it changes |
@@ -417,8 +439,9 @@ build only inside a git repository that holds them.
 
 ## Limits
 
-- One diagram type: the process flow. Sequence and architecture views are not
-  built.
+- One diagram type: the process flow, top to bottom or left to right.
+  Sequence and architecture views are not built yet, nor measured
+  durations.
 - `C6` is measured on macOS (`ui-monospace`); a narrower Windows font only
   adds air.
 - Steps are declared, not derived from the logic: C3 and C4 catch a wrong

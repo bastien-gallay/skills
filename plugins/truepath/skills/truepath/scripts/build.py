@@ -83,6 +83,7 @@ def validate(spec, specdir, exporting=False):
     p.raise_if_any()
 
     p.typed(spec, "credit", bool, "spec", "true or false")
+    validate_views(spec, p)
     if spec.get("lang", "en") not in ("en", "fr"):
         p.append(f"spec: lang is {spec['lang']!r}, expected en or fr")
     if "oracle" in spec:
@@ -166,6 +167,26 @@ def validate(spec, specdir, exporting=False):
 
 
 DOUBLE_KINDS = ("stub", "fake", "mock")
+
+
+VIEWS = ("flow", "flow-lr")  # how a path is drawn: top-down, or left to right
+
+
+def views_of(spec):
+    """The views the page offers, the one it opens on first."""
+    first = spec.get("view", "flow")
+    return [first] + [v for v in spec.get("views", []) if v != first]
+
+
+def validate_views(spec, p):
+    if "view" in spec and spec["view"] not in VIEWS:
+        p.append(f"spec: view is {spec['view']!r}, expected one of {', '.join(VIEWS)}")
+    if p.typed(spec, "views", list, "spec", f"a list of views among {', '.join(VIEWS)}") and "views" in spec:
+        for v in spec["views"]:
+            if v not in VIEWS:
+                p.append(f"spec: views names {v!r}, expected one of {', '.join(VIEWS)}")
+        if len(set(map(str, spec["views"]))) < len(spec["views"]):
+            p.append("spec: views names a view twice")
 
 
 def validate_doubles(o, p):
@@ -761,7 +782,10 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
             "cases": [{k: c[k] for k in ("id", "label", "summary", "origin")} for c in grid["cases"]],
         },
     }
-    return {"page": page, "geo": geo}
+    data = {"page": page, "geo": geo[views_of(spec)[0]]}
+    if len(geo) > 1:  # the page offers to switch: every view's geometry, in the spec's order
+        data["views"] = {v: geo[v] for v in views_of(spec)}
+    return data
 
 
 def plain(text):
@@ -807,7 +831,8 @@ def build(specpath, out=None, export_to=None, check_only=False, dry_run=False):
 
     grid, scenarios = expand_grid(spec["grid"]) if "grid" in spec else (None, copy.deepcopy(spec["scenarios"]))
     edges = [[*e, ""][:3] for e in spec["edges"]]
-    geo = layout(spec["nodes"], edges)
+    geos = {v: layout(spec["nodes"], edges, across=v == "flow-lr") for v in views_of(spec)}
+    geo = geos[views_of(spec)[0]]
     if check_only:
         # a hop to {verdict.outcome} is known once the logic has run: its path is checked then
         known = [s for s in scenarios if not any("{" in h for st in s["steps"] for h in st["hop"])]
@@ -833,7 +858,7 @@ def build(specpath, out=None, export_to=None, check_only=False, dry_run=False):
     if dry_run:
         return None, len(scenarios), verdict_source, None
     # everything is computed before anything is written: a page without its fixture is not "or nothing"
-    page = render(page_data(spec, scenarios, grid, geo, verdict_source))
+    page = render(page_data(spec, scenarios, grid, geos, verdict_source))
     fixture = export_fixture(spec, scenarios, from_code) if export_to else None
     out = pathlib.Path(out) if out else default_out(specpath)
     out.write_text(page, encoding="utf-8")

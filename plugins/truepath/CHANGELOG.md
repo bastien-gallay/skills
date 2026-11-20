@@ -145,6 +145,20 @@ passes.
   `⚠ ported`, `◇ definition`); a value keeps its glyph only when the
   table mixes several. The full text stays on hover.
 
+After the tag `v0.2.0`, on `main`: the README pictures retaken, then the
+view, chosen apart from the shape (stories S33–S34). Installed copies get
+it with the next release.
+
+- `view: "flow-lr"` lays the ranks out left to right: the same layout on
+  boxes turned a quarter, then turned back. A branch's name sits on the run
+  entering its target, after a rail kept close to the source, and each gap
+  is as wide as the names entering it, plus room for pass badges only
+  where a loop comes back. Loops run under the drawing.
+- `views` offers other views beside the zoom (`↓` `→`, or the key `V`):
+  the page draws the same case again on the same step.
+- SKILL.md picks the view from the question, after the shape, and asks
+  the user when two fit.
+
 ## 0.1.2
 
 Issues #2 and #3, and what a first use on a real repository showed.
