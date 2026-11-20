@@ -937,7 +937,7 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
 
 def measure_basis(m):
     """Where the times come from, without the word the footer already puts before it, in either language."""
-    return re.sub(r"^\s*(measure|mesure)\s*:\s*", "", str(m.get("basis", "")), flags=re.I).strip()
+    return re.sub(r"^\s*(measure|mesure)\s*:\s*", "", str(m.get("basis", "")), flags=re.IGNORECASE).strip()
 
 
 def measure_row(s):
