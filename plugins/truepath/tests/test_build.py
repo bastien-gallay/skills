@@ -433,6 +433,29 @@ class Page(Case):
         out, *_ = self.build(self.spec(change))
         self.assertEqual(self.play(out)["parted"], {"step": 1, "node": "D"})
 
+    def test_a_series_row_changes_step_by_step_and_parts_where_it_first_differs(self):
+        """A value built up across a loop: one value per step from `at`, the last one kept."""
+        def change(s):
+            s["panel"] = [s["panel"][0], {"label": "Log", "value": "inputs.log", "at": 0, "series": True}]
+            s["scenarios"][0]["inputs"]["log"] = ["opened", "1 line"]
+            s["scenarios"][1]["inputs"]["log"] = ["opened", "2 lines"]
+        out, *_ = self.build(self.spec(change))
+        row = self.page(out)["scenarios"][0]["rows"][1]
+        self.assertEqual((row["series"], row["shown"]), (["opened", "1 line"], "1 line"))
+        played = self.play(out)
+        self.assertEqual(played["parted"], {"step": 1, "node": "AGE"})
+        self.assertTrue(any("≠ " in h and "2 lines" in h for h in played["html"]))
+
+    def test_c9_a_series_row_reads_a_list(self):
+        self.refused(lambda s: s["panel"].append({"label": "Log", "value": "inputs.days", "at": 0, "series": True}), "C9")
+
+    def test_c13_a_series_longer_than_the_steps(self):
+        def change(s):
+            s["panel"].append({"label": "Log", "value": "inputs.log", "at": 1, "series": True})
+            for sc in s["scenarios"]:
+                sc["inputs"]["log"] = ["a", "b", "c"]
+        self.refused(change, "C13")
+
     def test_c1_a_step_through_a_node_takes_only_edges(self):
         self.refused(lambda s: s["scenarios"][0]["steps"].__setitem__(
             slice(0, 2), [{"hop": ["REQ", "D"], "message": "m", "caption": "c"}]), "C1")

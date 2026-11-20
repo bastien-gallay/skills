@@ -126,7 +126,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `kinds` | `{id: {label, color}}` | at most 4 |
 | `nodes` | `[{id, label, role?, kind?}]` | `role: "decision"` marks a branching point; where a path starts is found, and drawn round; sinks need `kind` |
 | `edges` | `[[from, to, label]]` | label `""` for none |
-| `panel` | `[{label, value, at, labels?, digits?, compared?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search |
+| `panel` | `[{label, value, at, labels?, digits?, compared?, series?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search; `series: true` when `value` is a list with one value per step from `at`, the last one kept: what a loop builds up line by line |
 | `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`, or `hop: [from, via…, to]` to run through a node without stopping (a loop's return); `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
 | `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
@@ -192,11 +192,11 @@ serve every rule.
 | C6 | a label wider than its box (13px monospace) |
 | C7 | a scenario without an origin saying real or illustrative, and where from |
 | C8 | a pair naming a scenario that does not exist |
-| C9 | a panel row that reads a field a scenario lacks |
+| C9 | a panel row that reads a field a scenario lacks, or a series row whose value is not a list |
 | C10 | a matrix cell naming a panel row that does not exist |
 | C11 | a case shown under a question whose cell still depends on another question |
 | C12 | a case in no matrix section, or a section naming an unknown case |
-| C13 | a panel row set to appear at a step the scenario does not have |
+| C13 | a panel row, or a value of a series, set to appear at a step the scenario does not have |
 | C14 | a text over its budget (see *Text budget*) |
 
 C3 and C4 are the point: a scenario that says something the code does not do

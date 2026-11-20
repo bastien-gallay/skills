@@ -136,6 +136,7 @@ def validate(spec, specdir, exporting=False):
                 p.append(f"{where}: `at` is {r['at']!r}, expected a step index")
             p.typed(r, "labels", dict, where, "an object {value: what to show}")
             p.typed(r, "digits", int, where, "a number of digits")
+            p.typed(r, "series", bool, where, "true or false")
 
     scenarios = spec.get("scenarios", [])
     for i, s in enumerate(scenarios):
@@ -416,7 +417,12 @@ def panel_rows(scenario, panel, in_grid):
             out["answer"] = True  # named by the page: an answer is called as the open question calls it
         else:
             try:
-                out["shown"] = shown(row, resolve(row["value"], scenario))
+                value = resolve(row["value"], scenario)
+                if row.get("series") and isinstance(value, list) and value:
+                    out["series"] = [shown(row, v) for v in value]  # one value per step from `at`, the last one stays
+                    out["shown"] = out["series"][-1]
+                else:
+                    out["shown"] = None if row.get("series") else shown(row, value)  # C9 says so
             except KeyError:
                 out["shown"] = None  # C9 says so
             head, _, rest = row["value"].partition(".")
@@ -528,7 +534,8 @@ def c9_panel_rows_resolve(b):
     for s in b.scenarios:
         for row, filled in zip(b.panel, s["rows"]):
             if "answer" not in filled and filled["shown"] is None:
-                yield f"{s['id']}: panel row {row['label']!r} reads {row['value']}, which is missing"
+                yield f"{s['id']}: panel row {row['label']!r} reads {row['value']}, which is " \
+                      + ("not a list with one value per step" if row.get("series") else "missing")
 
 
 def c10_matrix_shows_panel_rows(b):
@@ -570,9 +577,10 @@ def c12_every_case_is_in_the_matrix(b):
 def c13_panel_rows_appear_at_a_real_step(b):
     for s in b.scenarios:
         n = len(s["steps"])
-        for row in b.panel:
-            if n and row["at"] >= n:
-                yield f"{s['id']}: panel row {row['label']!r} appears at step {row['at']}, the scenario has {n}"
+        for row, filled in zip(b.panel, s["rows"]):
+            last = row["at"] + len(filled.get("series", [None])) - 1
+            if n and last >= n:
+                yield f"{s['id']}: panel row {row['label']!r} appears at step {last}, the scenario has {n}"
 
 
 # What a text may say at most, in characters: the motion carries the explanation, the text labels it.

@@ -16,6 +16,9 @@ line-by-line file parser (S28–S31).
 - The first divergence of a pair is also where the paths fork, on the last
   node both share: two parser runs that part at line 3 were marked only at
   the verdict, where the panel values first differ.
+- A panel row may change step by step: `series: true` on a row whose value
+  is a list, one value per step from `at`. A parser's open work grows line
+  by line; one value per row showed only where it ended.
 
 - A matrix cell says how its case ends, the outcome's label beside its
   colour, then the value: `rien` read the same for a value lost, dropped on

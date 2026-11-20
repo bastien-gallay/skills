@@ -246,6 +246,10 @@ const shortOf=v=>(columnOf(v)||variantOf(v)).short;
 const headOf=v=>{const c=columnOf(v);return c?c.head:variantOf(v).label;};
 /** The panel rows of a scenario, as build.py filled them; only the row naming a grid answer is named here. */
 const rowsOf=s=>s.rows.map(r=>r.answer?{...r,shown:shortOf(s.variant)}:r);
+/** A row's value at step i: a series row gives one value per step from its `at`, and keeps its last one. */
+const valueAt=(r,i)=>r.series?r.series[Math.max(0,Math.min(i-r.at,r.series.length-1))]:r.shown;
+/** A row is new at step i when it appears there, or when its series changes there. */
+const changedAt=(r,i)=>r.at===i||(!!r.series&&i>r.at&&valueAt(r,i)!==valueAt(r,i-1));
 /** Where a value comes from: real code, a ported behaviour, or a definition the simulation makes. */
 const basisClass=k=>k==="code"?"code":k==="port"?"port":"def";
 /** Next to a value: the glyph alone, its full text on hover, and nothing when every value of the table has that provenance
@@ -260,7 +264,9 @@ const basisLegend=(rows,span)=>{const ks=[...new Set(rows.filter(r=>r.provenance
 /** The first step at which the two scenarios part: their paths fork, or their data differ, whichever comes first.
  *  The node marked is where it happens: the last node both paths share, or the one whose step produces the value. */
 function divergence(a,b){const ra=rowsOf(a),rb=rowsOf(b);let at=Infinity;
- ra.forEach((r,i)=>{if(!r.compared&&r.shown!==rb[i].shown)at=Math.min(at,r.at);}); // a compared row names what differs, it is not an effect
+ ra.forEach((r,i)=>{if(r.compared)return; // a compared row names what differs, it is not an effect
+  const last=r.at+Math.max(r.series?.length||1,rb[i].series?.length||1)-1;
+  for(let k=r.at;k<=last&&k<at;k++)if(valueAt(r,k)!==valueAt(rb[i],k)){at=k;break;}});
  const fork=forkOf(a,b);
  if(fork&&fork.step<=at)return fork;
  return at===Infinity?null:{step:at,node:a.steps[at].hop[0]};}
@@ -476,7 +482,7 @@ function renderSummary(tab,sides){
 /** One scenario: its caption, its data so far, its steps. */
 function renderOne(s){const step=s.steps[st.step];$("caption").innerHTML=rich(step.caption);$("msg").innerHTML=rich(step.message);
  const rs=rowsOf(s),only=onlyKind(rs);
- $("data").innerHTML=rs.filter(r=>!(grid&&r.answer)).map(r=>`<tr class="${r.at>st.step?"hidden":r.at===st.step?"new":""}"><td${basisTitle(r)}>${rich(r.label)}</td><td class="v">${r.at>st.step?"…":esc(r.shown)+provenanceTag(r,only)}</td></tr>`).join("")+basisLegend(rs,2);
+ $("data").innerHTML=rs.filter(r=>!(grid&&r.answer)).map(r=>`<tr class="${r.at>st.step?"hidden":changedAt(r,st.step)?"new":""}"><td${basisTitle(r)}>${rich(r.label)}</td><td class="v">${r.at>st.step?"…":esc(valueAt(r,st.step))+provenanceTag(r,only)}</td></tr>`).join("")+basisLegend(rs,2);
  $("steps").innerHTML=s.steps.map((x,i)=>stepItem(i,()=>rich(x.message))).join("");}
 /** Two scenarios side by side: what they share is said once, what differs is said − then +. */
 function renderTwo(a,b){const sa=a.steps[stepOf(a,st.step)],sb=b.steps[stepOf(b,st.step)];
@@ -484,8 +490,8 @@ function renderTwo(a,b){const sa=a.steps[stepOf(a,st.step)],sb=b.steps[stepOf(b,
  $("msg").innerHTML=sa.message===sb.message?rich(sa.message):`− ${rich(sa.message)}<br>+ ${rich(sb.message)}`;
  const ra=rowsOf(a),rb=rowsOf(b),only=onlyKind(ra.concat(rb)),cols=grid?[shortOf(a.variant),shortOf(b.variant)]:[words.before,words.after];
  $("data").innerHTML=`<tr><th>${words.field}</th><th>− ${rich(cols[0])}</th><th>+ ${rich(cols[1])}</th></tr>`+ra.map((r,i)=>{if(grid&&r.answer)return ""; // the case's row above already says which answer plays on each side
-  const hid=r.at>st.step,diff=!hid&&r.shown!==rb[i].shown;
-  return `<tr class="${hid?"hidden":diff?"new diff":""}"><td${basisTitle(r)}>${diff?"≠ ":""}${rich(r.label)}</td><td class="v">${hid?"…":esc(r.shown)+provenanceTag(r,only)}</td><td class="v">${hid?"…":esc(rb[i].shown)+provenanceTag(rb[i],only)}</td></tr>`;}).join("")+basisLegend(ra.concat(rb),3);
+  const hid=r.at>st.step,va=valueAt(r,st.step),vb=valueAt(rb[i],st.step),diff=!hid&&va!==vb;
+  return `<tr class="${hid?"hidden":diff?"new diff":changedAt(r,st.step)||changedAt(rb[i],st.step)?"new":""}"><td${basisTitle(r)}>${diff?"≠ ":""}${rich(r.label)}</td><td class="v">${hid?"…":esc(va)+provenanceTag(r,only)}</td><td class="v">${hid?"…":esc(vb)+provenanceTag(rb[i],only)}</td></tr>`;}).join("")+basisLegend(ra.concat(rb),3);
  $("steps").innerHTML=Array.from({length:Math.max(a.steps.length,b.steps.length)},(_,i)=>stepItem(i,()=>stepLine(a.steps[i],b.steps[i]))).join("");}
 /** A step of the list: told once the dot has reached it, a numbered blank before, still a click away. */
 function stepItem(i,said){const later=i>st.step;
