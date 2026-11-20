@@ -446,6 +446,14 @@ class Page(Case):
         self.assertEqual(played["parted"], {"step": 1, "node": "AGE"})
         self.assertTrue(any("≠ " in h and "2 lines" in h for h in played["html"]))
 
+    def test_a_compared_row_is_not_marked_as_a_change(self):
+        """The row naming the fix differs on both sides by design: no ≠, which would point at it as an effect."""
+        out, *_ = self.build(self.spec())
+        html = self.play(out)["html"]
+        self.assertTrue(any(">Fix<" in h for h in html))
+        self.assertFalse(any("≠ Fix" in h for h in html))
+        self.assertTrue(any("≠ In the window" in h for h in html))
+
     def test_c9_a_series_row_reads_a_list(self):
         self.refused(lambda s: s["panel"].append({"label": "Log", "value": "inputs.days", "at": 0, "series": True}), "C9")
 

@@ -19,6 +19,8 @@ line-by-line file parser (S28–S31).
 - A panel row may change step by step: `series: true` on a row whose value
   is a list, one value per step from `at`. A parser's open work grows line
   by line; one value per row showed only where it ended.
+- A pair's `compared` row (the fix, the rule) is no longer marked `≠`: it
+  differs by design, and the mark pointed at it as an effect.
 
 - A matrix cell says how its case ends, the outcome's label beside its
   colour, then the value: `rien` read the same for a value lost, dropped on

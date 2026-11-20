@@ -490,7 +490,7 @@ function renderTwo(a,b){const sa=a.steps[stepOf(a,st.step)],sb=b.steps[stepOf(b,
  $("msg").innerHTML=sa.message===sb.message?rich(sa.message):`− ${rich(sa.message)}<br>+ ${rich(sb.message)}`;
  const ra=rowsOf(a),rb=rowsOf(b),only=onlyKind(ra.concat(rb)),cols=grid?[shortOf(a.variant),shortOf(b.variant)]:[words.before,words.after];
  $("data").innerHTML=`<tr><th>${words.field}</th><th>− ${rich(cols[0])}</th><th>+ ${rich(cols[1])}</th></tr>`+ra.map((r,i)=>{if(grid&&r.answer)return ""; // the case's row above already says which answer plays on each side
-  const hid=r.at>st.step,va=valueAt(r,st.step),vb=valueAt(rb[i],st.step),diff=!hid&&va!==vb;
+  const hid=r.at>st.step,va=valueAt(r,st.step),vb=valueAt(rb[i],st.step),diff=!hid&&!r.compared&&va!==vb; // a compared row differs by design: it names the two sides, not a change
   return `<tr class="${hid?"hidden":diff?"new diff":changedAt(r,st.step)||changedAt(rb[i],st.step)?"new":""}"><td${basisTitle(r)}>${diff?"≠ ":""}${rich(r.label)}</td><td class="v">${hid?"…":esc(va)+provenanceTag(r,only)}</td><td class="v">${hid?"…":esc(vb)+provenanceTag(rb[i],only)}</td></tr>`;}).join("")+basisLegend(ra.concat(rb),3);
  $("steps").innerHTML=Array.from({length:Math.max(a.steps.length,b.steps.length)},(_,i)=>stepItem(i,()=>stepLine(a.steps[i],b.steps[i]))).join("");}
 /** A step of the list: told once the dot has reached it, a numbered blank before, still a click away. */
