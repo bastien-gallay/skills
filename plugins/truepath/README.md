@@ -25,11 +25,11 @@ layout.py ──┘                                └► fixture.json (--export
 
 ## Status
 
-0.3.2, tagged
-[`v0.3.2`](https://github.com/bastien-gallay/truepath/releases/tag/v0.3.2)
+0.3.3, tagged
+[`v0.3.3`](https://github.com/bastien-gallay/truepath/releases/tag/v0.3.3)
 on 2026-11-20. The spec vocabulary may still change before
 1.0; [`CHANGELOG.md`](CHANGELOG.md) says what did. The examples build with 0
-violations, and the three that keep their page rebuild it byte for byte; the
+violations, and the four that keep their page rebuild it byte for byte; the
 tests check both on every push to `main` and every pull request.
 Known limits are listed under *Limits* in
 [`SKILL.md`](skills/truepath/SKILL.md).
@@ -76,6 +76,7 @@ on day 30, refused before an off-by-one fix and granted after it.
 | [`refund-window`](skills/truepath/examples/refund-window/) | a before/after pair | a JS port |
 | [`free-shipping`](skills/truepath/examples/free-shipping/) | a grid: two open questions against three cases | a JS port |
 | [`loyalty-tier`](skills/truepath/examples/loyalty-tier/) | an oracle, and the fixture it exports | the folder's own `src/tier.js`, as committed |
+| [`canyon-chase`](skills/truepath/examples/canyon-chase/) | two races on one clock, and a fall | a JS port of cartoon physics |
 
 `loyalty-tier` reads its code through `git archive`, so it builds from a
 clone of this repository, not from a bare copy of the folder.
@@ -85,7 +86,14 @@ clone of this repository, not from a bare copy of the folder.
 - one scenario, played step by step;
 - a before/after pair, its first divergence outlined;
 - a grid of cases against the answers to one or more open questions, the
-  matrix first, each cell opening the case.
+  matrix first, each cell opening the case;
+- a race: two to four ways on one graph and one clock, each step lasting
+  the time measured, or estimated, for it.
+
+![A race from the canyon-chase example: a bird and a hunter run past a
+cliff's edge on thin air; the bird never looks down and gets across, the
+hunter looks down, hangs a moment, then falls
+](docs/canyon-chase.gif)
 
 The page opens paused, the play button green; the diagram zooms and pans,
 and once zoomed the view follows the dot.

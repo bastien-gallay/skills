@@ -198,7 +198,8 @@ def validate_views(spec, p):
             p.append("spec: views names a view twice")
 
 
-RACE_MAX = 4  # dots told apart by a number and a colour: beyond four, the graph is a crowd
+RACE_MAX = 4
+MOTIONS = ("fall",)  # how a step's dot moves when not at an even pace: "fall" speeds up as a falling body does  # dots told apart by a number and a colour: beyond four, the graph is a crowd
 STATS = ("mean", "median")  # what one case's measures sum up: several runs read as one
 SOURCES = ("runs", "estimate")  # timed on real runs, or worked out from a model of each step: never mixed up
 
@@ -269,6 +270,8 @@ def validate_steps(steps, where, p):
                 p.append(f"{where}, step {i}: hop must be [from, to], two node ids, or [from, via…, to]")
             if not isinstance(st["message"], str) or not isinstance(st["caption"], str):
                 p.append(f"{where}, step {i}: message and caption must be text")
+            if "motion" in st and st["motion"] not in MOTIONS:
+                p.append(f"{where}, step {i}: `motion` is one of {', '.join(MOTIONS)}, not {st['motion']!r}")
 
 
 def validate_grid(g, p):
@@ -936,7 +939,8 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
                   for n in spec["nodes"]},
         "scenarios": [{"id": s["id"], "tab": s["tab"], "summary": s["summary"], "origin": s["origin"],
                        "undecided": bool(s.get("undecided")), "case": s.get("case"), "variant": s.get("variant"),
-                       "steps": [{"hop": st["hop"], "message": st["message"], "caption": st["caption"]} for st in s["steps"]],
+                       "steps": [{"hop": st["hop"], "message": st["message"], "caption": st["caption"],
+                                  **({"motion": st["motion"]} if "motion" in st else {})} for st in s["steps"]],
                        "rows": s["rows"]} for s in scenarios],
         "pairs": [{k: p[k] for k in ("before", "after", "tab", "summary")} for p in spec.get("pairs", [])],
         "races": [{k: r[k] for k in ("scenarios", "tab", "summary")} for r in spec.get("races", [])],

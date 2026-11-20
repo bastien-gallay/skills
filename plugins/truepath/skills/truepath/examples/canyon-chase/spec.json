@@ -1,0 +1,523 @@
+{
+ "title": "Three ways a plan backfires",
+ "lang": "en",
+ "subtitle": "Example: a hunter, a very fast bird, a canyon; cartoon physics, times estimated",
+ "source": "truepath example, self-contained: cartoon physics ported in decide.js, times in estimate.js",
+ "kinds": {
+  "bad": {
+   "label": "backfired",
+   "color": "#b91c1c"
+  },
+  "ok": {
+   "label": "got away",
+   "color": "#15803d"
+  }
+ },
+ "nodes": [
+  {
+   "id": "START",
+   "label": "the chase"
+  },
+  {
+   "id": "PLAN",
+   "label": "which plan?",
+   "role": "decision"
+  },
+  {
+   "id": "STRAP",
+   "label": "straps on a rocket"
+  },
+  {
+   "id": "SPIN",
+   "label": "spins"
+  },
+  {
+   "id": "FUEL",
+   "label": "fuel left?",
+   "role": "decision"
+  },
+  {
+   "id": "WALL",
+   "label": "canyon wall",
+   "kind": "bad"
+  },
+  {
+   "id": "FUSE",
+   "label": "lights the fuse"
+  },
+  {
+   "id": "ZOOM",
+   "label": "bird zooms by"
+  },
+  {
+   "id": "BOOM",
+   "label": "BOOM",
+   "kind": "bad"
+  },
+  {
+   "id": "EDGE",
+   "label": "runs past the edge"
+  },
+  {
+   "id": "AIR",
+   "label": "runs on thin air"
+  },
+  {
+   "id": "LOOK",
+   "label": "looks down?",
+   "role": "decision"
+  },
+  {
+   "id": "HANG",
+   "label": "hangs a moment"
+  },
+  {
+   "id": "DROP",
+   "label": "still falling…"
+  },
+  {
+   "id": "BOTTOM",
+   "label": "far below",
+   "kind": "bad"
+  },
+  {
+   "id": "ACROSS",
+   "label": "other side",
+   "kind": "ok"
+  }
+ ],
+ "edges": [
+  [
+   "START",
+   "PLAN",
+   ""
+  ],
+  [
+   "PLAN",
+   "STRAP",
+   "rocket"
+  ],
+  [
+   "PLAN",
+   "FUSE",
+   "bomb"
+  ],
+  [
+   "FUSE",
+   "ZOOM",
+   ""
+  ],
+  [
+   "ZOOM",
+   "BOOM",
+   ""
+  ],
+  [
+   "STRAP",
+   "SPIN",
+   ""
+  ],
+  [
+   "SPIN",
+   "FUEL",
+   ""
+  ],
+  [
+   "FUEL",
+   "SPIN",
+   "yes"
+  ],
+  [
+   "FUEL",
+   "WALL",
+   "no"
+  ],
+  [
+   "PLAN",
+   "EDGE",
+   "cliff"
+  ],
+  [
+   "EDGE",
+   "AIR",
+   ""
+  ],
+  [
+   "AIR",
+   "LOOK",
+   ""
+  ],
+  [
+   "LOOK",
+   "HANG",
+   "yes"
+  ],
+  [
+   "HANG",
+   "DROP",
+   ""
+  ],
+  [
+   "DROP",
+   "BOTTOM",
+   ""
+  ],
+  [
+   "LOOK",
+   "ACROSS",
+   "no"
+  ]
+ ],
+ "panel": [
+  {
+   "label": "Runner",
+   "value": "inputs.who",
+   "at": 0
+  },
+  {
+   "label": "Plan",
+   "value": "inputs.plan",
+   "at": 1
+  },
+  {
+   "label": "How it ends",
+   "value": "verdict.ends",
+   "at": "last"
+  },
+  {
+   "label": "Time",
+   "value": "measure.total",
+   "at": "last"
+  }
+ ],
+ "port": "decide.js",
+ "measure": {
+  "cmd": [
+   "node",
+   "estimate.js"
+  ],
+  "source": "estimate",
+  "unit": "s",
+  "tolerance": 0.1
+ },
+ "scenarios": [
+  {
+   "id": "bomb",
+   "tab": "Bomb",
+   "summary": "A bomb on the road: the bird is faster than the fuse",
+   "origin": {
+    "kind": "illustrative",
+    "text": "cartoon physics, ported in decide.js"
+   },
+   "inputs": {
+    "who": "hunter",
+    "plan": "bomb",
+    "fuel": 0,
+    "looksDown": false
+   },
+   "expect": {
+    "outcome": "BOOM"
+   },
+   "steps": [
+    {
+     "hop": [
+      "START",
+      "PLAN"
+     ],
+     "message": "the bird is near",
+     "caption": "He has a plan. He always has a plan."
+    },
+    {
+     "hop": [
+      "PLAN",
+      "FUSE"
+     ],
+     "message": "lights the fuse",
+     "caption": "A bomb on the road, the fuse lit."
+    },
+    {
+     "hop": [
+      "FUSE",
+      "ZOOM"
+     ],
+     "message": "the bird zooms by",
+     "caption": "Too fast. The bomb is still in his hands."
+    },
+    {
+     "hop": [
+      "ZOOM",
+      "BOOM"
+     ],
+     "message": "BOOM",
+     "caption": "The fuse was shorter than planned."
+    }
+   ]
+  },
+  {
+   "id": "rocket",
+   "tab": "Rocket",
+   "summary": "A rocket on his back: it spins until the fuel runs out",
+   "origin": {
+    "kind": "illustrative",
+    "text": "cartoon physics, ported in decide.js"
+   },
+   "inputs": {
+    "who": "hunter",
+    "plan": "rocket",
+    "fuel": 8,
+    "looksDown": false
+   },
+   "expect": {
+    "outcome": "WALL",
+    "spins": 8
+   },
+   "steps": [
+    {
+     "hop": [
+      "START",
+      "PLAN"
+     ],
+     "message": "the bird is near",
+     "caption": "He has a plan. He always has a plan."
+    },
+    {
+     "hop": [
+      "PLAN",
+      "STRAP"
+     ],
+     "message": "straps on a rocket",
+     "caption": "He lights it. It goes, not where he aimed."
+    },
+    {
+     "hop": [
+      "STRAP",
+      "SPIN"
+     ],
+     "message": "spin 1",
+     "caption": "It turns round and round, him on it."
+    },
+    {
+     "hop": [
+      "SPIN",
+      "FUEL",
+      "SPIN"
+     ],
+     "message": "spin 2",
+     "caption": "Fuel left: it spins once more."
+    },
+    {
+     "hop": [
+      "SPIN",
+      "FUEL",
+      "SPIN"
+     ],
+     "message": "spin 3",
+     "caption": "Fuel left: it spins once more."
+    },
+    {
+     "hop": [
+      "SPIN",
+      "FUEL",
+      "SPIN"
+     ],
+     "message": "spin 4",
+     "caption": "Fuel left: it spins once more."
+    },
+    {
+     "hop": [
+      "SPIN",
+      "FUEL",
+      "SPIN"
+     ],
+     "message": "spin 5",
+     "caption": "Fuel left: it spins once more."
+    },
+    {
+     "hop": [
+      "SPIN",
+      "FUEL",
+      "SPIN"
+     ],
+     "message": "spin 6",
+     "caption": "Fuel left: it spins once more."
+    },
+    {
+     "hop": [
+      "SPIN",
+      "FUEL",
+      "SPIN"
+     ],
+     "message": "spin 7",
+     "caption": "Fuel left: it spins once more."
+    },
+    {
+     "hop": [
+      "SPIN",
+      "FUEL",
+      "SPIN"
+     ],
+     "message": "spin 8",
+     "caption": "Fuel left: it spins once more."
+    },
+    {
+     "hop": [
+      "SPIN",
+      "FUEL",
+      "WALL"
+     ],
+     "message": "out of fuel",
+     "caption": "No fuel, no spin: straight into the wall."
+    }
+   ]
+  },
+  {
+   "id": "cliff",
+   "tab": "Cliff",
+   "summary": "Past the edge, he keeps running, until he looks down",
+   "origin": {
+    "kind": "illustrative",
+    "text": "cartoon physics, ported in decide.js"
+   },
+   "inputs": {
+    "who": "hunter",
+    "plan": "cliff",
+    "fuel": 0,
+    "looksDown": true
+   },
+   "expect": {
+    "outcome": "BOTTOM"
+   },
+   "steps": [
+    {
+     "hop": [
+      "START",
+      "PLAN"
+     ],
+     "message": "the bird is near",
+     "caption": "He has a plan. He always has a plan."
+    },
+    {
+     "hop": [
+      "PLAN",
+      "EDGE"
+     ],
+     "message": "runs to the cliff",
+     "caption": "Faster, faster, to the canyon's edge."
+    },
+    {
+     "hop": [
+      "EDGE",
+      "AIR"
+     ],
+     "message": "runs on thin air",
+     "caption": "Past the edge, the legs keep going."
+    },
+    {
+     "hop": [
+      "AIR",
+      "LOOK"
+     ],
+     "message": "still running",
+     "caption": "Nothing below. Nobody has noticed yet."
+    },
+    {
+     "hop": [
+      "LOOK",
+      "HANG"
+     ],
+     "message": "looks down",
+     "caption": "He looks down. He holds up a little sign."
+    },
+    {
+     "hop": [
+      "HANG",
+      "DROP",
+      "BOTTOM"
+     ],
+     "message": "falls",
+     "caption": "Now gravity remembers him.",
+     "motion": "fall"
+    }
+   ]
+  },
+  {
+   "id": "bird",
+   "tab": "Bird",
+   "summary": "The bird runs past the edge too, and never looks down",
+   "origin": {
+    "kind": "illustrative",
+    "text": "cartoon physics, ported in decide.js"
+   },
+   "inputs": {
+    "who": "bird",
+    "plan": "cliff",
+    "fuel": 0,
+    "looksDown": false
+   },
+   "expect": {
+    "outcome": "ACROSS"
+   },
+   "steps": [
+    {
+     "hop": [
+      "START",
+      "PLAN"
+     ],
+     "message": "the bird is near",
+     "caption": "The bird is out for a run."
+    },
+    {
+     "hop": [
+      "PLAN",
+      "EDGE"
+     ],
+     "message": "runs to the cliff",
+     "caption": "The road ends at the canyon. It runs on."
+    },
+    {
+     "hop": [
+      "EDGE",
+      "AIR"
+     ],
+     "message": "runs on thin air",
+     "caption": "Past the edge, the legs keep going."
+    },
+    {
+     "hop": [
+      "AIR",
+      "LOOK"
+     ],
+     "message": "still running",
+     "caption": "Nothing below. Nobody has noticed yet."
+    },
+    {
+     "hop": [
+      "LOOK",
+      "ACROSS"
+     ],
+     "message": "never looks down",
+     "caption": "It never looks down: the other side, at once."
+    }
+   ]
+  }
+ ],
+ "races": [
+  {
+   "tab": "Three plans",
+   "scenarios": [
+    "bomb",
+    "rocket",
+    "cliff"
+   ],
+   "summary": "Three plans start together; each runs at its own estimated pace"
+  },
+  {
+   "tab": "The canyon",
+   "scenarios": [
+    "bird",
+    "cliff"
+   ],
+   "summary": "Both run past the edge; only one looks down"
+  }
+ ]
+}

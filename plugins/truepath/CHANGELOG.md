@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.3
+
+A race example the repository can keep, and a dot that falls.
+
+- `examples/canyon-chase/`: a hunter, a very fast bird and a canyon. Four
+  ways (a bomb, a rocket that spins until its fuel runs out, a cliff, and
+  the bird that never looks down), two races on one clock, times
+  estimated, cartoon physics ported in `decide.js`. Its page rebuilds byte
+  for byte, like the other port examples.
+- A step may say `"motion": "fall"`: its dot speeds up as a falling body
+  does, does not brake into its outcome, and lands in a puff of dust
+  instead of a ring. Any other `motion` is refused.
+
 ## 0.3.2
 
 From watching the race again: the fastest dot was lost before it arrived.

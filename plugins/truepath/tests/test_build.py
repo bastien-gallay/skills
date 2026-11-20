@@ -115,6 +115,15 @@ class Examples(unittest.TestCase):
                                            capture_output=True, text=True, check=True).stdout)
         self.assertEqual(played["tabs"], 3)
 
+    def test_the_race_example_rebuilds_into_its_committed_page(self):
+        src, work = self.copy("canyon-chase")
+        out, n, _, _ = build.build(work / "spec.json", out=work / "built.html")
+        self.assertEqual(n, 4)
+        self.assertEqual(out.read_bytes(), (src / "sim.html").read_bytes())
+        played = json.loads(subprocess.run(["node", str(ROOT / "tests/play_page.js"), str(out)],
+                                           capture_output=True, text=True, check=True).stdout)
+        self.assertEqual(played["tabs"], 6)  # four ways, then two races
+
     def test_the_doubles_example_runs_its_unit_alone(self):
         _, work = self.copy("payment-retry")
 
@@ -679,6 +688,13 @@ class Race(Case):
         text = out.read_text(encoding="utf-8")
         page = json.loads(text[text.index("const DATA=") + 11:text.index(";\n", text.index("const DATA="))])["page"]
         self.assertEqual(page["races"], [{"scenarios": ["old", "new"], "tab": "R", "summary": "x"}])
+
+    def test_a_step_may_fall_and_nothing_else(self):
+        self.unreadable(lambda s: s["scenarios"][0]["steps"][0].update(motion="fly"), "`motion` is one of fall")
+        out, *_ = self.build(self.spec(lambda s: s["scenarios"][0]["steps"][-1].update(motion="fall")))
+        steps = self.page(out)["scenarios"][0]["steps"]
+        self.assertEqual(steps[-1]["motion"], "fall")
+        self.assertNotIn("motion", steps[0])  # a step that does not fall says nothing
 
     def test_a_step_lasts_the_time_of_the_nodes_it_reaches_a_loop_sharing_it(self):
         steps = [{"hop": ["S", "A"]}, {"hop": ["A", "L"]}, {"hop": ["L", "C", "L"]}, {"hop": ["L", "E"]}]

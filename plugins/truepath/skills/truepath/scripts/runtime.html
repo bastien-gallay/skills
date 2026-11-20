@@ -202,6 +202,8 @@ ol.steps li.peek{background:var(--hl);border-radius:4px}
 .fx .land{stroke-width:3;animation:land 1.1s ease-out 2 forwards}
 @keyframes ring{from{transform:scale(1);opacity:.9}to{transform:scale(3.2);opacity:0}}
 @keyframes land{0%{transform:scale(1);opacity:.95}100%{transform:scale(1.12);opacity:0}}
+.fx .dust{fill:var(--muted);transform-box:fill-box;transform-origin:center;animation:dust .9s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes dust{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(3);opacity:0}}
 @media (prefers-reduced-motion:reduce){table.mx td.pulse,.pass.fresh,.fx *{animation:none}.fx *{opacity:0}table.mx td,table.mx td .chev{transition:none}}
 </style></head><body>
 <header><h1 id="title"></h1><p class="sub" id="sub"></p></header>
@@ -439,16 +441,19 @@ function camera(items,lead){if(!st.follow||!st.readable||!items.length)return;
  if(!glideRaf)glideRaf=requestAnimationFrame(glide);}
 const nodeBox=id=>{const b=geo.nodes[id];return {x:b.x,y:b.y,width:b.w,height:b.h};};
 /** Behind each dot of a timed page, a short fading comet: where it was a moment ago says how fast it goes. */
-const TRAIL_N=12,TRAIL_STEP=3,TRAIL_FADE=300; // dots in the comet; the least move, in units, that adds one
+const TRAIL_N=12,TRAIL_STEP=3,TRAIL_FADE=300;
+const DUST=[[-34,-4],[-22,-14],[-8,-20],[8,-20],[22,-14],[34,-4]]; // a fall lands in a puff: where each grain drifts, in units // dots in the comet; the least move, in units, that adds one
 function trail(d,j,q){if(REDUCED||!page.measure||!d.trails)return;const t=d.trails[j];const last=t.pts[t.pts.length-1];
  if(!last||Math.hypot(last.x-q.x,last.y-q.y)>=TRAIL_STEP){t.pts.push({x:q.x,y:q.y});if(t.pts.length>TRAIL_N)t.pts.shift();}
  t.els.forEach((c,i)=>{const p=t.pts[t.pts.length-1-i];if(!p){c.setAttribute("r",0);return;}
   const f=1-i/TRAIL_N;c.setAttribute("cx",p.x);c.setAttribute("cy",p.y);c.setAttribute("r",(d.sides.length>1?7:4)*f);c.setAttribute("opacity",.45*f);});}
 function clearTrails(d){(d.trails||[]).forEach(t=>{t.pts.length=0;t.els.forEach(c=>c.setAttribute("r",0));});}
 /** An arrival: a ring out of the dot, two pulses round the outcome's box; once per arrival, none under reduced motion. */
-function land(d,j,q,id){if(d.landed.has(j))return;d.landed.add(j);d.landedAt[j]=performance.now();if(REDUCED)return;
+function land(d,j,q,id,fall){if(d.landed.has(j))return;d.landed.add(j);d.landedAt[j]=performance.now();if(REDUCED)return;
  const t=d.trails&&d.trails[j];if(t)setTimeout(()=>{t.pts.length=0;t.els.forEach(c=>c.setAttribute("r",0));},TRAIL_FADE); // arrived: the comet goes
- el("circle",{cx:q.x,cy:q.y,r:d.sides.length>1?9:6,class:"ring"+(d.sides.length>1?" "+d.side[j]:"")},d.fx).addEventListener("animationend",e=>e.target.remove());
+ const gone=e=>e.target.remove();
+ if(fall)DUST.forEach(([dx,dy])=>{const c=el("circle",{cx:q.x,cy:q.y,r:5,class:"dust"},d.fx);c.style.setProperty("--dx",dx+"px");c.style.setProperty("--dy",dy+"px");c.addEventListener("animationend",gone);});
+ else el("circle",{cx:q.x,cy:q.y,r:d.sides.length>1?9:6,class:"ring"+(d.sides.length>1?" "+d.side[j]:"")},d.fx).addEventListener("animationend",gone);
  const b=geo.nodes[id],n=page.nodes[id],col=n.kind?page.kinds[n.kind].color:"var(--accent)";
  const r=el("rect",{x:b.x,y:b.y,width:b.w,height:b.h,rx:8,class:"land"},d.fx);r.style.stroke=col;r.addEventListener("animationend",e=>e.target.remove());}
 function glide(){if(aim.k!=null&&Math.abs(aim.k-view.k)>.002){view.k+=(aim.k-view.k)*ZOOM_EASE;const c=clampView(view);view.x=c.x;view.y=c.y;} // the zoom glides as the view does
@@ -775,22 +780,25 @@ function spread(qs){return qs.map((q,j)=>{const near=qs.flatMap((o,k)=>Math.hypo
  *  through the arrivals while playing, and the slowest side arrives after RACE_MS at 1×. */
 const SLOW=1.8,ARRIVE_PAUSE=650; // the run into an arrival lasts SLOW times longer, easing out; the race then holds a moment
 const easeOut=f=>1-Math.pow(1-f,3);
+/** Where a dot is along its step: a "fall" covers its edge as a body falls, the distance growing with the square of the time. */
+const fallen=(step,f)=>step&&step.motion==="fall"?f*f:f;
 function runRace(c){const d=diagrams[0],c1=c.times[st.step],c0=st.step?c.times[st.step-1]:0;
- const arrives=c.ends.some(e=>Math.abs(e[e.length-1]-c1)<1e-6); // some dot reaches its outcome at the end of this run
- const ms=RACE_MS/c.span/st.speed,dur=REDUCED?1:Math.max(1,(c1-c0)*ms*(arrives?SLOW:1));let t0=null;
+ const lands=d.sides.map((s,j)=>{const e=c.ends[j];return Math.abs(e[e.length-1]-c1)<1e-6?s.steps[s.steps.length-1]:null;});
+ const arrives=lands.some(Boolean),soft=lands.some(x=>x&&x.motion!=="fall"); // some dot reaches its outcome at the end of this run; a fall does not brake
+ const ms=RACE_MS/c.span/st.speed,dur=REDUCED?1:Math.max(1,(c1-c0)*ms*(soft?SLOW:1));let t0=null;
  if(!st.step)clearTrails(d);
  const place=t=>{const qs=d.sides.map((s,j)=>{const e=c.ends[j];let k=e.findIndex(x=>x>t+1e-9);const end=k<0;if(end)k=e.length-1;
-   const a=k?e[k-1]:0,f=end?1:Math.max(0,Math.min(1,(t-a)/((e[k]-a)||1))),p=pathOf(d,s.steps[k].hop);
+   const a=k?e[k-1]:0,f0=end?1:Math.max(0,Math.min(1,(t-a)/((e[k]-a)||1))),f=fallen(s.steps[k],f0),p=pathOf(d,s.steps[k].hop);
    return {q:p.getPointAtLength(f*p.getTotalLength()),end,id:dest(s.steps[k].hop),p:t/e[e.length-1],box:end?geo.nodes[dest(s.steps[k].hop)]&&nodeBox(dest(s.steps[k].hop)):p.getBBox()};});
   const dx=spread(qs.map(x=>x.q));qs.forEach((x,j)=>{d.dots[j].setAttribute("transform",`translate(${x.q.x+dx[j]} ${x.q.y})`);
-   if(x.end&&st.playing)land(d,j,x.q,x.id);else if(!x.end){d.landed.delete(j);trail(d,j,x.q);}});
+   if(x.end&&st.playing)land(d,j,x.q,x.id,d.sides[j].steps[d.sides[j].steps.length-1].motion==="fall");else if(!x.end){d.landed.delete(j);trail(d,j,x.q);}});
   const clock=$("rclock");if(clock)clock.textContent=`⏱ ${fmtT(t*c.real/c.span)}\u00a0${page.measure.unit}`;
   const now=performance.now(),run=qs.filter((x,j)=>!x.end||now-(d.landedAt[j]??-1e9)<CAM_HOLD);lastDots=run.map(x=>x.q); // an arrival stays in frame a moment
   const landing=run.find(x=>x.end); // a dot just arrived: its landing is what to see, ahead of the leader
   const lead=landing||run.filter(x=>!x.end).reduce((b,x)=>!b||x.p>b.p?x:b,null)||run[0]; // else the leader: furthest along its own way
   if(st.readable&&lead)camera(run,lead);else follow(lastDots);};
  const tick=ts=>{if(!st.playing){place(c1);return;}
-  t0??=ts;const f=Math.min(1,(ts-t0)/dur);place(c0+(c1-c0)*(arrives?easeOut(f):f));
+  t0??=ts;const f=Math.min(1,(ts-t0)/dur);place(c0+(c1-c0)*(soft?easeOut(f):f));
   if(f<1){st.raf=requestAnimationFrame(tick);return;}
   const last=st.step===nSteps()-1;
   st.timer=setTimeout(()=>{if(!st.playing)return;
@@ -800,20 +808,20 @@ function runRace(c){const d=diagrams[0],c1=c.times[st.step],c0=st.step?c.times[s
 function runHop(){cancelAnimationFrame(st.raf);clearTimeout(st.timer);if(!diagrams.length)return;
  const clock=clockOn();if(clock)return runRace(clock);
  const hops=diagrams.flatMap(d=>d.sides.map((s,j)=>{const i=stepOf(s,st.step),h=s.steps[i].hop,p=pathOf(d,h);
-  return {d,j,dot:d.dots[j],p,len:p.getTotalLength(),arrived:i<st.step,n:h.length-1,end:i===s.steps.length-1,id:dest(h)};}));
+  return {d,j,dot:d.dots[j],p,len:p.getTotalLength(),arrived:i<st.step,n:h.length-1,end:i===s.steps.length-1,id:dest(h),fall:s.steps[i].motion==="fall"};}));
  if(!st.step)diagrams.forEach(clearTrails);
- const ending=hops.some(h=>h.end&&!h.arrived); // a dot runs into its outcome: that hop slows down at its end
+ const ending=hops.some(h=>h.end&&!h.arrived&&!h.fall); // a dot runs into its outcome: that hop slows down at its end, unless it falls
  const legsNow=Math.max(1,...hops.filter(h=>!h.arrived).map(h=>h.n)); // a hop through a node takes the time of its edges
- const dur=REDUCED?1:HOP_MS*legsNow*(ending?SLOW:1)/st.speed;let t0=null; // reduced motion: the dots land at once, they never vanish
- const place=f=>{const qs=hops.map(h=>h.p.getPointAtLength((h.arrived?1:f)*h.len));
+ const dur=REDUCED?1:HOP_MS*legsNow*(ending?SLOW:1)/st.speed;let t0=null,f0=0; // reduced motion: the dots land at once, they never vanish
+ const place=f=>{const qs=hops.map(h=>h.p.getPointAtLength((h.arrived?1:h.fall?f0*f0:f)*h.len));
   const dx=spread(qs); // dots on one point sit side by side, − left of +, so all stay readable
   hops.forEach((h,j)=>{h.dot.setAttribute("transform",`translate(${qs[j].x+dx[j]} ${qs[j].y})`);if(!h.arrived)trail(h.d,h.j,qs[j]);});
   lastDots=qs.filter((q,j)=>!hops[j].arrived);follow(lastDots);};
  hops.forEach(h=>{if(!h.end)h.d.landed.delete(h.j);});
  const tick=ts=>{if(!st.playing){place(1);return;}
-  t0??=ts;const f=Math.min(1,(ts-t0)/dur);place(ending?easeOut(f):easeInOut(f));
-  if(f<1){st.raf=requestAnimationFrame(tick);return;}
-  hops.forEach(h=>{if(h.end&&!h.arrived)land(h.d,h.j,h.p.getPointAtLength(h.len),h.id);});
+  t0??=ts;f0=Math.min(1,(ts-t0)/dur);place(ending?easeOut(f0):easeInOut(f0));
+  if(f0<1){st.raf=requestAnimationFrame(tick);return;}
+  hops.forEach(h=>{if(h.end&&!h.arrived)land(h.d,h.j,h.p.getPointAtLength(h.len),h.id,h.fall);});
   st.timer=setTimeout(()=>{if(!st.playing)return;const last=st.step===nSteps()-1;
    if(last&&st.view==="detail"){st.playing=false;render();return;}
    st.step=last?0:st.step+1;render();runHop();},st.view==="detail"?dwellAfter(st.step)/st.speed:OVERVIEW_PAUSE);};

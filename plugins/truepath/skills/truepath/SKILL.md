@@ -366,7 +366,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `nodes` | `[{id, label, role?, kind?}]` | `role: "decision"` marks a branching point; where a path starts is found, and drawn round; sinks need `kind` |
 | `edges` | `[[from, to, label]]` | label `""` for none; one edge per pair of nodes, its label naming every case it carries (`same or absent`) |
 | `panel` | `[{label, value, at, labels?, digits?, compared?, series?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first), or `"last"` for each scenario's own last step (a result, in scenarios of different lengths); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search and never marked `≠`; `series: true` when `value` is a list with one value per step from `at`, the last one kept: what a loop builds up line by line |
-| `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`, or `hop: [from, via…, to]` to run through a node without stopping (a loop's return); `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
+| `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`, or `hop: [from, via…, to]` to run through a node without stopping (a loop's return); a step with `motion: "fall"` speeds up as a body falls, lands in a puff of dust, and does not brake into its outcome; `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
 | `races` | `[{scenarios, tab, summary}]` | 2 to 4 scenario ids run at once on one graph, a numbered dot each, in a tab of its own: unlike a pair, each scenario keeps its tab, and nothing is compared (no `≠`). With a `measure` for each, the race runs on one clock (see *Measured time*); otherwise the dots take a step together |
 | `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
@@ -491,6 +491,10 @@ in a `basis` text, shown on hover.
 - On a timed page, a short comet trails each dot: where it was a moment ago
   says how fast it goes. The run into an outcome slows down at its end, and
   an arrival rings out of the dot and pulses twice round the outcome's box.
+  A step marked `motion: "fall"` is the exception: its dot speeds up all
+  the way down, the distance growing with the square of the time, and lands
+  in a puff of dust. A long fall reads best as one step through a node
+  (`hop: [edge, falling, bottom]`), the time it takes kept short.
 - In a race, the camera keeps the leader (the dot furthest along its own
   way) in sight: it frames the edge every running dot is on, zooming out no
   further than readable labels; when they no longer fit, it follows the
@@ -535,6 +539,7 @@ Paths are relative to this file's folder.
 | `examples/loyalty-tier/` | an oracle on the folder's own `src/`, its glue and the fixture `--export` writes |
 | `examples/payment-retry/` | an oracle running one unit alone, a stub and a mock in its glue, a loop and its passes |
 | `examples/deploy-job/` | measured time: the same run over three weeks, left to right, a script averaging a fictitious CI log |
+| `examples/canyon-chase/` | estimated time and two races: three plans that backfire, then a bird and a hunter past a cliff's edge, one of them falling |
 
 Generated files (`.truepath/`, where an oracle's snapshots live, and `*.html`
 next to a spec) are build output. The port examples keep their `sim.html`
