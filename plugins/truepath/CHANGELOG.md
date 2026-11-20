@@ -38,6 +38,32 @@ public repository, its unit run alone.
   strongest first, and the answer kept in the spec. C15 refuses a scenario
   resting on an unanswered doubt, unless it is `undecided`.
 
+From a second run on that project, by an agent that had only the skill,
+and from the author driving the page.
+
+- A loop's order is written where it branches: on a node a path passes more
+  than once, each branch leaving it gets a numbered badge per pass, set once
+  the dot took it. `① ②` on *timeout*, `③` on *ok*: the third try got
+  through. More than three passes on one branch read as a range and the
+  last. A badge names its step on hover or focus; a click or `Enter` goes
+  there.
+- Keys work wherever the focus is: `Space` on a tab played nothing, it
+  reopened the tab. `Home` `End` reach the first and last step; on the tab
+  row `↑` `↓` change tab, and `1`…`9` open a tab.
+- `build.py --check` runs the checks that need no verdict, without the
+  logic, and writes nothing: doubts are asked before the first build, and
+  a slow oracle no longer stands between a spec and its typos.
+- A panel row may appear `at: "last"`, each scenario's own last step: a
+  result row appeared too early in the longer scenarios.
+- A `double: …` basis is marked `◌ double`, apart from a definition; the
+  footer counts only the excerpt's files the oracle runs, not those
+  fetched to be read; `TRUEPATH_SPEC_DIR` points the oracle to the spec's
+  folder, where a dependency cache lives.
+- A long value wraps inside the panel instead of running past its edge;
+  the `≠` key is shown only on a page that compares two sides.
+- `examples/payment-retry/`: a unit run alone, a stub and a mock in its
+  glue, a retry loop and its passes.
+
 - A matrix cell says how its case ends, the outcome's label beside its
   colour, then the value: `rien` read the same for a value lost, dropped on
   purpose, or lost again. The highlight of a split case is gone; `≠` is the

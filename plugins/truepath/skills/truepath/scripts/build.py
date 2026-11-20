@@ -133,8 +133,8 @@ def validate(spec, specdir, exporting=False):
         if p.keys(r, ["label", "value", "at"], where):
             if not isinstance(r["value"], str):
                 p.append(f"{where}: `value` must be a path such as inputs.x or verdict.y")
-            if not (isinstance(r["at"], int) and not isinstance(r["at"], bool) and r["at"] >= 0):
-                p.append(f"{where}: `at` is {r['at']!r}, expected a step index")
+            if r["at"] != "last" and not (isinstance(r["at"], int) and not isinstance(r["at"], bool) and r["at"] >= 0):
+                p.append(f"{where}: `at` is {r['at']!r}, expected a step index or \"last\"")
             p.typed(r, "labels", dict, where, "an object {value: what to show}")
             p.typed(r, "digits", int, where, "a number of digits")
             p.typed(r, "series", bool, where, "true or false")
@@ -275,7 +275,8 @@ def run_oracle(spec, scenarios, specdir):
     io_out.unlink(missing_ok=True)
     try:
         run = subprocess.run(o["cmd"], cwd=snap / o["cwd"], check=False, capture_output=True, text=True,
-                             env={**os.environ, "TRUEPATH_ORACLE_IN": str(io_in), "TRUEPATH_ORACLE_OUT": str(io_out)})
+                             env={**os.environ, "TRUEPATH_ORACLE_IN": str(io_in), "TRUEPATH_ORACLE_OUT": str(io_out),
+                                  "TRUEPATH_SPEC_DIR": str(specdir)})  # a dependency cache lives there, not in the snapshot
     except OSError as e:
         raise UnreadableSpec(f"oracle: cannot run {o['cmd']!r}: {e}") from e
     if run.returncode or not io_out.exists():
@@ -293,7 +294,8 @@ def oracle_label(o, sha, repo, en):
                              capture_output=True, text=True)
     if excerpt.returncode == 0:
         e = json.loads(excerpt.stdout)
-        n = len(e["files"])
+        n = len([f for f in e["files"] if any(f == p.rstrip("/") or f.startswith(p.rstrip("/") + "/") for p in o["paths"])])
+        # what the snapshot holds: files fetched only to be read are not what ran
         label = (f"code of {e['repo']} @ {e['sha'][:7]}, excerpt of {n} file{'s' * (n > 1)}" if en else
                  f"code de {e['repo']} @ {e['sha'][:7]}, extrait de {n} fichier{'s' * (n > 1)}")
     else:
@@ -303,7 +305,7 @@ def oracle_label(o, sha, repo, en):
         label += f" + from the spec: {brought}" if en else f" + apporté par le spec : {brought}"
     if o.get("doubles"):
         names = ", ".join(f"{d['name']} ({d['kind']})" for d in o["doubles"])
-        label += f" · doubles: {names}" if en else f" · doubles : {names}"
+        label += f" · doubles: {names}" if en else f" · doublures : {names}"
     return label
 
 
@@ -333,10 +335,10 @@ def read_verdicts(text, who):
 
 
 def provenance(basis):
-    """What a `basis` text claims: `code: …`, `port: …`, or anything else, a definition.
+    """What a `basis` text claims: `code: …`, `port: …`, `double: …` (a stub or a fake answered), or anything else, a definition.
 
     The word before the colon decides, not a prefix: "code of conduct" is a definition."""
-    m = re.match(r"\s*(code|port)\s*:", str(basis))
+    m = re.match(r"\s*(code|port|double)\s*:", str(basis))
     return m.group(1) if m else "definition"
 
 
@@ -462,7 +464,8 @@ def panel_rows(scenario, panel, in_grid):
     rows = []
     basis = scenario["verdict"].get("basis") if isinstance(scenario["verdict"].get("basis"), dict) else {}
     for row in panel:
-        out = {"label": row["label"], "at": row["at"], "compared": bool(row.get("compared"))}
+        at = len(scenario["steps"]) - 1 if row["at"] == "last" else row["at"]  # "last": each scenario's own last step
+        out = {"label": row["label"], "at": at, "compared": bool(row.get("compared"))}
         if in_grid and row["value"] == "answer":
             out["answer"] = True  # named by the page: an answer is called as the open question calls it
         else:
@@ -628,7 +631,7 @@ def c13_panel_rows_appear_at_a_real_step(b):
     for s in b.scenarios:
         n = len(s["steps"])
         for row, filled in zip(b.panel, s["rows"]):
-            last = row["at"] + len(filled.get("series", [None])) - 1
+            last = filled["at"] + len(filled.get("series", [None])) - 1
             if n and last >= n:
                 yield f"{s['id']}: panel row {row['label']!r} appears at step {last}, the scenario has {n}"
 
@@ -694,8 +697,12 @@ CHECKS = [
 ]
 
 
-def check(subject):
-    return [f"{cid} {said}" for cid, rule in CHECKS for said in rule(subject)]
+# What the logic must have run for: a verdict to compare (C3, C4), panel rows filled from it (C9, C11, C13).
+NEEDS_LOGIC = {"C3", "C4", "C9", "C11", "C13"}
+
+
+def check(subject, without_logic=False):
+    return [f"{cid} {said}" for cid, rule in CHECKS if not (without_logic and cid in NEEDS_LOGIC) for said in rule(subject)]
 
 
 # ---- output
@@ -773,10 +780,11 @@ def render(data):
     return shell.replace("/*__DATA__*/null", payload, 1)
 
 
-def build(specpath, out=None, export_to=None):
+def build(specpath, out=None, export_to=None, check_only=False):
     """Returns (page path, scenario count, verdict source, exported). Raises UnreadableSpec or ChecksFailed.
 
-    `exported` is (fixture path, case count), or None without `export_to`."""
+    `exported` is (fixture path, case count), or None without `export_to`. `check_only` runs the checks
+    that need no verdict, without the logic, and writes nothing: the page path is then None."""
     specpath = pathlib.Path(specpath).resolve()
     specdir = specpath.parent
     try:
@@ -790,6 +798,15 @@ def build(specpath, out=None, export_to=None):
     grid, scenarios = expand_grid(spec["grid"]) if "grid" in spec else (None, copy.deepcopy(spec["scenarios"]))
     edges = [[*e, ""][:3] for e in spec["edges"]]
     geo = layout(spec["nodes"], edges)
+    if check_only:
+        # a hop to {verdict.outcome} is known once the logic has run: its path is checked then
+        known = [s for s in scenarios if not any("{" in h for st in s["steps"] for h in st["hop"])]
+        paths = ("C1", "C2")
+        violations = [v for v in check(Subject(spec, known, grid, geo), without_logic=True) if v.split()[0] in paths]
+        violations += [v for v in check(Subject(spec, scenarios, grid, geo), without_logic=True) if v.split()[0] not in paths]
+        if violations:
+            raise ChecksFailed(violations)
+        return None, len(scenarios), "not run", None
     from_code = "oracle" in spec
     verdicts, verdict_source = (run_oracle if from_code else run_port)(spec, scenarios, specdir)
     if len(verdicts) != len(scenarios):
@@ -822,15 +839,21 @@ def main(argv=None):
     ap.add_argument("spec")
     ap.add_argument("-o", "--out")
     ap.add_argument("--export", metavar="WORKTREE")
+    ap.add_argument("--check", action="store_true",
+                    help="run the checks that need no verdict, without the logic, and write nothing")
     args = ap.parse_args(argv)
     try:
-        out, n, verdict_source, exported = build(args.spec, args.out, args.export)
+        out, n, verdict_source, exported = build(args.spec, args.out, args.export, check_only=args.check)
     except UnreadableSpec as e:
         sys.exit(f"✗ {e}\nnothing written")
     except ChecksFailed as e:
         for line in e.args[0]:
             print("✗", line)
         sys.exit(f"{len(e.args[0])} violation(s), nothing written")
+    if args.check:
+        print(f"✓ 0 violation without the logic · {n} scenarios · "
+              f"{', '.join(sorted(NEEDS_LOGIC, key=lambda c: int(c[1:])))} wait for it · nothing written")
+        return
     if exported:
         print(f"✓ exported {exported[1]} cases to {exported[0]}")
     print(f"✓ 0 violation · {n} scenarios · logic: {verdict_source} · wrote {out}")

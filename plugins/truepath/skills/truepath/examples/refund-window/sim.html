@@ -40,8 +40,8 @@ aside{display:flex;flex-direction:column;gap:12px;position:sticky;top:8px;align-
 table{width:100%;border-collapse:collapse}
 td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 td:first-child{color:var(--muted);width:46%}
-td.v{font-family:var(--mono)}
-.basis{font:11px var(--sans);margin-left:6px;cursor:help}.basisrow td{border-bottom:none;color:var(--muted);font-size:11px;padding-top:8px}.basisrow .basis{margin:0 10px 0 0;cursor:auto}.basis.code{color:var(--plus)}.basis.port{color:var(--diverge)}.basis.def{color:var(--muted)}
+td.v{font-family:var(--mono);overflow-wrap:anywhere} /* a long identifier wraps inside the panel, never past its edge */
+.basis{font:11px var(--sans);margin-left:6px;cursor:help}.basisrow td{border-bottom:none;color:var(--muted);font-size:11px;padding-top:8px}.basisrow .basis{margin:0 10px 0 0;cursor:auto}.basis.code{color:var(--plus)}.basis.port{color:var(--diverge)}.basis.def{color:var(--muted)}.basis.double{color:var(--muted)}
 tr.new td{background:var(--hl)}
 tr.hidden td.v{color:var(--dim)}
 ol.steps{margin:0;padding-left:20px;color:var(--muted)}
@@ -134,8 +134,18 @@ table.mx td:focus-visible{outline:2px dashed var(--ink);outline-offset:-6px} /* 
 .pickhint{font-size:12px;color:var(--muted);margin:2px 0 0}
 ol.steps button{all:unset;display:block;width:100%;cursor:pointer;border-radius:4px}
 ol.steps button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* the passes of a node a loop revisits: which visit left by which branch, written beside the branch once the dot took it */
+.pass rect{fill:var(--surface);stroke:var(--accent);stroke-width:1.2}
+.pass text{font:600 9px var(--mono);fill:var(--accent);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.pass.m rect{stroke:var(--minus)}.pass.m text{fill:var(--minus)}.pass.p rect{stroke:var(--plus)}.pass.p text{fill:var(--plus)}
+.pass.cur rect{fill:var(--accent)}.pass.cur text{fill:var(--surface)}.pass.cur.m rect{fill:var(--minus)}.pass.cur.p rect{fill:var(--plus)}
+.pass{cursor:pointer;outline:none}.pass:hover rect,.pass:focus-visible rect{stroke-width:2.4}
+.pass.fresh{transform-box:fill-box;transform-origin:center;animation:pop .16s cubic-bezier(.25,1,.5,1)}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+ol.steps li.peek{background:var(--hl);border-radius:4px}
+.sw.passw{border-radius:50%;border-color:var(--accent);color:var(--accent);font:600 8px/9px var(--mono);text-align:center}
 @media (max-width:900px){main,.panes.mxview{grid-template-columns:minmax(0,1fr)}}
-@media (prefers-reduced-motion:reduce){table.mx td.pulse{animation:none}table.mx td,table.mx td .chev{transition:none}}
+@media (prefers-reduced-motion:reduce){table.mx td.pulse,.pass.fresh{animation:none}table.mx td,table.mx td .chev{transition:none}}
 </style></head><body>
 <header><h1 id="title"></h1><p class="sub" id="sub"></p></header>
 <div class="bar">
@@ -163,7 +173,7 @@ ol.steps button:focus-visible{outline:2px solid var(--accent);outline-offset:2px
 </main>
 <footer id="foot"></footer>
 <script>
-const DATA={"page": {"title": "Refund window", "subtitle": "Example: a refund asked on day 30 was refused before the fix", "source": "truepath example, self-contained", "lang": "en", "verdictSource": "port decide.js", "credit": true, "kinds": {"ok": {"label": "refunded", "color": "#15803d"}, "wrong": {"label": "store credit only", "color": "#b91c1c"}}, "nodes": {"REQ": {"label": "refund request", "kind": null, "role": "start"}, "AGE": {"label": "days since delivery", "kind": null, "role": null}, "D": {"label": "within 30 days?", "kind": null, "role": "decision"}, "REFUND": {"label": "money refunded", "kind": "ok", "role": null}, "CREDIT": {"label": "store credit", "kind": "wrong", "role": null}}, "scenarios": [{"id": "old", "tab": "Before", "summary": "Day 30: the old check reads `days \u003c 30` and refuses", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "The customer asks on the last day of the window."}, {"hop": ["AGE", "D"], "message": "30 \u003c 30 → false", "caption": "The old check excludes the last day."}, {"hop": ["D", "CREDIT"], "message": "store credit", "caption": "A refund the policy promises is refused."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "no"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "no", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "new", "tab": "After", "summary": "Same request: `days \u003c= 30` keeps day 30 in the window", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "Same request."}, {"hop": ["AGE", "D"], "message": "30 \u003c= 30 → true", "caption": "The last day counts."}, {"hop": ["D", "REFUND"], "message": "refunded", "caption": "The policy is applied as written."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "yes"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "yes", "provenance": {"kind": "port", "text": "port: decide.js"}}]}], "pairs": [{"before": "old", "after": "new", "tab": "before / after", "summary": "The one difference: does day 30 count?"}], "grid": null}, "geo": {"width": 381, "height": 448, "lineHeight": 16, "nodes": {"REQ": {"w": 150, "h": 44, "labelLines": ["refund request"], "y": 32.0, "x": 119.2}, "AGE": {"w": 190, "h": 44, "labelLines": ["days since delivery"], "y": 140.0, "x": 99.2}, "D": {"w": 158, "h": 44, "labelLines": ["within 30 days?"], "y": 248.0, "x": 115.2}, "REFUND": {"w": 150, "h": 44, "labelLines": ["money refunded"], "y": 356.0, "x": 32.0}, "CREDIT": {"w": 135, "h": 44, "labelLines": ["store credit"], "y": 356.0, "x": 214.0}}, "edges": [{"from": "REQ", "to": "AGE", "d": "M194 76 V136", "label": null, "labelPos": null}, {"from": "AGE", "to": "D", "d": "M194 184 V244", "label": null, "labelPos": null}, {"from": "D", "to": "REFUND", "d": "M194 292 V324 H107 V352", "label": "yes", "labelPos": [141.2, 320]}, {"from": "D", "to": "CREDIT", "d": "M194 292 V324 H282 V352", "label": "no", "labelPos": [231.8, 320]}]}};
+const DATA={"page": {"title": "Refund window", "subtitle": "Example: a refund asked on day 30 was refused before the fix", "source": "truepath example, self-contained", "lang": "en", "verdictSource": "port decide.js", "credit": true, "kinds": {"ok": {"label": "refunded", "color": "#15803d"}, "wrong": {"label": "store credit only", "color": "#b91c1c"}}, "nodes": {"REQ": {"label": "refund request", "kind": null, "role": "start"}, "AGE": {"label": "days since delivery", "kind": null, "role": null}, "D": {"label": "within 30 days?", "kind": null, "role": "decision"}, "REFUND": {"label": "money refunded", "kind": "ok", "role": null}, "CREDIT": {"label": "store credit", "kind": "wrong", "role": null}}, "scenarios": [{"id": "old", "tab": "Before", "summary": "Day 30: the old check reads `days \u003c 30` and refuses", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "The customer asks on the last day of the window."}, {"hop": ["AGE", "D"], "message": "30 \u003c 30 → false", "caption": "The old check excludes the last day."}, {"hop": ["D", "CREDIT"], "message": "store credit", "caption": "A refund the policy promises is refused."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "no"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "no", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "new", "tab": "After", "summary": "Same request: `days \u003c= 30` keeps day 30 in the window", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "Same request."}, {"hop": ["AGE", "D"], "message": "30 \u003c= 30 → true", "caption": "The last day counts."}, {"hop": ["D", "REFUND"], "message": "refunded", "caption": "The policy is applied as written."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "yes"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "yes", "provenance": {"kind": "port", "text": "port: decide.js"}}]}], "pairs": [{"before": "old", "after": "new", "tab": "before / after", "summary": "The one difference: does day 30 count?"}], "grid": null}, "geo": {"width": 381, "height": 448, "lineHeight": 16, "nodes": {"REQ": {"w": 150, "h": 44, "labelLines": ["refund request"], "y": 32.0, "x": 119.2}, "AGE": {"w": 190, "h": 44, "labelLines": ["days since delivery"], "y": 140.0, "x": 99.2}, "D": {"w": 158, "h": 44, "labelLines": ["within 30 days?"], "y": 248.0, "x": 115.2}, "REFUND": {"w": 150, "h": 44, "labelLines": ["money refunded"], "y": 356.0, "x": 32.0}, "CREDIT": {"w": 135, "h": 44, "labelLines": ["store credit"], "y": 356.0, "x": 214.0}}, "edges": [{"from": "REQ", "to": "AGE", "d": "M194 76 V136", "label": null, "pass": [194, 122.0, -1], "labelPos": null}, {"from": "AGE", "to": "D", "d": "M194 184 V244", "label": null, "pass": [194, 230.0, -1], "labelPos": null}, {"from": "D", "to": "REFUND", "d": "M194 292 V324 H107 V352", "label": "yes", "pass": [107, 338.0, -1], "labelPos": [141.2, 320]}, {"from": "D", "to": "CREDIT", "d": "M194 292 V324 H282 V352", "label": "no", "pass": [282, 338.0, -1], "labelPos": [231.8, 320]}]}};
 const {page,geo}=DATA, grid=page.grid, NS="http://www.w3.org/2000/svg";
 const HOP_MS=650;         // every hop takes the same time, however long it is drawn: time on screen follows meaning, not ink
 const DWELL_PASS=450;     // ms the dot stays on a node that only passes it on
@@ -201,7 +211,8 @@ const words={
   home:"← matrice",source:"Source\u00a0: ",logic:" · logique exécutée\u00a0: ",
   path:"chemin du scénario",diverge:"≠ premier écart entre avant et après",caseCol:"Cas",cell:"Cellule\u00a0: ",outcome:"issue, puis ",hover:"Au survol\u00a0: ",
   differs:b=>`≠ diffère de «\u00a0${b}\u00a0»`,split:"les réponses divergent",pick:"Clic ou Entrée\u00a0: comparer en +. Avec Maj\u00a0: en −.",esc:"<kbd>Échap</kbd> matrice",later:"étape à venir",
-  keys:"Clavier\u00a0: <kbd>←</kbd><kbd>→</kbd> étape · <kbd>Espace</kbd> lecture · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",minusOnly:"chemin du seul −",plusOnly:"chemin du seul +",code:"✓ code",port:"⚠ portage",definition:"◇ définition",
+  keys:"Clavier\u00a0: <kbd>←</kbd><kbd>→</kbd> étape · <kbd>Début</kbd><kbd>Fin</kbd> première, dernière · <kbd>Espace</kbd> lecture",tabKeys:" · <kbd>↑</kbd><kbd>↓</kbd> ou <kbd>1</kbd>…<kbd>9</kbd> onglet",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",minusOnly:"chemin du seul −",plusOnly:"chemin du seul +",code:"✓ code",port:"⚠ portage",definition:"◇ définition",double:"◌ doublure",
+  passes:"n<sup>e</sup> passage par un nœud qui revient",pass:(n,node,i,m)=>`passage ${n} par «\u00a0${node}\u00a0» · étape ${i}\u00a0: ${m}`,
   hint:b=>`Cliquez une cellule\u00a0: elle ouvre le cas pas à pas, «\u00a0${b}\u00a0» à gauche, la réponse de la colonne à droite.`,credit:"créé avec truepath",
   real:"● cas réel",illus:"○ illustratif",undecided:"⚠️ règle non décidée · ",field:"Champ",before:"avant",after:"après",
   hide:"Masquer le détail ›",show:"‹ Détail pas à pas",pause:"Pause",play:"Lecture",side:"côte à côte",sep:"\u00a0: ",half:"0,5×",
@@ -210,14 +221,15 @@ const words={
   home:"← matrix",source:"Source: ",logic:" · logic run: ",
   path:"scenario path",diverge:"≠ first difference between before and after",caseCol:"Case",cell:"Cell: ",outcome:"outcome, then ",hover:"On hover: ",
   differs:b=>`≠ differs from “${b}”`,split:"the answers disagree",pick:"Click or Enter: compare as +. With Shift: as −.",esc:"<kbd>Esc</kbd> matrix",later:"step to come",
-  keys:"Keys: <kbd>←</kbd><kbd>→</kbd> step · <kbd>Space</kbd> play · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",minusOnly:"path of − only",plusOnly:"path of + only",code:"✓ code",port:"⚠ ported",definition:"◇ definition",
+  keys:"Keys: <kbd>←</kbd><kbd>→</kbd> step · <kbd>Home</kbd><kbd>End</kbd> first, last · <kbd>Space</kbd> play",tabKeys:" · <kbd>↑</kbd><kbd>↓</kbd> or <kbd>1</kbd>…<kbd>9</kbd> tab",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",minusOnly:"path of − only",plusOnly:"path of + only",code:"✓ code",port:"⚠ ported",definition:"◇ definition",double:"◌ double",
+  passes:"n<sup>th</sup> pass through a node a loop revisits",pass:(n,node,i,m)=>`pass ${n} through “${node}” · step ${i}: ${m}`,
   hint:b=>`Click a cell: it opens the case step by step, “${b}” on the left, the column's answer on the right.`,credit:"made with truepath",
   real:"● real case",illus:"○ illustrative",undecided:"⚠️ rule not decided · ",field:"Field",before:"before",after:"after",
   hide:"Hide detail ›",show:"‹ Step-by-step detail",pause:"Pause",play:"Play",side:"side by side",sep:": ",half:"0.5×",
   zoom:"Zoom",zin:"Zoom in",zout:"Zoom out",fit:"Show the whole diagram",fitText:"Fit"}}[page.lang];
 for(const id of ["tabs","variants","back","fwd","restart","speed","zoom","zin","zout","fit"])$(id).setAttribute("aria-label",words[id]);
 for(const id of ["zin","zout","fit"])$(id).title=words[id];
-$("keys").innerHTML=words.keys+(grid?" · "+words.esc:""); // the page's own words, never spec text
+// keys: said after TABS is known, since the tab keys are said only when there are tabs to switch
 $("speed").options[0].textContent=words.half;$("fit").textContent=words.fitText;
 
 // ---- what the page shows: a matrix then one tab per case (grid), or one tab per pair and per scenario outside a pair
@@ -251,7 +263,7 @@ const valueAt=(r,i)=>r.series?r.series[Math.max(0,Math.min(i-r.at,r.series.lengt
 /** A row is new at step i when it appears there, or when its series changes there. */
 const changedAt=(r,i)=>r.at===i||(!!r.series&&i>r.at&&valueAt(r,i)!==valueAt(r,i-1));
 /** Where a value comes from: real code, a ported behaviour, or a definition the simulation makes. */
-const basisClass=k=>k==="code"?"code":k==="port"?"port":"def";
+const basisClass=k=>k==="code"?"code":k==="port"?"port":k==="double"?"double":"def";
 /** Next to a value: the glyph alone, its full text on hover, and nothing when every value of the table has that provenance
  *  (`only`); the words are said once, under the table (basisLegend). */
 const onlyKind=rows=>{const ks=new Set(rows.filter(r=>r.provenance).map(r=>r.provenance.kind));return ks.size===1?[...ks][0]:null;};
@@ -291,7 +303,15 @@ swatch("border-color:var(--accent);background:var(--accent);border-radius:50%",w
 // a page that compares two sides says what their own colours mean: the path only one of them takes
 if(grid||page.pairs.length){swatch("border-color:var(--minus);background:var(--minus);border-radius:50%",words.minusOnly);
  swatch("border-color:var(--plus);background:var(--plus);border-radius:50%",words.plusOnly);}
-swatch(`border-color:${DIVERGE}`,words.diverge);
+if(grid||page.pairs.length)swatch(`border-color:${DIVERGE}`,words.diverge); // ≠ says nothing on a page with one side per tab
+
+/** Each time a step leaves a node a loop brings it back to: the node, the edge it left by, which visit, at which step.
+ *  Only nodes a scenario passes through more than once: elsewhere the order is the path itself. */
+function passesOf(s){if(s.passes)return s.passes;const n={},all=[];
+ s.steps.forEach((x,i)=>x.hop.slice(0,-1).forEach((a,m)=>{n[a]=(n[a]||0)+1;all.push({node:a,edge:a+">"+x.hop[m+1],visit:n[a],step:i});}));
+ return s.passes=all.filter(q=>n[q.node]>1);}
+if(page.scenarios.some(s=>passesOf(s).length)){const s=document.createElement("span");
+ s.innerHTML=`<span class="sw passw">1</span>${words.passes}`;$("legend").appendChild(s);}
 
 // ---- zoom: one view, in diagram units, shared by every diagram of the tab
 const ZOOM_MAX=6,ZOOM_STEP=1.25;
@@ -374,12 +394,43 @@ function draw(pane,k,sides){
   box.labelLines.forEach((l,i)=>{el("text",{x:box.x+box.w/2,y:box.y+box.h/2+(i-(box.labelLines.length-1)/2)*geo.lineHeight},g).textContent=l;});
   el("text",{x:box.x+box.w+6,y:box.y+12,class:"divmark",visibility:"hidden"},g).textContent="≠";
   nodeEls[id]=g;}
+ const passes=el("g",{class:"passes"},svg);
  listenZoom(svg);
+ listenPasses(svg);
  const dots=sides.map((s,j)=>{const g=el("g",{class:"dot"+(sides.length>1?" "+SIDE[j]:""),transform:"translate(-40 -40)"},svg);
   el("circle",{r:sides.length>1?9:5},g);
   if(sides.length>1)el("text",{class:"dsign","text-anchor":"middle","dominant-baseline":"central"},g).textContent=SIGN[j];return g;});
- return {svg,edgeEls,nodeEls,k,sides,dots};
+ return {svg,edgeEls,nodeEls,k,sides,dots,passes};
 }
+const PASS_R=7,PASS_GAP=3,PASS_MAX=3,PASS_CHAR=5.6; // a badge is a circle; beyond PASS_MAX visits on one branch, the earlier ones are one range
+const geoEdge=k=>geo.edges.find(e=>e.from+">"+e.to===k);
+/** The badges of every pass so far, laid along their branch from its anchor (layout.py's `pass`); − above +, in a pair. */
+function paintPasses(d,step,detail){const layer=d.passes,two=d.sides.length>1,focused=document.activeElement;
+ const keep=focused&&focused.getAttribute&&focused.getAttribute("data-key");layer.textContent="";
+ d.sides.forEach((s,j)=>{const here=stepOf(s,step),by=new Map();
+  for(const q of passesOf(s))if(!detail||q.step<=here){if(!by.has(q.edge))by.set(q.edge,[]);by.get(q.edge).push(q);}
+  for(const [k,list] of by){const e=geoEdge(k);if(!e||!e.pass)continue;const [x,y0,dir]=e.pass,y=y0+(two?(j?1:-1)*(PASS_R+1):0);
+   const last=list[list.length-1];
+   const items=list.length<=PASS_MAX?list.map(q=>({q,text:String(q.visit)})):[{q:list[list.length-2],text:`${list[0].visit}–${list[list.length-2].visit}`,all:list.slice(0,-1)},{q:last,text:String(last.visit)}];
+   let at=x+dir*(PASS_R/2+2);
+   for(const it of dir<0?[...items].reverse():items){const w=Math.max(2*PASS_R,it.text.length*PASS_CHAR+6),cx=at+dir*w/2;at+=dir*(w+PASS_GAP);
+    const cur=detail&&it.q.step===here,node=plain(page.nodes[it.q.node].label),msg=plain(s.steps[it.q.step].message);
+    const said=(it.all||[it.q]).map(q=>words.pass(q.visit,node,q.step+1,plain(s.steps[q.step].message))).join("\n");
+    const g=el("g",{class:"pass"+(two?" "+SIDE[j]:"")+(cur?" cur":"")+(cur&&!REDUCED?" fresh":""),tabindex:0,role:"button",
+     "data-step":it.q.step,"data-key":`${j}:${k}:${it.text}`,"aria-label":words.pass(it.q.visit,node,it.q.step+1,msg)},layer);
+    el("title",{},g).textContent=said;
+    el("rect",{x:cx-w/2,y:y-PASS_R,width:w,height:2*PASS_R,rx:PASS_R},g);
+    el("text",{x:cx,y},g).textContent=it.text;}}});
+ if(keep){const again=layer.querySelector&&layer.querySelector(`[data-key="${cssq(keep)}"]`);again&&again.focus&&again.focus();}}
+/** A badge says its step in the list on hover or focus; a click or Enter takes the cursor there. */
+function listenPasses(svg){const peek=(e,on)=>{const g=e.target.closest&&e.target.closest(".pass");if(!g)return;
+  const li=$("steps").querySelector(`li[data-i="${g.getAttribute("data-step")}"]`);li&&li.classList.toggle("peek",on);};
+ const goTo=g=>{st.playing=false;engage();go(+g.getAttribute("data-step"));};
+ svg.addEventListener("mouseover",e=>peek(e,true));svg.addEventListener("mouseout",e=>peek(e,false));
+ svg.addEventListener("focusin",e=>peek(e,true));svg.addEventListener("focusout",e=>peek(e,false));
+ svg.addEventListener("click",e=>{const g=e.target.closest&&e.target.closest(".pass");if(g)goTo(g);});
+ svg.addEventListener("keydown",e=>{const g=e.target.closest&&e.target.closest(".pass");if(!g||(e.key!=="Enter"&&e.key!==" "))return;
+  e.preventDefault();e.stopPropagation();goTo(g);});} // Space on a badge goes there: it does not start Play
 let diagrams=[],preview=null;
 /** The matrix tab's graph: still, one path lit, the path of the cell under the pointer or the keyboard focus. */
 function showPreview(td){if(!preview||!td)return;const s=cellOf(grid.cases[+td.dataset.case].id,td.dataset.variant);
@@ -461,7 +512,8 @@ function paint(d,step,detail,div){const two=d.sides.length>1;
   if(!onPath.has(id))c+=" off";if(ends.includes(id))c+=" end"; // where each side ends is marked from the start
   if(detail&&here.includes(id)){c+=" cur";if(two&&here[0]!==here[1])c+=" "+SIDE[here.indexOf(id)];}
   const diverges=div&&id===div.node&&(!detail||step>=div.step);if(diverges)c+=" diverge";
-  g.querySelector(".divmark").setAttribute("visibility",diverges?"visible":"hidden");g.setAttribute("class",c);}}
+  g.querySelector(".divmark").setAttribute("visibility",diverges?"visible":"hidden");g.setAttribute("class",c);}
+ paintPasses(d,step,detail);}
 
 /** In a grid case: back to the matrix, then which variant plays on each side, among the open section's columns. */
 /** Which answer plays on each side is picked in the case's row (miniRow); the bar keeps only the tabs of a page without grid. */
@@ -501,7 +553,7 @@ function stepLine(x,y){if(x&&y&&x.message===y.message)return rich(x.message);
  return [x&&"− "+rich(x.message),y&&"+ "+rich(y.message)].filter(Boolean).join("<br>");}
 function render(){
  const tab=TABS[st.tab],detail=st.view==="detail";
- renderVariants();[...document.querySelectorAll("#tabs button")].forEach((b,i)=>b.setAttribute("aria-pressed",i===st.tab));
+ renderVariants();[...document.querySelectorAll("#tabs button")].forEach((b,i)=>{b.setAttribute("aria-pressed",i===st.tab);b.setAttribute("aria-selected",i===st.tab);});
  document.body.classList.toggle("onmatrix",!!tab.matrix);
  if(tab.matrix){$("main").className="matrix";$("summary").innerHTML=rich(grid.summary);return;}
  const sides=sidesOf(tab),div=sides.length>1?divergence(sides[0],sides[1]):null;
@@ -564,6 +616,9 @@ function openTab(i){st.tab=i;st.playing=false;st.step=0;buildPanes();fit();go(0)
 function engage(){if(!st.auto)return;st.auto=false;readable();}
 // ---- controls
 if(!grid)TABS.forEach((t,i)=>{const b=document.createElement("button");b.setAttribute("role","tab");b.textContent=t.label;b.title=t.title;if(t.pair)b.className="pair";b.onclick=()=>openTab(i);$("tabs").appendChild(b);});
+$("keys").innerHTML=words.keys+(!grid&&TABS.length>1?words.tabKeys:"")+words.zoomKeys+(grid?" · "+words.esc:""); // the page's own words, never spec text
+/** Another tab, the focus moved onto it: ↑ ↓ walk the row, a digit opens the tab of that rank. */
+function toTab(i){if(grid||i<0||i>=TABS.length)return;openTab(i);const b=$("tabs").children[i];b&&b.focus&&b.focus();}
 $("fold").onclick=()=>{st.view=st.view==="detail"?"overview":"detail";try{localStorage.setItem("truepath-view",st.view);}catch(e){}st.playing=!REDUCED;
  st.auto=false;fit();go(0);fitHeight();readable();};
 try{const v=localStorage.getItem("truepath-view");if(v==="overview"||v==="detail")st.view=v;}catch(e){}
@@ -576,11 +631,20 @@ const cssq=v=>String(v).replace(/["\\]/g,"\\$&"); // a value inside a quoted att
 /** Back to the matrix, the focus on the cell the case was opened from. */
 function home(){openTab(0);const f=st.from;if(!f)return;
  const td=$("panes").querySelector(`td[data-case="${f.case}"][data-variant="${cssq(f.variant)}"][data-section="${f.section}"]`);td&&td.focus&&td.focus();}
+/** One set of keys wherever the focus is, a tab included: the reader clicks a tab, then drives the case from the keyboard.
+ *  ← → step, Home End the first and last step, Space plays; on the tab row ↑ ↓ change tab; a digit opens that tab. */
+const onTab=t=>!!(t&&t.getAttribute&&t.getAttribute("role")==="tab");
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&grid&&!TABS[st.tab].matrix){e.preventDefault();home();return;}
- if(e.target.tagName==="SELECT")return;
+ const t=e.target;if(t.tagName==="SELECT"||t.tagName==="INPUT"||t.tagName==="TEXTAREA"||e.ctrlKey||e.metaKey||e.altKey)return;
+ const story=!TABS[st.tab].matrix;
  if(e.key==="ArrowRight")$("fwd").click();else if(e.key==="ArrowLeft")$("back").click();
- else if(e.key===" "&&e.target.tagName!=="BUTTON"){e.preventDefault();$("play").click();} // on a button, Space presses that button
+ else if((e.key==="Home"||e.key==="End")&&story){e.preventDefault();st.playing=false;engage();go(e.key==="Home"?0:nSteps()-1);}
+ else if((e.key==="ArrowUp"||e.key==="ArrowDown")&&onTab(t)){e.preventDefault();toTab((st.tab+(e.key==="ArrowDown"?1:-1)+TABS.length)%TABS.length);}
+ else if(/^[1-9]$/.test(e.key)&&!grid&&+e.key<=TABS.length)toTab(+e.key-1);
+ else if(e.key===" "){if(t.tagName==="BUTTON"&&!onTab(t))return; // a control presses itself; a tab does not reopen, it plays
+  e.preventDefault();if(story)$("play").click();}
  else if(e.key==="+"||e.key==="=")$("zin").click();else if(e.key==="-")$("zout").click();else if(e.key==="0")$("fit").click();});
+document.addEventListener("keyup",e=>{if(e.key===" "&&onTab(e.target))e.preventDefault();}); // a button acts on Space's keyup: the tab would reopen
 /** A cell of the case's row: on +, or on − with Shift; the side it leaves goes to the other one rather than playing twice. */
 function pick(td,minus){const v=td.dataset.variant,[me,other]=minus?["minus","plus"]:["plus","minus"];if(v===st[me])return;
  if(v===st[other])st[other]=st[me];st[me]=v;openTab(st.tab);

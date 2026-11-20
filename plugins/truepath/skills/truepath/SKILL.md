@@ -48,8 +48,10 @@ pairs, the reader gets one tab per case and no table to compare them in.
    when the rule has no code yet.
 5. Write the scenarios. Each declares its `origin`, its `inputs`, the
    `expect`ed verdict fields, and its `steps` along real edges.
-6. Write down your doubts, then ask the user about the strongest ones,
-   before building (see *Doubts*).
+6. Run `build.py --check`: the checks that need no verdict (paths, layout,
+   texts, doubts), without the logic, nothing written. Then write down your
+   doubts and ask the user about the strongest ones, before building (see
+   *Doubts*).
 7. Build, then open the file:
 
    ```sh
@@ -60,6 +62,19 @@ pairs, the reader gets one tab per case and no table to compare them in.
 
 `spec.json` builds `sim.html`, `<subject>.spec.json` builds
 `<subject>.sim.html`; `-o` names another file.
+
+Keys work wherever the focus is, a tab included, so a reader clicks a tab
+and drives the case from the keyboard: `←` `→` a step, `Home` `End` the
+first and last step, `Space` play or pause; on the tab row `↑` `↓` change
+tab, and `1`…`9` open the tab of that rank.
+
+When a path comes back to a node (a loop), each branch leaving that node
+gets a numbered badge per pass, once the dot has taken it: `① ②` on
+*timeout*, `③` on *ok* says the third try got through. Up to three badges
+sit side by side, more read as a range (`1–11`) and the last pass. The pass
+under way is filled; a badge names its step on hover or focus, and a click
+or `Enter` takes the cursor there. Nodes passed once get none: there the
+order is the path itself.
 
 The page opens paused on the first tab, with the detail panel open; the green
 play button, under the diagram with the other controls and the keys that
@@ -93,6 +108,10 @@ the live checkout: a branch under work may move during the build), extracts
 - `TRUEPATH_ORACLE_OUT`: the path where to write a JSON array of verdicts,
   same order.
 
+`TRUEPATH_SPEC_DIR` holds the spec's folder: a dependency cache kept next
+to the spec (`CARGO_HOME`, an npm cache) is reached from it, never by
+counting `../` out of the snapshot, whose depth is the build's business.
+
 `cmd` is an argument list, run without a shell: to pin a toolchain, start it
 with `env`, as in `["env", "JAVA_HOME=…", "mvn", "-o", "-q", "-Dtest=…",
 "test"]` (a Java project's annotation processors, Lombok among them, may
@@ -109,8 +128,9 @@ oracle run or in the snapshot's `paths`, not in `files`.
 A verdict is an object of fields. `outcome` is required: it names the node the
 path must end on, and is what ties a scenario to the logic. `basis` optionally
 says, per field, whether real code computed it (`"code: …"`), the glue copied
-a behaviour (`"port: …"`), or the simulation defines it (any other text,
-shown `◇ definition`). The page shows that mark next to every panel value
+a behaviour (`"port: …"`), a double answered it (`"double: …"`, shown
+`◌ double`), or the simulation defines it (any other text, shown
+`◇ definition`). The page shows that mark next to every panel value
 whose field has a basis, its full text on hover, and `--export` asserts only
 fields whose basis is code: a field with no basis counts as code under an
 oracle, as ported under a `port`. One oracle can mix them: a rule still
@@ -143,6 +163,10 @@ system is the exception, for a path that crosses several units on purpose.
 - **What the unit asked is a verdict too.** A double that records its calls
   turns them into fields (`checked: true`, `sync: "forced"`): the panel then
   shows what the unit did, not only where it ended.
+- **Mark what a double decided.** A field the stub's answer settles has a
+  basis `double: …`, shown `◌ double`; a field the unit computed stays
+  `code: …`, even when a mock recorded it: the unit decided to ask, the
+  mock only wrote it down.
 - **Say what stood in.** `oracle.doubles` lists each double:
   `{name, kind: stub|fake|mock, replaces}`. The footer names them
   (`· doubles: runner (stub), crypto (fake)`), and a field a double decides
@@ -152,7 +176,16 @@ system is the exception, for a path that crosses several units on purpose.
 - **Prefer a small toolchain.** The compiler alone, or the language's
   package manager with a few small libraries the unit names (an error
   crate, say) when rewriting them would put toy code where the real one
-  runs.
+  runs. Bring the lockfile through `files`, keep the dependency cache next
+  to the spec (`TRUEPATH_SPEC_DIR`), and run offline once it is filled: the
+  build then needs no network.
+- **Cut the unit by markers, include it by path.** In Rust, `#[path]` on a
+  module declared in its own file (`src/unit.rs` holding
+  `#[path = "../excerpt/x.rs"] mod x;`), not in an inline module, whose
+  path resolves under a folder `files` does not create.
+
+`examples/payment-retry/` is the pattern: `src/pay.js` unchanged, a stub
+gateway and a mock clock in `glue/oracle.js`, a retry loop.
 
 ## Working from an excerpt
 
@@ -183,6 +216,9 @@ wrong guess would change what the reader concludes:
 - a case no test of the project covers, so nothing confirms its path;
 - code you read but did not run (a log message, a branch the doubles never
   reach);
+- a compile-time choice that changes the branches shown: a feature flag, a
+  build profile, a platform (the default build may differ from the one you
+  chose to keep the unit small);
 - a rule whose intent the code does not settle.
 
 Ask the user about the strongest ones, one question at a time, through the
@@ -209,7 +245,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `kinds` | `{id: {label, color}}` | at most 4 |
 | `nodes` | `[{id, label, role?, kind?}]` | `role: "decision"` marks a branching point; where a path starts is found, and drawn round; sinks need `kind` |
 | `edges` | `[[from, to, label]]` | label `""` for none |
-| `panel` | `[{label, value, at, labels?, digits?, compared?, series?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search and never marked `≠`; `series: true` when `value` is a list with one value per step from `at`, the last one kept: what a loop builds up line by line |
+| `panel` | `[{label, value, at, labels?, digits?, compared?, series?}]` | `value` reads `inputs.x` or `verdict.y`; shown from step `at` (0 is the first), or `"last"` for each scenario's own last step (a result, in scenarios of different lengths); `labels` maps a value to what the page shows (`"true"`, `"false"`, `"null"`, `"[]"` for those values); `digits` zero-pads a numeric code to that length; `compared: true` for the row naming what a pair compares (the fix, the rule), left out of the first-divergence search and never marked `≠`; `series: true` when `value` is a list with one value per step from `at`, the last one kept: what a loop builds up line by line |
 | `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`, or `hop: [from, via…, to]` to run through a node without stopping (a loop's return); `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
 | `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
 | `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
@@ -299,7 +335,9 @@ the checks run.
 The motion carries the explanation; the text labels it. Write the shortest
 text that names what the reader sees, one sentence at most: a reader in a
 workshop reads a line, not a paragraph, and a short spec is faster to write.
-C14 refuses a text over its budget, in characters, backticks not counted:
+C14 refuses a text over its budget, in characters, backticks not counted,
+measured once `{verdict.x}` and `{inputs.x}` are filled (`--check`, which
+runs no logic, measures them unfilled):
 
 | Text | At most |
 | --- | --- |
@@ -326,6 +364,9 @@ in a `basis` text, shown on hover.
   takes is that side's colour: the divergence is a fork in one drawing, not a
   difference between two thumbnails.
 - Taken edges are solid, untaken ones dashed and grey; nodes off the path fade.
+- A loop's order is written where it branches: numbered badges on the
+  branches leaving a node passed more than once, one per pass, set once
+  the dot has taken them.
 - Colour encodes the outcome kind only. In a pair, the first divergence is
   outlined amber and marked `≠`: the first step where the paths fork, on the
   last node both still share, or where a panel value differs, whichever comes
@@ -354,12 +395,14 @@ in a `basis` text, shown on hover.
 | `examples/refund-window/` | a JS port and a before/after pair |
 | `examples/free-shipping/` | a grid: two open questions, each decided on the cases it changes |
 | `examples/loyalty-tier/` | an oracle on the folder's own `src/`, its glue and the fixture `--export` writes |
+| `examples/payment-retry/` | an oracle running one unit alone, a stub and a mock in its glue, a loop and its passes |
 
 Generated files (`.truepath/`, where an oracle's snapshots live, and `*.html`
 next to a spec) are build output. The port examples keep their `sim.html`
-so the skill can be seen without running it. `loyalty-tier` keeps none: its
-footer names the commit that produced the verdicts, so the page changes with
-every commit, and it builds only inside a git repository that holds it.
+so the skill can be seen without running it. The oracle examples
+(`loyalty-tier`, `payment-retry`) keep none: their footer names the commit
+that produced the verdicts, so the page changes with every commit, and they
+build only inside a git repository that holds them.
 
 ## Limits
 

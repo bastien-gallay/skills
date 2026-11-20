@@ -2,13 +2,16 @@
 
     layout(nodes, edges) -> {width, height, lineHeight,
                              nodes: {id: {x, y, w, h, labelLines}},
-                             edges: [{from, to, d, label, labelPos}]}
+                             edges: [{from, to, d, label, labelPos, pass}]}
 
 A node's rank is its longest path from the sources; a rank is drawn as one layer. An edge that
 climbs back (a loop) runs in a lane of its own to the right of every box; when other boxes
 stand beside its source, it first runs under their row in a corridor of its own. An edge that would
 cross a box on its way down steps aside just past the boxes in its way, on the nearer side:
 sent around the whole drawing, it was the longest line on the page and widened it for nothing.
+`pass` is where the page writes, along an edge, which visits of a node revisited by a loop left
+by it: [x, y, side], the badges laid from (x, y) towards side (-1 left, 1 right), on a stretch
+of the edge no other edge leaving the same node shares.
 Pure stdlib, deterministic: the same graph gives the same file.
 
 The page draws with the fonts these widths assume: node labels in 13px monospace, edge
@@ -178,7 +181,7 @@ def loop_lanes(loops, ids, box, rank, right):
             high = corridor[e, "over"]
         else:
             back_in, high = f" V{ty} H{t['x'] + t['w'] + STUB:.0f}", ty
-        paths[e] = (out + back_in, x, (low + high) / 2)
+        paths[e] = (out + back_in, x, (low + high) / 2, low)
     return paths
 
 
@@ -198,26 +201,30 @@ def route(edges, ids, box, rank, back):
         passed = [box[n] for n in ids if rank[a] < rank[n] < rank[b]]
         lane = None
         if (a, b) in back:  # out of the source's side, up its lane, into the target's side
-            d, lane, climb = loops[a, b]
+            d, lane, climb, low = loops[a, b]
             pos = [lane + LABEL_GAP, climb]
+            badge = [lane, low - LANE, 1]  # at the foot of its own lane, which no other edge climbs
         elif any(o["x"] - CLEARANCE <= tx <= o["x"] + o["w"] + CLEARANCE for o in passed):  # a box is in the way
             lane, side = detour(tx, passed, taken)
             lane = round(lane)
             taken.append(lane)
             low = round(t["y"] - GAP_Y / 2)
             d = f"M{sx} {y1} V{rail} H{lane} V{low} H{tx} V{y2}"
+            badge = [tx, (low + y2) / 2, -1]
             # the label sits on the outer side of the detour, away from the boxes it steps around
             pos = [lane + LABEL_GAP if side > 0 else lane - LABEL_GAP - len(label) * EDGE_CHAR_W, (rail + low) / 2]
         elif sx == tx:
             d = f"M{sx} {y1} V{y2}"
+            badge = [sx, (rail + y2) / 2, -1]  # past the rail: above it, the stub is shared with the source's other edges
             # below the rail: above it, the stub is shared with the source's other edges, and a label there names them all
             pos = [sx + CLEARANCE, (rail + y2) / 2 + LABEL_GAP]
         else:
             d = f"M{sx} {y1} V{rail} H{tx} V{y2}"
+            badge = [tx, (rail + y2) / 2, -1]
             pos = [(sx + tx) / 2 - len(label) * EDGE_CHAR_W / 2, rail - LABEL_GAP]  # centred on the rail
         if lane is not None:
             reach = max(reach, lane, lane + LABEL_GAP + len(label) * EDGE_CHAR_W if label else lane)
-        out.append({"from": a, "to": b, "d": d, "label": label or None,
+        out.append({"from": a, "to": b, "d": d, "label": label or None, "pass": [round(badge[0], 1), round(badge[1], 1), badge[2]],
                     "labelPos": [round(pos[0], 1), round(pos[1], 1)] if label else None})
     return out, reach
 

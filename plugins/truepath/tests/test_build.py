@@ -105,6 +105,26 @@ class Examples(unittest.TestCase):
                                            capture_output=True, text=True, check=True).stdout)
         self.assertEqual(played["tabs"], 4)  # the matrix, then one per case
 
+    def test_the_doubles_example_runs_its_unit_alone(self):
+        _, work = self.copy("payment-retry")
+
+        def git(*args):
+            subprocess.run(["git", "-C", str(work), *args], check=True, capture_output=True)
+        git("init", "-q")
+        git("add", "spec.json", "src")
+        git("-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "example")
+        out, n, source, _ = build.build(work / "spec.json", out=work / "built.html")
+        self.assertEqual(n, 4)
+        self.assertTrue(source.endswith(" · doubles: gateway (stub), clock (mock)"), source)
+        page = json.loads(out.read_text(encoding="utf-8").split("const DATA=", 1)[1].split(";\n", 1)[0])["page"]
+        third = next(s for s in page["scenarios"] if s["id"] == "third-try")
+        answered = next(r for r in third["rows"] if r["label"] == "Gateway answers")
+        self.assertEqual(answered["provenance"]["kind"], "double")  # the stub answered it, the unit did not
+        self.assertEqual(next(r for r in third["rows"] if r["label"] == "Attempts")["at"], 8)  # "last", its own
+        played = json.loads(subprocess.run(["node", str(ROOT / "tests/play_page.js"), str(out)],
+                                           capture_output=True, text=True, check=True).stdout)
+        self.assertEqual(played["tabs"], 4)
+
     def test_the_oracle_example_runs_its_committed_code_and_exports_its_fixture(self):
         src, work = self.copy("loyalty-tier")
 
@@ -196,6 +216,26 @@ class Checks(Case):
     def test_c14_backticks_cost_nothing(self):
         out, _, _, _ = self.build(self.spec(lambda s: s.update(subtitle="`x`" * 45)))
         self.assertTrue(out.exists())
+
+
+class CheckOnly(Case):
+    def test_check_writes_nothing_and_runs_no_logic(self):
+        (self.dir / "decide.js").write_text("throw new Error('the logic ran')", encoding="utf-8")
+        out, _, source, _ = self.build(self.spec(), check_only=True)
+        self.assertEqual((out, source), (None, "not run"))
+        self.assertEqual(list(self.dir.glob("*.html")), [])
+
+    def test_check_still_refuses_what_it_can_see(self):
+        def change(s):
+            s["scenarios"][0]["steps"][0]["hop"] = ["REQ", "NOWHERE"]
+        with self.assertRaises(build.ChecksFailed) as cm:
+            self.build(self.spec(change), check_only=True)
+        self.assertTrue(any(e.startswith("C1 ") for e in cm.exception.args[0]))
+
+    def test_check_leaves_a_templated_hop_to_the_logic(self):
+        def change(s):
+            s["scenarios"][0]["steps"][-1]["hop"][-1] = "{verdict.outcome}"
+        self.build(self.spec(change), check_only=True)
 
 
 class Doubts(Case):
@@ -665,7 +705,8 @@ class Oracle(Case):
 
     def test_an_excerpt_is_named_by_its_origin_not_its_local_commit(self):
         (self.repo / "excerpt.json").write_text(json.dumps(
-            {"repo": "someone/project", "sha": "0123456789abcdef", "files": ["src/rule.js", "src/run.js"]}), encoding="utf-8")
+            {"repo": "someone/project", "sha": "0123456789abcdef",
+             "files": ["src/rule.js", "src/run.js", "docs/read-only.md"]}), encoding="utf-8")  # fetched to be read, not run
         self.commit("excerpt")
         *_, source, _ = self.build(self.spec(self.oracle))
         self.assertTrue(source.startswith("code of someone/project @ 0123456, excerpt of 2 files"), source)
@@ -737,6 +778,20 @@ class Fetch(unittest.TestCase):
         self.assertEqual(json.loads((into / "excerpt.json").read_text())["files"], ["src/other.rs", "src/rule.rs"])
         with self.assertRaises(self.fetch.FetchFailed):
             self.fetch.get("o/r", "next", ["src/rule.rs"], into)
+
+
+class Passes(unittest.TestCase):
+    def test_every_edge_says_where_its_passes_are_written(self):
+        geo = build.layout([{"id": i, "label": i} for i in "ABCD"],
+                           [["A", "B", ""], ["B", "C", "next"], ["C", "B", "again"], ["C", "D", "done"]])
+        for e in geo["edges"]:
+            x, y, side = e["pass"]
+            self.assertIn(side, (-1, 1))
+            self.assertTrue(0 <= x <= geo["width"] and 0 <= y <= geo["height"], e)
+
+    def test_a_double_basis_is_its_own_provenance(self):
+        self.assertEqual(build.provenance("double: the stub answers"), "double")
+        self.assertEqual(build.provenance("doubled by hand"), "definition")
 
 
 if __name__ == "__main__":
