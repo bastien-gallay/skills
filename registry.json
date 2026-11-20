@@ -17,7 +17,7 @@
       "plugin": "bfw",
       "install": "/plugin install bfw@skills",
       "status": "stable",
-      "version": "0.2.0"
+      "version": "0.2.1"
     },
     {
       "name": "contre-expertise",
@@ -39,7 +39,7 @@
       "repository": "https://github.com/bastien-gallay/feature-torture",
       "install": "/plugin install feature-torture@skills",
       "status": "stable",
-      "version": "0.2.0"
+      "version": "0.2.1"
     },
     {
       "name": "market-strategist",
@@ -72,7 +72,7 @@
       "repository": "https://github.com/bastien-gallay/redaction",
       "install": "/plugin install redaction@skills",
       "status": "stable",
-      "version": "0.2.0"
+      "version": "0.2.1"
     },
     {
       "name": "rhetorical-analysis",
@@ -116,7 +116,7 @@
       "repository": "https://github.com/bastien-gallay/truepath",
       "install": "/plugin install truepath@skills",
       "status": "beta",
-      "version": "0.2.0"
+      "version": "0.2.1"
     },
     {
       "name": "flair",
