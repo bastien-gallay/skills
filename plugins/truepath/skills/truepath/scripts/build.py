@@ -358,7 +358,8 @@ def oracle_label(o, sha, repo, en):
         label = (f"code of {e['repo']} @ {e['sha'][:7]}, excerpt of {n} file{'s' * (n > 1)}" if en else
                  f"code de {e['repo']} @ {e['sha'][:7]}, extrait de {n} fichier{'s' * (n > 1)}")
     else:
-        label = f"code of {o['ref']} @ {sha}" if en else f"code de {o['ref']} @ {sha}"
+        at = "" if sha.startswith(str(o["ref"])) or str(o["ref"]).startswith(sha) else f"{o['ref']} @ "  # a sha as ref: said once
+        label = f"code of {at}{sha}" if en else f"code de {at}{sha}"
     if o.get("files"):  # what the spec brings is not the ref's code: the footer names it
         brought = ", ".join(sorted(str(src) for src in o["files"].values()))
         label += f" + from the spec: {brought}" if en else f" + apporté par le spec : {brought}"
@@ -550,7 +551,14 @@ def fill_templates(scenarios, panel):
             raise UnreadableSpec(f"scenario {sc['id']}: a step quotes {{{e.args[0]}}}, which is missing") from e
 
 
-def panel_rows(scenario, panel, in_grid):
+def timed(row, value, unit):
+    """A panel row reading a measured time, total or step, with no labels of its own."""
+    v = row["value"]
+    return (unit is not None and not row.get("labels") and number(value)
+            and (v == "measure.total" or v.startswith("measure.steps.")))
+
+
+def panel_rows(scenario, panel, in_grid, unit=None):
     """The panel as one scenario fills it: each row already shown, with where its value comes from."""
     rows = []
     basis = scenario["verdict"].get("basis") if isinstance(scenario["verdict"].get("basis"), dict) else {}
@@ -565,6 +573,8 @@ def panel_rows(scenario, panel, in_grid):
                 if row.get("series") and isinstance(value, list) and value:
                     out["series"] = [shown(row, v) for v in value]  # one value per step from `at`, the last one stays
                     out["shown"] = out["series"][-1]
+                elif timed(row, value, unit):  # a time from the measure reads as its bar reads it: 82.3 ms
+                    out["shown"] = f"{round(value, 1):g}\u00a0{unit}"
                 else:
                     out["shown"] = None if row.get("series") else shown(row, value)  # C9 says so
             except KeyError:
@@ -572,7 +582,7 @@ def panel_rows(scenario, panel, in_grid):
             head, _, rest = row["value"].partition(".")
             said = basis.get(rest.split(".")[0]) if head == "verdict" else None
             if head == "measure" and isinstance(scenario.get("measure"), dict):
-                said = "measure: " + str(scenario["measure"].get("basis", "")).removeprefix("measure:").strip()
+                said = "measure: " + measure_basis(scenario["measure"])
             if said:
                 out["provenance"] = {"kind": provenance(said), "text": str(said)}
         rows.append(out)
@@ -796,8 +806,10 @@ def c16_measured_steps_add_up_to_the_total(b):
             gap = sum(steps.values()) - m["total"]
             if abs(gap) > tol:
                 yield f"{s['id']}: its measured steps add up to {sum(steps.values()):g} {unit}, " \
-                      f"its total is {m['total']:g} {unit} ({gap:+g}, tolerance {tol:g}): " \
-                      "a step is missing, counted twice, or the runs overlap"
+                      f"its total is {m['total']:g} {unit} ({gap:+g}, tolerance {tol:g}): " + \
+                      ("a step is missing, counted twice, or the runs overlap" if b.spec["measure"].get("stat") != "median"
+                       else "medians of the steps need not add up to the median run: state the gap you accept "
+                            "in `tolerance`, unless a step is missing or counted twice")
 
 
 def c17_measured_nodes_are_on_the_path(b):
@@ -923,6 +935,11 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
     return data
 
 
+def measure_basis(m):
+    """Where the times come from, without the word the footer already puts before it, in either language."""
+    return re.sub(r"^\s*(measure|mesure)\s*:\s*", "", str(m.get("basis", "")), flags=re.I).strip()
+
+
 def measure_row(s):
     """One case's time, step by step in the order its path first reaches each node."""
     m, order = s["measure"], []
@@ -932,7 +949,7 @@ def measure_row(s):
                 order.append(n)
     left = ([[m["failed"], None]] if m.get("failed") else []) + [[e["n"], e["why"]] for e in m.get("excluded", []) if e["n"]]
     return {"scenario": s["id"], "total": m["total"], "n": m["n"], "left": left,  # None: failed, in the page's words
-            "basis": str(m.get("basis", "")).removeprefix("measure:").strip(),
+            "basis": measure_basis(m),
             "segs": [[n, m["steps"][n]] for n in order]}
 
 
@@ -1001,7 +1018,8 @@ def build(specpath, out=None, export_to=None, check_only=False, dry_run=False):
             s["measure"] = m
     fill_templates(scenarios, spec.get("panel", []))
     for s in scenarios:
-        s["rows"] = panel_rows(s, spec.get("panel", []), in_grid=bool(grid))
+        s["rows"] = panel_rows(s, spec.get("panel", []), in_grid=bool(grid),
+                               unit=spec["measure"].get("unit", "s") if "measure" in spec else None)
     violations = check(Subject(spec, scenarios, grid, geo))
     if violations:
         raise ChecksFailed(violations)

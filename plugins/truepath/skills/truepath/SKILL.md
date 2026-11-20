@@ -27,11 +27,16 @@ changes and every case walks the same path, it does not.
 | one case, before and after a fix | one `pair` |
 | one rule, a few cases | `scenarios` |
 | several cases, each under two versions, rules or answers | a `grid` with `variants` (or `questions`): one matrix, each cell opening its case |
-| every case walks the same path, but its runs were timed: where does the time go, and how did it move | `scenarios` with a `measure`: one bar per case under the graph (see *Measured time*) |
-| every case walks the same path, only a count or a list changes, nothing timed per step | not truepath: answer with a table, and say why no page was built |
+| timed runs whose path differs between cases (a step one case skips, a loop that turns more often): where does the time go, and why did it move | `scenarios` with a `measure`: one bar per case under the graph (see *Measured time*) |
+| every case walks the same path, only a count, a list or the time per step changes | not truepath: answer with a table, and say why no page was built |
 
 More than two pairs comparing the same two versions is a grid: written as
 pairs, the reader gets one tab per case and no table to compare them in.
+
+Timed runs on one straight path are a table, however the time moved: the
+dot walks the same line in every case and says nothing the rows do not. The
+page earns its place when the path explains the time: the step an image no
+longer runs, the loop that turned twelve times instead of two.
 
 ## Then, the view
 
@@ -46,9 +51,11 @@ the spec names in `view`.
 
 When both fit, the user decides: ask it as a doubt, one question whose
 options show each view as a small text sketch, yours first, and write the
-answer in `view`. `views` lists other views the page offers to switch to
-(`↓` `→` beside the zoom, or the key `V`), on the same step; leave it out
-when one view says it, since each one offered is one more drawing to read.
+answer in `view`. With no one to ask (an agent working alone), pick
+yours, offer the other in `views`, and say so in the report. `views` lists
+other views the page offers to switch to (`↓` `→` beside the zoom, or the
+key `V`), on the same step; leave it out when one view says it, since each
+one offered is one more drawing to read.
 The same spec gives every view: nodes, edges and steps are not rewritten.
 
 ## Workflow
@@ -187,14 +194,24 @@ snapshot: measures are data, not code under test. It reads
  "basis": "measure: CI log of week 1; each run cut by the time stamps of its log lines"}
 ```
 
+Measure where the reader meets the time. A page reload is felt in the
+browser, which parses and draws what the server sent: a harness that stops
+when the server has written its last byte misses the part that grows most
+with the data. When the runs cannot reach that far, end the path where
+the measure ends, name what it leaves out in `basis`, and raise it as a
+doubt: the page must not read as the whole wait.
+
 `total` is what a whole run took, `n` how many runs the `stat` (`mean` or
-`median`) sums up, `failed` the failed runs left out, `excluded` the runs
-left out for another reason (`why` in the page's language), `steps` the
-time on each node, all passes through a loop together. `basis` says where
-the times come from and how a run was cut into steps, in the page's
-language; when steps run side by side, say which one a second counts for.
-Keep the script that reads the raw log next to the spec, so the page can be
-built again when the log grows.
+`median`) sums up, `failed` the failed runs left out (none: leave it out),
+`excluded` the runs left out for another reason (`why` in the page's
+language: a warm-up run, runs with nothing to do), `steps` the time on each
+node, all passes through a loop together. `basis` says where the times come
+from and how a run was cut into steps, in the page's language; when steps
+run side by side, say which one a second counts for. With `median`, the
+steps' medians need not add up to the median run: C16 holds within
+`tolerance`, set to the gap the runs show. Keep the script that reads the
+raw log next to the spec, so the page can be built again when the log
+grows.
 
 The page draws one bar per case under the graph, every case on one scale:
 the case played is in bold, the node the dot is on is filled in every bar,

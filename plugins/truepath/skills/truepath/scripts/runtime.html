@@ -53,8 +53,8 @@ ol.steps li.cur{color:var(--ink);font-weight:600}
 .tlrow{display:grid;grid-template-columns:minmax(80px,max-content) 1fr minmax(84px,max-content);gap:8px;align-items:center;margin:3px 0}
 .tlname{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:16em}.tlrow.on .tlname{color:var(--ink);font-weight:600}
 .tlbar{display:flex;height:20px;min-width:0}
-.tlbar .seg{flex:none;min-width:0;height:100%;padding:0 3px;border:none;border-radius:0;border-right:1px solid var(--surface);background:var(--line);color:var(--ink);
- font:10px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:clip;text-align:left;cursor:pointer}
+.tlbar .seg{flex:none;min-width:0;height:100%;padding:0;text-indent:3px;border:none;border-radius:0;box-shadow:inset -1px 0 0 var(--surface);background:var(--line);color:var(--ink);
+ font:10px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;cursor:pointer}
 .tlbar .seg:nth-child(even){background:var(--dim)}
 .tlbar .seg.on{background:var(--accent);color:var(--surface)}
 .tlbar .seg.neq{box-shadow:inset 0 0 0 2px var(--diverge)}

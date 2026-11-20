@@ -575,13 +575,28 @@ class Measure(Case):
             s["panel"].append({"label": "Time", "value": "measure.total", "at": "last"})
         out, *_ = self.build(self.spec(change))
         row = next(r for r in self.data(out)["scenarios"][0]["rows"] if r["label"] == "Time")
-        self.assertEqual(row["shown"], "10")
+        self.assertEqual(row["shown"], "10\u00a0s")  # as its bar reads it
         self.assertEqual(row["provenance"]["kind"], "measure")
 
     def test_c16_the_steps_add_up_to_the_total(self):
         rows = [{"total": 20, "n": 1, "steps": {"AGE": 4, "D": 5}, "basis": "measure: log"}] * 2
         self.refused(self.measured(rows), "C16")
         self.build(self.spec(self.measured(rows, tolerance=11)))  # within a tolerance the spec states
+
+    def test_c16_says_medians_need_not_add_up(self):
+        rows = [{"total": 20, "n": 3, "steps": {"AGE": 4, "D": 5}, "basis": "measure: log"}] * 2
+        def change(s):
+            self.measured(rows)(s)
+            s["measure"]["stat"] = "median"
+        with self.assertRaises(build.ChecksFailed) as cm:
+            self.build(self.spec(change))
+        self.assertTrue(any("medians of the steps" in v for v in cm.exception.args[0]), cm.exception.args[0])
+
+    def test_the_footer_word_is_not_said_twice(self):
+        rows = [{"total": 10, "n": 3, "steps": {"AGE": 4, "REQ": 1, "D": 5}, "basis": "mesure : un journal"},
+                {"total": 7, "n": 2, "steps": {"AGE": 2, "D": 5}, "basis": "measure: a test log"}]
+        out, *_ = self.build(self.spec(self.measured(rows)))
+        self.assertEqual([r["basis"] for r in self.data(out)["measure"]["rows"]], ["un journal", "a test log"])
 
     def test_c17_a_measured_node_is_on_the_path(self):
         self.refused(self.measured([{"total": 9, "n": 1, "steps": {"AGE": 4, "NOWHERE": 5}, "basis": "measure: log"}] * 2), "C17")

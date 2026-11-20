@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.2.4
+
+From an agent, alone with the skill, timing a full reload of a board
+companion on two workspaces: one straight path, its time moving with the
+size of a journal. Every existing spec builds as before.
+
+- The shape table no longer sends every timed run to a page: when every
+  case walks the same straight path, the dot says nothing the rows do not,
+  and the answer is a table. A page is for timed runs whose path explains
+  the time: a step one case skips, a loop that turns more often.
+- SKILL.md asks to measure where the reader meets the time: a reload is
+  felt in the browser, which grows with the data more than the server
+  does. A measure that stops earlier says so in its basis and asks it as a
+  doubt.
+- With `median`, C16 says that the steps' medians need not add up to the
+  median run, and how to set `tolerance`; it spoke of a missing step.
+- A bar no longer runs past its total: each segment kept a few pixels of
+  padding however short it was, and nine of them pushed `≠` over `82.3 ms`.
+  A name cut short ends with an ellipsis.
+- A panel row reading a measured time shows it as its bar does, rounded
+  and with its unit (`82.3 ms`, not `82.26`).
+- A basis starting with `mesure :` no longer reads `mesuré : mesure :` in
+  the footer; an oracle whose `ref` is a sha names it once.
+- SKILL.md: with no one to ask about the view, pick one and offer the
+  other in `views`; a warm-up run goes in `excluded`; `failed` is left out
+  when no run failed.
+
 ## 0.2.3
 
 From a first measured run on a real CI job, three days of a deploy whose
