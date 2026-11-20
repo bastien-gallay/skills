@@ -116,7 +116,7 @@
       "repository": "https://github.com/bastien-gallay/truepath",
       "install": "/plugin install truepath@skills",
       "status": "beta",
-      "version": "0.3.2"
+      "version": "0.3.3"
     },
     {
       "name": "flair",
