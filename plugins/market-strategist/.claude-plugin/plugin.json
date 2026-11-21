@@ -1,0 +1,22 @@
+{
+  "name": "market-strategist",
+  "version": "0.1.0",
+  "description": "Strategic advisor for market analysis, positioning, traction, pitch, and project communication — it fills the framework and lets you react, drawing on a library of 24 well-known and lesser-known strategic frameworks.",
+  "author": {
+    "name": "Bastien Gallay"
+  },
+  "homepage": "https://github.com/bastien-gallay/market-strategist",
+  "repository": "https://github.com/bastien-gallay/market-strategist",
+  "license": "MIT",
+  "keywords": [
+    "market-strategist",
+    "strategy",
+    "positioning",
+    "traction",
+    "pitch",
+    "marketing",
+    "blue-ocean",
+    "wardley",
+    "jobs-to-be-done"
+  ]
+}
