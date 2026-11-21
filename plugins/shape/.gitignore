@@ -1,0 +1,7 @@
+.DS_Store
+.personal/
+dist/
+node_modules/
+.impeccable/
+runs/
+.shape-baseline.json
