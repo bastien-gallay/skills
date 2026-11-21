@@ -1,0 +1,379 @@
+#!/usr/bin/env bash
+# check-render.sh — markdown, links and mermaid, per render target.
+#
+# Usage: check-render.sh <file> [--target github|confluence|jira|mdbook|pdf|terminal|plain]
+#                               [--out-dir DIR]
+#
+# --out-dir keeps the rendered mermaid SVGs instead of discarding them, so a
+# human can look at the diagram the check just compiled. It changes no verdict.
+#
+# ⚠️ Every absent tool reports NOT RUN. A verification you skipped is not a
+# verification you passed.
+#
+# Exit: 0 all checks that ran passed · 1 a check failed · 2 usage
+#       3 a check could not run — the tool is present but its runtime, its
+#         browser, its network or its config is not
+
+set -euo pipefail
+
+file="${1:-}"
+target="github"
+out_dir=""
+shift || true
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --target)  target="${2:-}";  shift 2 || true ;;
+    --out-dir) out_dir="${2:-}"; shift 2 || true ;;
+    *) echo "usage: check-render.sh <file> [--target T] [--out-dir DIR]" >&2; exit 2 ;;
+  esac
+done
+if [[ -z "$file" || ! -r "$file" || -z "$target" ]]; then
+  echo "usage: check-render.sh <file> [--target T] [--out-dir DIR]" >&2
+  exit 2
+fi
+if [[ -n "$out_dir" ]] && ! mkdir -p "$out_dir" 2>/dev/null; then
+  echo "usage: --out-dir $out_dir is not creatable" >&2
+  exit 2
+fi
+
+failed=0
+render_not_run=0
+md_not_run=0
+jira_not_run=0
+
+# ⚠️ `mmdc` is a Node wrapper around headless Chrome, and the Chrome it wants is
+# a revision pinned by the puppeteer bundled inside mermaid-cli — not any Chrome
+# on the machine. Measured 2026-09-01: mermaid-cli 11.13.0 demanded 131.0.6778.204
+# on a machine whose puppeteer cache held 148 and 152, and every mermaid fixture
+# reported NOT RUN on a diagram that renders. So resolve a browser here rather
+# than leaving the pin to decide, in this order:
+#
+#   1. SHAPE_PUPPETEER_CONFIG — a puppeteer config file, when this machine needs
+#      one the discovery below cannot guess.
+#   2. PUPPETEER_EXECUTABLE_PATH — a browser named by the environment.
+#   3. the newest chrome-headless-shell, then the newest chrome, in
+#      ${PUPPETEER_CACHE_DIR:-$HOME/.cache/puppeteer}.
+#
+# ⚠️ Nothing here is installed and nothing is downloaded. Finding no browser
+# leaves mmdc to fail its own way, which still reports NOT RUN — that classification
+# is what must not change, whatever this resolution does.
+mermaid_puppeteer_config=""
+
+resolve_mermaid_browser() {
+  local cache exe newest headless
+  if [[ -n "${SHAPE_PUPPETEER_CONFIG:-}" && -r "${SHAPE_PUPPETEER_CONFIG}" ]]; then
+    mermaid_puppeteer_config="$SHAPE_PUPPETEER_CONFIG"
+    return 0
+  fi
+
+  exe="${PUPPETEER_EXECUTABLE_PATH:-}"
+  if [[ -z "$exe" ]]; then
+    cache="${PUPPETEER_CACHE_DIR:-$HOME/.cache/puppeteer}"
+    for flavour in chrome-headless-shell chrome; do
+      [[ -d "$cache/$flavour" ]] || continue
+      # The producer runs in its own statement, into a real file. Zero lines is
+      # "this flavour is not installed", not a failure — the next one is tried.
+      local listing="${TMPDIR:-/tmp}/shape-browsers-$$.txt"
+      find "$cache/$flavour" -maxdepth 3 -type f -name "$flavour" -perm -111 \
+        > "$listing" 2>/dev/null || true
+      newest="$(sort -V "$listing" | tail -1)"
+      rm -f "$listing"
+      [[ -n "$newest" && -x "$newest" ]] && { exe="$newest"; break; }
+    done
+  fi
+  [[ -n "$exe" && -x "$exe" ]] || return 1
+
+  # ⚠️ `"headless": "shell"` is the old headless mode, and it belongs to the
+  # chrome-headless-shell binary alone — a full Chrome refuses it.
+  headless=true
+  [[ "$(basename "$exe")" == "chrome-headless-shell" ]] && headless='"shell"'
+
+  # --no-sandbox because Chrome's own sandbox is what a CI container and this
+  # repo's own agent sandbox both refuse; the input is a local .mmd file.
+  mermaid_puppeteer_config="${TMPDIR:-/tmp}/shape-puppeteer-$$.json"
+  cat > "$mermaid_puppeteer_config" <<EOF
+{
+  "executablePath": "$exe",
+  "headless": $headless,
+  "args": ["--no-sandbox", "--disable-gpu"]
+}
+EOF
+  printf '   ℹ️  mermaid browser: %s\n' "$exe"
+}
+
+# ⚠️ Markdown linting is cwd-sensitive and tool-sensitive, and BOTH failures
+# report as ❌ fail rather than as NOT RUN — the exact inversion this script
+# exists to prevent.
+#
+#   - markdownlint-cli v1 resolves .markdownlint.json from the CURRENT
+#     DIRECTORY, not from the linted file's. Invoked as `markdownlint <file>`
+#     from anywhere but the config's own directory it finds no config, applies
+#     defaults, and MD013 alone reddens any document whose repo disabled it.
+#     Measured 2026-08-28 on markdownlint-cli 0.46.0: 17 MD013 findings on a
+#     document that lints clean under its own repo's config, from a cwd one
+#     directory below the config. The verdict was a statement about the cwd.
+#
+#   - markdownlint-cli2 reads .markdownlint-cli2.jsonc and its own ignore
+#     config, so it is preferred wherever present. Its trap is the inverse and
+#     it is silent: "Linting: 0 files" exits 0. The FILE COUNT is read, never
+#     the exit status alone.
+#
+# So: walk up from the FILE to find the config, run the linter from that
+# directory, and PRINT THE CONFIG PATH. A lint whose config is implicit is not
+# reproducible, and a lint with no config is a different proposition from a
+# lint with one.
+#
+# 🛑 And a no-config FAILURE is NOT RUN, never ❌. Measured 2026-08-31: a
+# document held in a scratchpad — which is how shape edits a copy — has no
+# config above it, so MD013 and MD041 fired although the governing repo
+# disables both. The verdict was a statement about where the file sat. Same
+# class as mmdc without a browser and lychee without a network, and treated
+# the same way. ⚠️ A no-config PASS stays ✅: stock rules are stricter than a
+# config that disables some, so passing them passes the repo's too.
+#
+# Set SHAPE_MD_CONFIG to name the governing config when the document is being
+# linted away from the repo that owns it.
+
+md_config_file() {
+  local dir
+  if [[ -n "${SHAPE_MD_CONFIG:-}" ]]; then
+    [[ -r "$SHAPE_MD_CONFIG" ]] || return 1
+    printf '%s\n' "$SHAPE_MD_CONFIG"; return 0
+  fi
+  dir="$(cd "$(dirname "$1")" && pwd)"
+  while :; do
+    for name in .markdownlint-cli2.jsonc .markdownlint-cli2.yaml .markdownlint-cli2.cjs \
+                .markdownlint.json .markdownlint.jsonc .markdownlint.yaml .markdownlintrc; do
+      [[ -r "$dir/$name" ]] && { printf '%s\n' "$dir/$name"; return 0; }
+    done
+    [[ "$dir" == "/" ]] && return 1
+    dir="$(dirname "$dir")"
+  done
+}
+
+lint_markdown() {
+  local f="$1" root rel out status label n cfg
+  if cfg="$(md_config_file "$f")"; then
+    root="$(cd "$(dirname "$cfg")" && pwd)"
+    label="config $cfg"
+  else
+    root="$(cd "$(dirname "$f")" && pwd)"
+    cfg=""
+    label="no-config"
+  fi
+  rel="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
+  rel="${rel#"$root"/}"
+
+  if command -v markdownlint-cli2 >/dev/null 2>&1; then
+    status=0
+    out="$(cd "$root" && markdownlint-cli2 "$rel" 2>&1)" || status=$?
+    # 🛑 The count, not the status. `Linting: 0 files` exits 0 having linted
+    # nothing — a gate reporting a clean document it never opened.
+    n="$(printf '%s\n' "$out" | sed -nE 's/^Linting: ([0-9]+) files?.*/\1/p' | head -1)"
+    if [[ -z "$n" ]]; then
+      printf '⚠️  %-12s NOT RUN (no "Linting: N files" line, exited %s)\n' "cli2" "$status"
+      printf '%s\n' "$out" | head -3 | sed 's/^/   /'
+    elif [[ "$n" -eq 0 ]]; then
+      printf '⚠️  %-12s NOT RUN (Linting: 0 files — ignored or unmatched)\n' "cli2"
+    elif [[ "$status" -eq 0 ]]; then
+      printf '✅ %-12s pass (%s file(s), %s)\n' "cli2" "$n" "$label"
+    elif [[ -z "$cfg" ]]; then
+      printf '⚠️  %-12s NOT RUN (findings under DEFAULT rules — no config above the file)\n' "cli2"
+      printf '%s\n' "$out" | grep -E 'MD[0-9]+' | head -10 | sed 's/^/   /'
+      printf '   ⚠️  advisory only. Set SHAPE_MD_CONFIG to the governing config.\n'
+      md_not_run=1
+    else
+      printf '❌ %-12s fail (%s)\n' "cli2" "$label"
+      printf '%s\n' "$out" | grep -E 'MD[0-9]+' | head -10 | sed 's/^/   /'
+      failed=1
+    fi
+    return
+  fi
+
+  if command -v markdownlint >/dev/null 2>&1; then
+    status=0
+    out="$(cd "$root" && markdownlint "$rel" 2>&1)" || status=$?
+    if [[ "$status" -eq 0 ]]; then
+      printf '✅ %-12s pass (%s)\n' "markdownlint" "$label"
+    elif [[ -z "$cfg" ]]; then
+      printf '⚠️  %-12s NOT RUN (findings under DEFAULT rules — no config above the file)\n' \
+        "markdownlint"
+      printf '%s\n' "$out" | head -10 | sed 's/^/   /'
+      printf '   ⚠️  advisory only. Set SHAPE_MD_CONFIG to the governing config.\n'
+      md_not_run=1
+    else
+      printf '❌ %-12s fail (%s)\n' "markdownlint" "$label"
+      printf '%s\n' "$out" | head -10 | sed 's/^/   /'
+      failed=1
+    fi
+    return
+  fi
+
+  printf '⚠️  %-12s NOT RUN (neither markdownlint-cli2 nor markdownlint installed)\n' "markdown"
+}
+
+lint_markdown "$file"
+
+# ⚠️ Link checking has a third outcome, and conflating it with the second is
+# the whole doctrine failing quietly. A blocked or TLS-intercepted network
+# makes every URL "fail" — that is the checker not reaching the network, not
+# the document carrying dead links. Measured 2026-08-27: behind a filtering
+# proxy, lychee reported both live URLs in README.md as errors.
+if ! command -v lychee >/dev/null 2>&1; then
+  printf '⚠️  %-12s NOT RUN (not installed)\n' "lychee"
+else
+  # 🛑 The status is read in its own statement. An earlier revision discarded
+  # it with `|| true` and classified from stdout alone, so a lychee that died
+  # on a bad config printed no errors and was read as ✅ pass — a crashed
+  # checker reporting a clean document.
+  lychee_status=0
+  lychee_out="$(lychee --no-progress "$file" 2>&1)" || lychee_status=$?
+
+  # No summary line means lychee never got as far as checking anything.
+  if ! printf '%s\n' "$lychee_out" | grep -qE '[0-9]+ Total'; then
+    printf '⚠️  %-12s NOT RUN (exited %s with no summary)\n' "lychee" "$lychee_status"
+    printf '%s\n' "$lychee_out" | head -3 | sed 's/^/   /'
+  else
+
+    # NOT RUN only when EVERY error is a transport failure. ⚠️ Matching the
+    # transport pattern anywhere is not enough, twice over: lychee words a 404 as
+    # "Network error: 404", and the URL itself is on the [ERROR] line — so
+    # https://example.com/proxy-guide returning 404 matched `proxy` and a dead
+    # link was reported as a check that did not run. The URL is stripped before
+    # the reason is matched. Measured 2026-08-27 against a stubbed lychee.
+    err_lines="${TMPDIR:-/tmp}/shape-lychee-$$.txt"
+    printf '%s\n' "$lychee_out" | grep -E '^[[:space:]]*\[ERROR\]' > "$err_lines" || true
+    err_total="$(wc -l < "$err_lines" | tr -d ' ')"
+    err_transport="$(sed -E 's#https?://[^[:space:]]+##g' "$err_lines" \
+      | grep -ciE 'TLS certificate|connection refused|dns error|failed to lookup|operation timed out|proxy|invalid response data|malformed response' || true)"
+
+    if [[ "$err_total" -gt 0 && "$err_total" -eq "$err_transport" ]]; then
+      printf '⚠️  %-12s NOT RUN (network unreachable or intercepted)\n' "lychee"
+    elif printf '%s' "$lychee_out" | grep -qE '[1-9][0-9]* Errors'; then
+      printf '❌ %-12s fail\n' "lychee"
+      sed 's/^/   /' "$err_lines"
+      failed=1
+    else
+      printf '✅ %-12s pass\n' "lychee"
+    fi
+    rm -f "$err_lines"
+  fi
+fi
+
+# 🛑 Jira reads a `>` at the start of a table cell as a blockquote marker and
+# eats it. On 2026-07-30 that turned *fail = `>0` dead-lettered messages* into
+# *fail = `0` …* — the inverse — on a shared board (issue #6). Mechanically
+# decidable, so it is a check here, not a prose warning. The awk runs in its
+# own statement into a file; a producer failure is exit 3, never a clean line.
+if [[ "$target" == "jira" ]]; then
+  jira_cells="${TMPDIR:-/tmp}/shape-jira-cells-$$"
+  jira_st=0
+  awk '
+    /^[[:space:]]*\|/ {
+      n = split($0, cells, "|")
+      for (i = 2; i <= n; i++) {
+        c = cells[i]; sub(/^[[:space:]]+/, "", c)
+        if (c ~ /^`?>/) { printf "%d\t%s\n", NR, c; break }
+      }
+    }' "$file" > "$jira_cells" || jira_st=$?
+  if [[ $jira_st -ne 0 ]]; then
+    printf '⚠️  %-12s NOT RUN (awk exited %d)\n' "jira-cells" "$jira_st"
+    jira_not_run=1
+  elif [[ -s "$jira_cells" ]]; then
+    printf '❌ %-12s a table cell starts with `>` — Jira eats it as a blockquote marker\n' "jira-cells"
+    sed 's/^/   line /' "$jira_cells" | head -5
+    echo "   fallback: see references/render-targets.md — words, never a comparison symbol first."
+    failed=1
+  else
+    printf '✅ %-12s no table cell starts with `>`\n' "jira-cells"
+  fi
+  rm -f "$jira_cells"
+fi
+
+if grep -q '```mermaid' "$file"; then
+  case "$target" in
+    confluence|jira|terminal|plain)
+      echo "❌ mermaid   present but unsupported on --target $target"
+      echo "   fallback: see references/render-targets.md — a labelled table."
+      failed=1
+      ;;
+    *)
+      if ! command -v mmdc >/dev/null 2>&1; then
+        printf '⚠️  %-12s NOT RUN (not installed)\n' "mmdc"
+      else
+        # ⚠️ `mmdc --version` proves the binary answers, not that the diagram
+        # renders. Each block is extracted and actually compiled.
+        block_dir="${TMPDIR:-/tmp}/shape-mermaid-$$"
+        mkdir -p "$block_dir"
+        awk -v dir="$block_dir" '
+          /^```mermaid[[:space:]]*$/ { n++; inblock = 1; next }
+          /^```[[:space:]]*$/        { inblock = 0; next }
+          inblock                    { print > (dir "/block-" n ".mmd") }
+        ' "$file"
+        # 🛑 `mmdc` present is not `mmdc` able to run. It drives headless
+        # Chrome through puppeteer, and a missing or mis-cached browser exits
+        # non-zero with the diagram untouched — which read as "this diagram
+        # does not render" on a diagram that is fine. Measured 2026-08-28 on
+        # fixtures/T2-topology-01b.md, the first fixture in the corpus: a valid
+        # 9-edge graph reported ❌ because Chrome was not installed. The
+        # verdict was a statement about the machine.
+        resolve_mermaid_browser || true
+        mmdc_args=()
+        [[ -n "$mermaid_puppeteer_config" ]] && mmdc_args=(-p "$mermaid_puppeteer_config")
+        for block in "$block_dir"/block-*.mmd; do
+          if [[ -n "$out_dir" ]]; then
+            svg="$out_dir/$(basename "${file%.md}")-$(basename "$block" .mmd).svg"
+          else
+            svg="$block.svg"
+          fi
+          mmdc_status=0
+          # ⚠️ bash 3.2 — the shell macOS ships — treats an empty array as
+          # unbound under `set -u`, so the expansion is guarded.
+          mmdc_out="$(mmdc ${mmdc_args[@]+"${mmdc_args[@]}"} -i "$block" -o "$svg" 2>&1)" \
+            || mmdc_status=$?
+          if [[ $mmdc_status -eq 0 ]]; then
+            printf '✅ %-12s %s renders\n' "mmdc" "$(basename "$block")"
+            if [[ -n "$out_dir" ]]; then printf '   👁  %s\n' "$svg"; fi
+          # ⚠️ Same trap as lychee's, and it bites harder here: mmdc renders in
+          # the browser, so a mermaid PARSE ERROR carries a stack trace whose
+          # every frame names a puppeteer file. Matching `puppeteer` anywhere in
+          # the output reported NOT RUN on a diagram that is genuinely broken —
+          # measured 2026-09-01 on a deliberately malformed block. So the stack
+          # frames and the file paths are stripped before the reason is matched.
+          elif printf '%s\n' "$mmdc_out" \
+               | grep -vE '^[[:space:]]*at ' \
+               | sed -E 's#(file://)?/[^[:space:]]+##g' \
+               | grep -qiE 'could not find chrome|puppeteer|failed to launch|browser was not found|ENOENT|no usable sandbox'; then
+            printf '⚠️  %-12s NOT RUN (%s — the browser mmdc drives is unavailable)\n' \
+              "mmdc" "$(basename "$block")"
+            render_not_run=1
+          else
+            printf '❌ %-12s %s does not render\n' "mmdc" "$(basename "$block")"
+            # The progress line and the stack frames are not the reason.
+            printf '%s\n' "$mmdc_out" \
+              | grep -vE '^[[:space:]]*(at |$)|^Generating ' | head -4 | sed "s/^/   /"
+            failed=1
+          fi
+        done
+        rm -rf "$block_dir"
+        if [[ -n "$mermaid_puppeteer_config" && "$mermaid_puppeteer_config" != "${SHAPE_PUPPETEER_CONFIG:-}" ]]; then
+          rm -f "$mermaid_puppeteer_config"
+        fi
+      fi
+      ;;
+  esac
+fi
+
+if [[ $failed -eq 0 && $render_not_run -eq 1 ]]; then
+  echo "🛑 a diagram was NOT RENDERED — this is not a clean render report" >&2
+  exit 3
+fi
+if [[ $failed -eq 0 && $jira_not_run -eq 1 ]]; then
+  echo "🛑 the Jira cell scan did not run — this is not a clean render report" >&2
+  exit 3
+fi
+if [[ $failed -eq 0 && $md_not_run -eq 1 ]]; then
+  echo "🛑 markdown findings came from DEFAULT rules — this is not a lint of this document" >&2
+  exit 3
+fi
+exit "$failed"
