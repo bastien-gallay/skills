@@ -53,19 +53,24 @@ Voir `references/fallacies-catalog.md` pour la liste complète des sophismes à 
 
 ### Option 1 : Génération automatique via script
 
+Cette option requiert le package Python `rhetorical-analysis-skill`, qui expose
+la commande `generate-analysis`. Le package n'est pas publié sur PyPI :
+l'installer depuis le dépôt (`uv tool install ./plugins/rhetorical-analysis`
+depuis la racine du monorepo). Sans le package, utiliser l'option 2 ci-dessous.
+
 1. Produire l'analyse au format JSON (voir `assets/example_analysis.json` pour le schéma)
-2. Exécuter le script de génération :
+2. Exécuter la commande de génération :
 
    ```bash
-   python scripts/generate_analysis.py analysis.json output.[xlsx|json|md] --format [xlsx|json|md]
+   generate-analysis analysis.json output.[xlsx|json|md] --format [xlsx|json|md]
    ```
 
 **Exemples :**
 
 ```bash
-python scripts/generate_analysis.py analysis.json rapport_analyse.xlsx --format xlsx
-python scripts/generate_analysis.py analysis.json analysis_output.json --format json
-python scripts/generate_analysis.py analysis.json rapport.md --format md
+generate-analysis analysis.json rapport_analyse.xlsx --format xlsx
+generate-analysis analysis.json analysis_output.json --format json
+generate-analysis analysis.json rapport.md --format md
 ```
 
 Le script génère un fichier de sortie selon le format choisi. Pour le format XLSX, il contient 5 feuilles :
