@@ -1,16 +1,22 @@
-name: Run Tests
+name: rhetorical-analysis tests
 
 on:
   push:
     branches:
       - main
+    paths: ["plugins/rhetorical-analysis/**", ".github/workflows/rhetorical-analysis-test.yml"]
   pull_request:
     branches:
       - main
+    paths: ["plugins/rhetorical-analysis/**", ".github/workflows/rhetorical-analysis-test.yml"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: plugins/rhetorical-analysis
 
 jobs:
   test:
