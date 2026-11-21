@@ -1,0 +1,16 @@
+{
+  "description": "show-me reflex: a prompt asking for a visual answer loads the show-me skill.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/show-me-reflex.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
