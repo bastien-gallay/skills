@@ -1,0 +1,114 @@
+{
+  "title": "Payment retry",
+  "subtitle": "Example: src/pay.js runs alone, the gateway and the clock replaced by doubles",
+  "source": "truepath example: a unit and its doubles, a loop that comes back",
+  "lang": "en",
+  "oracle": {
+    "repo": ".", "ref": "HEAD", "paths": ["src"], "cwd": "src", "cmd": ["node", "oracle.js"],
+    "files": { "src/oracle.js": "glue/oracle.js" },
+    "doubles": [
+      { "name": "gateway", "kind": "stub", "replaces": "the payment gateway: answers what the scenario lists" },
+      { "name": "clock", "kind": "mock", "replaces": "the clock: records each wait instead of sleeping" }
+    ]
+  },
+  "kinds": {
+    "paid": { "label": "paid", "color": "#15803d" },
+    "refused": { "label": "refused by the bank", "color": "#b91c1c" },
+    "gave-up": { "label": "given up, to retry later", "color": "#64748b" }
+  },
+  "nodes": [
+    { "id": "ORDER", "label": "order to pay" },
+    { "id": "CHARGE", "label": "charge the gateway" },
+    { "id": "ANSWER", "label": "gateway answer?", "role": "decision" },
+    { "id": "LAST", "label": "last attempt?", "role": "decision" },
+    { "id": "WAIT", "label": "wait, twice as long" },
+    { "id": "PAID", "label": "paid", "kind": "paid" },
+    { "id": "DECLINED", "label": "declined", "kind": "refused" },
+    { "id": "GAVE_UP", "label": "gave up", "kind": "gave-up" }
+  ],
+  "edges": [
+    ["ORDER", "CHARGE", ""],
+    ["CHARGE", "ANSWER", ""],
+    ["ANSWER", "PAID", "ok"],
+    ["ANSWER", "DECLINED", "declined"],
+    ["ANSWER", "LAST", "timeout"],
+    ["LAST", "GAVE_UP", "yes"],
+    ["LAST", "WAIT", "no"],
+    ["WAIT", "CHARGE", "retry"]
+  ],
+  "panel": [
+    { "label": "Gateway answers", "value": "verdict.answered", "at": 1 },
+    { "label": "Waits asked", "value": "verdict.waits", "at": 1, "labels": { "[]": "none" } },
+    { "label": "Attempts", "value": "verdict.attempts", "at": "last" }
+  ],
+  "scenarios": [
+    {
+      "id": "first-try",
+      "tab": "Paid at once",
+      "summary": "The gateway says ok: one charge, no wait",
+      "origin": { "kind": "illustrative", "text": "skill example" },
+      "inputs": { "answers": ["ok"], "maxAttempts": 3 },
+      "expect": { "outcome": "PAID", "attempts": 1 },
+      "steps": [
+        { "hop": ["ORDER", "CHARGE"], "message": "attempt 1", "caption": "The order is charged." },
+        { "hop": ["CHARGE", "ANSWER"], "message": "ok", "caption": "The gateway answers at once." },
+        { "hop": ["ANSWER", "PAID"], "message": "paid", "caption": "Paid on the first attempt." }
+      ]
+    },
+    {
+      "id": "third-try",
+      "tab": "Paid at the third try",
+      "summary": "Two timeouts, two waits that double, then ok",
+      "origin": { "kind": "illustrative", "text": "skill example" },
+      "inputs": { "answers": ["timeout", "timeout", "ok"], "maxAttempts": 3 },
+      "expect": { "outcome": "PAID", "attempts": 3, "waits": [200, 400] },
+      "steps": [
+        { "hop": ["ORDER", "CHARGE"], "message": "attempt 1", "caption": "The order is charged." },
+        { "hop": ["CHARGE", "ANSWER"], "message": "timeout", "caption": "No answer in time." },
+        { "hop": ["ANSWER", "LAST"], "message": "1 of 3", "caption": "Attempts are left." },
+        { "hop": ["LAST", "WAIT", "CHARGE"], "message": "wait 200 ms", "caption": "A short wait, then the same charge again." },
+        { "hop": ["CHARGE", "ANSWER"], "message": "timeout", "caption": "No answer again." },
+        { "hop": ["ANSWER", "LAST"], "message": "2 of 3", "caption": "One attempt is left." },
+        { "hop": ["LAST", "WAIT", "CHARGE"], "message": "wait 400 ms", "caption": "The wait doubles." },
+        { "hop": ["CHARGE", "ANSWER"], "message": "ok", "caption": "The gateway answers this time." },
+        { "hop": ["ANSWER", "PAID"], "message": "paid", "caption": "Paid on the third attempt." }
+      ]
+    },
+    {
+      "id": "gave-up",
+      "tab": "Three timeouts",
+      "summary": "Three timeouts in a row: the order waits for a later run",
+      "origin": { "kind": "illustrative", "text": "skill example" },
+      "inputs": { "answers": ["timeout", "timeout", "timeout"], "maxAttempts": 3 },
+      "expect": { "outcome": "GAVE_UP", "attempts": 3 },
+      "steps": [
+        { "hop": ["ORDER", "CHARGE"], "message": "attempt 1", "caption": "The order is charged." },
+        { "hop": ["CHARGE", "ANSWER"], "message": "timeout", "caption": "No answer in time." },
+        { "hop": ["ANSWER", "LAST"], "message": "1 of 3", "caption": "Attempts are left." },
+        { "hop": ["LAST", "WAIT", "CHARGE"], "message": "wait 200 ms", "caption": "A short wait, then the same charge again." },
+        { "hop": ["CHARGE", "ANSWER"], "message": "timeout", "caption": "No answer again." },
+        { "hop": ["ANSWER", "LAST"], "message": "2 of 3", "caption": "One attempt is left." },
+        { "hop": ["LAST", "WAIT", "CHARGE"], "message": "wait 400 ms", "caption": "The wait doubles." },
+        { "hop": ["CHARGE", "ANSWER"], "message": "timeout", "caption": "A third timeout." },
+        { "hop": ["ANSWER", "LAST"], "message": "3 of 3", "caption": "No attempt is left." },
+        { "hop": ["LAST", "GAVE_UP"], "message": "gave up", "caption": "No third wait: the order is left for later." }
+      ]
+    },
+    {
+      "id": "declined",
+      "tab": "Declined after a timeout",
+      "summary": "A refusal is final: no retry follows it",
+      "origin": { "kind": "illustrative", "text": "skill example" },
+      "inputs": { "answers": ["timeout", "declined"], "maxAttempts": 3 },
+      "expect": { "outcome": "DECLINED", "attempts": 2 },
+      "steps": [
+        { "hop": ["ORDER", "CHARGE"], "message": "attempt 1", "caption": "The order is charged." },
+        { "hop": ["CHARGE", "ANSWER"], "message": "timeout", "caption": "No answer in time." },
+        { "hop": ["ANSWER", "LAST"], "message": "1 of 3", "caption": "Attempts are left." },
+        { "hop": ["LAST", "WAIT", "CHARGE"], "message": "wait 200 ms", "caption": "A short wait, then the same charge again." },
+        { "hop": ["CHARGE", "ANSWER"], "message": "declined", "caption": "The bank refuses." },
+        { "hop": ["ANSWER", "DECLINED"], "message": "declined", "caption": "A refusal is not retried." }
+      ]
+    }
+  ]
+}

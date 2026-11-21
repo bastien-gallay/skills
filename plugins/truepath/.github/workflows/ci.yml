@@ -1,0 +1,50 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      # uv brings its own Python builds: the runner image no longer ships 3.9
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: false  # standard library only: nothing to cache
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Tests
+        run: uv run --no-project --python ${{ matrix.python }} python -m unittest discover -s tests
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: false
+      - name: Python
+        run: uvx ruff@0.17.5 check skills tests
+      - name: Markdown
+        run: npx --yes markdownlint-cli2@0.24.0 README.md CHANGELOG.md .wrap.md "docs/*.md" "skills/truepath/**/*.md"
+      - name: Plugin manifest
+        run: jq -e . .claude-plugin/plugin.json .claude-plugin/marketplace.json
+      - name: One version everywhere
+        run: |
+          v=$(jq -r .version .claude-plugin/plugin.json)
+          jq -e --arg v "$v" '.metadata.version == $v and .plugins[0].version == $v' .claude-plugin/marketplace.json
+          test "$(grep -m1 '^## ' CHANGELOG.md)" = "## $v"

@@ -1,0 +1,72 @@
+{
+  "title": "Loyalty tier",
+  "subtitle": "Example: the verdicts are computed by src/tier.js as committed",
+  "source": "truepath example: an oracle on this folder's own code",
+  "lang": "en",
+  "oracle": { "repo": ".", "ref": "HEAD", "paths": ["src"], "cwd": "src", "cmd": ["node", "oracle.js"] },
+  "export": { "dir": ".", "fixture": "cases.json", "assert": ["tier", "outcome"] },
+  "kinds": {
+    "gold": { "label": "gold", "color": "#b45309" },
+    "silver": { "label": "silver", "color": "#64748b" },
+    "bronze": { "label": "bronze", "color": "#9a3412" }
+  },
+  "nodes": [
+    { "id": "POINTS", "label": "points on the account" },
+    { "id": "D1", "label": "1000 or more?", "role": "decision" },
+    { "id": "D2", "label": "500 or more?", "role": "decision" },
+    { "id": "GOLD", "label": "gold", "kind": "gold" },
+    { "id": "SILVER", "label": "silver", "kind": "silver" },
+    { "id": "BRONZE", "label": "bronze", "kind": "bronze" }
+  ],
+  "edges": [
+    ["POINTS", "D1", ""],
+    ["D1", "GOLD", "yes"],
+    ["D1", "D2", "no"],
+    ["D2", "SILVER", "yes"],
+    ["D2", "BRONZE", "no"]
+  ],
+  "panel": [
+    { "label": "Points", "value": "inputs.points", "at": 0 },
+    { "label": "Tier", "value": "verdict.tier", "at": 1 }
+  ],
+  "scenarios": [
+    {
+      "id": "threshold",
+      "tab": "1000 points",
+      "summary": "Exactly on the gold threshold: `points >= 1000` includes it",
+      "origin": { "kind": "illustrative", "text": "skill example" },
+      "inputs": { "points": 1000 },
+      "expect": { "tier": "gold", "outcome": "GOLD" },
+      "steps": [
+        { "hop": ["POINTS", "D1"], "message": "{inputs.points} points", "caption": "The account is read." },
+        { "hop": ["D1", "GOLD"], "message": "tier: {verdict.tier}", "caption": "The threshold itself is gold." }
+      ]
+    },
+    {
+      "id": "one-short",
+      "tab": "999 points",
+      "summary": "One point short of gold falls to the second test",
+      "origin": { "kind": "illustrative", "text": "skill example" },
+      "inputs": { "points": 999 },
+      "expect": { "tier": "silver", "outcome": "SILVER" },
+      "steps": [
+        { "hop": ["POINTS", "D1"], "message": "{inputs.points} points", "caption": "The account is read." },
+        { "hop": ["D1", "D2"], "message": "under 1000", "caption": "Not gold: the next threshold is tried." },
+        { "hop": ["D2", "SILVER"], "message": "tier: {verdict.tier}", "caption": "999 is well above 500." }
+      ]
+    },
+    {
+      "id": "new-account",
+      "tab": "120 points",
+      "summary": "A recent account stays bronze",
+      "origin": { "kind": "illustrative", "text": "skill example" },
+      "inputs": { "points": 120 },
+      "expect": { "tier": "bronze", "outcome": "BRONZE" },
+      "steps": [
+        { "hop": ["POINTS", "D1"], "message": "{inputs.points} points", "caption": "The account is read." },
+        { "hop": ["D1", "D2"], "message": "under 1000", "caption": "Not gold: the next threshold is tried." },
+        { "hop": ["D2", "BRONZE"], "message": "tier: {verdict.tier}", "caption": "Under 500: bronze." }
+      ]
+    }
+  ]
+}

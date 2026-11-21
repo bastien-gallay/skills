@@ -1,0 +1,29 @@
+{
+  "name": "truepath",
+  "owner": {
+    "name": "Bastien Gallay"
+  },
+  "metadata": {
+    "description": "truepath — single-plugin marketplace.",
+    "version": "0.3.3"
+  },
+  "plugins": [
+    {
+      "name": "truepath",
+      "source": "./",
+      "description": "Self-contained HTML simulations of a process or a bug path, whose verdicts come from the repository's own code; the build refuses any scenario that contradicts them.",
+      "version": "0.3.3",
+      "license": "MIT",
+      "homepage": "https://github.com/bastien-gallay/truepath",
+      "repository": "https://github.com/bastien-gallay/truepath",
+      "category": "productivity",
+      "tags": [
+        "simulation",
+        "process",
+        "diagram",
+        "before-after",
+        "documentation"
+      ]
+    }
+  ]
+}
