@@ -19,10 +19,10 @@ a reflex in `CLAUDE.md`, load it by name before choosing a visual.
 
 ## Related skills
 
-- [`shape`](https://github.com/bastien-gallay/shape): improves a document for
-  its reader and proves nothing was lost; `show-me`'s proof gates live there.
-- [`glance`](https://github.com/bastien-gallay/glance): terminal answers
-  sized to be read at a glance.
+- [`shape`](../shape): improves a document for its reader and proves nothing
+  was lost; `show-me`'s proof gates live there.
+- [`glance`](../../styles/glance): terminal answers sized to be read at a
+  glance.
 - [`flow-lean`](https://github.com/FlorianBruniaux/flow-lean), a third-party
   plugin, sets terminal density; `dataviz`, `artifact-design` and
   `impeccable`, also routed to from `SKILL.md` §4, come with the host or their

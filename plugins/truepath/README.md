@@ -1,6 +1,6 @@
 # truepath
 
-[![ci](https://github.com/bastien-gallay/truepath/actions/workflows/ci.yml/badge.svg)](https://github.com/bastien-gallay/truepath/actions/workflows/ci.yml)
+[![truepath](https://github.com/bastien-gallay/skills/actions/workflows/truepath.yml/badge.svg)](https://github.com/bastien-gallay/skills/actions/workflows/truepath.yml)
 
 ![The free-shipping grid: the matrix of cases against answers, then a click
 on a cell that differs plays that case, today next to the answer
@@ -36,15 +36,9 @@ Known limits are listed under *Limits* in
 
 ## Install
 
-In Claude Code, as a plugin from this repository:
-
-```text
-/plugin marketplace add bastien-gallay/truepath
-/plugin install truepath@truepath
-```
-
-Or from the [skills hub](https://github.com/bastien-gallay/skills), with the
-other skills I maintain:
+In Claude Code, as a plugin from the
+[skills monorepo](https://github.com/bastien-gallay/skills), with the other
+skills I maintain:
 
 ```text
 /plugin marketplace add bastien-gallay/skills
@@ -55,8 +49,8 @@ For another agent, clone the repository and copy `skills/truepath/` into the
 skills folder it reads:
 
 ```sh
-git clone https://github.com/bastien-gallay/truepath.git
-cp -R truepath/skills/truepath ~/.claude/skills/
+git clone https://github.com/bastien-gallay/skills.git
+cp -R skills/plugins/truepath/skills/truepath ~/.claude/skills/
 ```
 
 Needs Python 3.9 or later (standard library only) and, for a JavaScript port

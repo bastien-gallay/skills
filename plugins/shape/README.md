@@ -53,8 +53,8 @@ replaces.
 ## Install
 
 ```sh
-git clone https://github.com/bastien-gallay/shape
-cd shape && ./install.sh          # symlink — edits propagate live
+git clone https://github.com/bastien-gallay/skills
+cd skills/plugins/shape && ./install.sh          # symlink — edits propagate live
 ```
 
 ## Usage
