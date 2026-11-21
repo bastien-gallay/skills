@@ -1,0 +1,131 @@
+# wrap
+
+A Claude Code skill that closes out a session which reached a milestone.
+
+A session ends in one of two states: **stopped** or **closed**. Stopped means
+the work is done and the traces of doing it are still lying around. Closed
+means the next arrival — a colleague, a future agent, you in six weeks — can
+pick it up without reconstructing it.
+
+`wrap` crosses that gap, using the 5S as the running order. See the [Infographic Guide](docs/infographic.md) for a complete visual workflow.
+
+Orientation runs first, as one wave of concurrent read-only collectors — git
+state, the grep fan-out over unchanged files, the tracker, and the project's
+checks. Then the five phases run in order, in one context, with one writer. One
+more subagent runs at the end: a **refuter**, given a fresh context and told to
+attack the closing table rather than confirm it, because a context that has just
+written something is the worst judge of whether it is true.
+
+Those two are the only subagents `wrap` uses, and typing `/wrap` is what
+authorises them — several harnesses stand off subagents unless the user asked.
+If yours refuses anyway, the pass reads serially and says in its output what
+went unverified, rather than re-reading its own claims and calling that a check.
+
+## The five phases
+
+| S | What it handles |
+| --- | --- |
+| 🗂 **Seiri** — sort | What stays, what goes. Absorbed notes deleted; un-reproducible evidence annexed; dead hypotheses retired into a table rather than erased; scratch zones emptied or ignored; deliberate non-decisions marked as such. |
+| 📍 **Seiton** — set in order | Consolidate scattered notes into one source. Write `## Provenance` (absorbed-and-deleted / kept-as-annex / corrected-in-place). Re-check the canonical-vs-exploratory boundary. Refresh the index that has quietly drifted. |
+| 🧹 **Seiso** — clean | Grep for every superseded claim and reconcile *all* its occurrences — headers, TL;DRs and summary lines included, not only body prose. Check the surfaces outside the repo too: a ticket built on a dead premise costs more than a stale doc — and what landed on the default branch *while you worked* can falsify prose you wrote minutes ago while appearing in no diff of your own. Run the project's checks. |
+| 📐 **Seiketsu** — standardise | Route each durable lesson by scope: topic doc, skill, contributor-facing lessons file, ADR, dated journal, or `.wrap.md` when the lesson is about wrapping this repo. Most sessions produce zero to two. |
+| 🪧 **Shitsuke** — sustain | Write the entry point: what is settled, what is open (ranked, each ticketed or explicitly not), what will look like a contradiction and is not, where the deleted things went. Then the copy-pasteable resume block, and the publication. The entry point is written *before* the publication gate, so it never asserts what that gate is about to change — and once the merge lands, `wrap` goes back and reconciles it against what actually happened. |
+
+The glyphs are load-bearing in the output, not decoration: they let a run be
+scanned for judgements. The gloss beside each slug is rendered in the language
+of the session.
+
+## What it is not
+
+- **Not `/do-eod`.** That runs on a clock and closes a *day*. This runs on a
+  milestone and may fire three times in a week or once a month. If both apply,
+  run `wrap` first — it produces the state the daily digest should describe.
+- **Not a report generator.** The tidied repo is the deliverable. The only
+  prose it adds is the entry-point section inside your canonical document.
+- **Not autonomous with your files.** Deletions, moves, ticket edits, and the
+  publication path always confirm. Everything else it does directly and
+  reports. Publication is *one* confirmation covering branch, commits, push and
+  PR — not three.
+- **Not a prose ask.** Every gate is a question with named options — what each
+  answer does, and always one that does less. Nothing gets approved by not
+  objecting to a sentence.
+- **Not credulous about its own commands.** A shell command's output is a claim
+  until the command is known to have run. A probe that fails in a way that
+  looks like an answer — an empty result, a stale cache, an exit status read
+  off the wrong end of a pipe — is the one failure that survives the pass,
+  because it gets written into a file as a fact.
+
+## Install
+
+```bash
+./install.sh          # symlink into ~/.claude/skills/wrap (edits propagate)
+./install.sh --copy   # copy instead
+```
+
+Then type `/wrap` when a milestone lands.
+
+## Configure
+
+Optional. Copy `skills/wrap/templates/wrap-config.md` to `.wrap.md` at your
+project root (or `.personal/wrap/config.md` to keep it out of the repo). It
+declares five things:
+
+- **Canonical locations** — the index that must match reality, where lessons
+  go, where decisions go, the dated journal, and the tracker whose tickets can
+  also carry a superseded claim.
+- **Verification commands** — blocking vs advisory.
+- **Disposable zones** — paths Seiri need not agonise over.
+- **Commit conventions** — format, scope, ticket pattern.
+- **Notes** — free prose, including what a pass over *this* repo got wrong last
+  time.
+
+With no config, `wrap` infers what it can, runs anyway, says plainly that it is
+unconfigured, and **writes the `.wrap.md` itself** during Shitsuke, capturing
+what it inferred and what the repo does not have. Offering it at the end
+instead meant the offer got swallowed by the commit proposal and the next run
+inferred everything again.
+
+## Usage
+
+```text
+/wrap
+/wrap --dry-run                 # read-only: full plan, nothing touched
+/wrap --only seiso              # run a single phase
+/wrap for picking up tomorrow   # free text narrows the scope, or states intent
+```
+
+## Output
+
+Four parts, in this order, facts rather than sentences:
+
+1. **The closing table** — one row per phase, each with its translation:
+
+   | Phase | Translation | Result |
+   | --- | --- | --- |
+   | 🗂 Seiri | sort | 3 deleted, 1 annexed, 2 hypotheses retired |
+   | 📍 Seiton | set in order | 6 notes → `wip/queue-pacing/README.md` · index refreshed (67) |
+   | 🧹 Seiso | clean | 4 docs reconciled ⚠️ · markdownlint ✅ · lychee ⚠️ 2 dead links |
+   | 📐 Seiketsu | standardise | 1 lesson → `AGENTS.md` |
+   | 🪧 Shitsuke | sustain | entry point written · 1 open (PROJ-419) · 1 not ticketed |
+
+2. **Files changed** — repo-relative paths, clickable in the terminal, no
+   detail.
+3. **The publication block** — one confirmation.
+4. **→ Next — recommended in a new session** — the ranked next actions, then
+   the copy-pasteable resume block.
+
+Verdict glyphs are a closed set — ✅ clean · ⚠️ finding · ❌ blocking · → routed
+elsewhere.
+
+The pass does not end at the push. Once the merge lands, `wrap` verifies it from
+the merge commit rather than from your answer, re-reads the entry point on the
+merged result, and reconciles what publishing just falsified. The `Publish`
+question says so, so that correction is inside the one confirmation you already
+gave.
+
+Empty phases are the normal case for small milestones, and `wrap` reports them
+as empty rather than manufacturing activity.
+
+## License
+
+MIT.
