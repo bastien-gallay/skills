@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Refund window</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--ink:#0f172a;--muted:#64748b;--line:#d5dbe3;--dim:#cbd5e1;--accent:#2563eb;--accent-soft:#dbe7fd;--hl:#fef3c7;
+ --plus:#15803d;--minus:#b91c1c;--diverge:#b45309;--r0:#2563eb;--r1:#c2410c;--r2:#7c3aed;--r3:#0f766e;
+ --mono:ui-monospace,'SF Mono','Cascadia Code',Menlo,Consolas,monospace;--sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1020;--surface:#121a2e;--ink:#e5e9f0;--muted:#8b97ab;--line:#26324a;--dim:#334155;--accent:#60a5fa;--accent-soft:#1e3a5f;--hl:#3b3416;--plus:#4ade80;--minus:#f87171;--diverge:#f59e0b;--r0:#60a5fa;--r1:#fb923c;--r2:#a78bfa;--r3:#2dd4bf}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 var(--sans)}
+header{padding:16px 20px 8px}
+h1{font-size:22px;margin:0 0 4px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0;max-width:38em}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:8px 20px;border-bottom:1px solid var(--line)}
+.grp{display:flex;gap:4px;flex-wrap:wrap}
+button,select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.sep{width:1px;height:22px;background:var(--line)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;padding:16px 20px}
+main.overview{grid-template-columns:minmax(0,1fr) 34px}
+main.overview #detail{display:none}
+#detail{display:flex;flex-direction:column;gap:12px}
+#fold{align-self:flex-end;color:var(--muted)}
+main.overview #fold{writing-mode:vertical-rl;padding:12px 6px;align-self:stretch;max-height:220px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+svg{width:100%;height:auto;display:block;max-height:calc(100vh - 210px)}
+.summary{margin:0 0 8px;font-size:16px;font-weight:500;min-width:0}
+.summary>:not(.casehead),.casetext{max-width:38em}
+.casehead{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:flex-start;justify-content:space-between}
+.caserow{display:flex;gap:10px;align-items:flex-start}.caserow .home{font-size:13px;margin-top:8px}
+body.grid .bar{display:none}
+.ocap{display:none;margin:8px 0 0;font-size:16px}main.overview .ocap{display:block}
+.ocap .cap2{display:inline;margin-right:16px}
+.origin{display:block;font:11px var(--sans);font-weight:400;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.origin.real{color:var(--accent)}
+.summary .warn{color:var(--diverge);font-weight:600}
+aside{display:flex;flex-direction:column;gap:12px;position:sticky;top:8px;align-self:start;max-height:calc(100vh - 16px);overflow:auto}
+.caption{font-size:16px;min-height:4.4em}
+.msg{font-family:var(--mono);font-size:13px;color:var(--accent);margin-top:6px}
+table{width:100%;border-collapse:collapse}
+td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td:first-child{color:var(--muted);width:46%}
+td.v{font-family:var(--mono);overflow-wrap:anywhere} /* a long identifier wraps inside the panel, never past its edge */
+.basis{font:11px var(--sans);margin-left:6px;cursor:help}.basisrow td{border-bottom:none;color:var(--muted);font-size:11px;padding-top:8px}.basisrow .basis{margin:0 10px 0 0;cursor:auto}.basis.code{color:var(--plus)}.basis.port{color:var(--diverge)}.basis.def{color:var(--muted)}.basis.double{color:var(--muted)}.basis.measure{color:var(--accent)}.basis.estimate{color:var(--diverge)}
+tr.new td{background:var(--hl)}
+tr.hidden td.v{color:var(--dim)}
+ol.steps{margin:0;padding-left:20px;color:var(--muted)}
+ol.steps li{padding:2px 0}
+ol.steps li.cur{color:var(--ink);font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.timeline{margin:4px 0 10px;font-size:11px}.timeline[hidden]{display:none}
+.timeline .tlhead{color:var(--muted);margin-bottom:4px}
+.tlrow{display:grid;grid-template-columns:minmax(80px,max-content) 1fr minmax(84px,max-content);gap:8px;align-items:center;margin:3px 0}
+.tlname{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:16em}.tlrow.on .tlname{color:var(--ink);font-weight:600}
+.tlbar{display:flex;height:20px;min-width:0}
+.tlbar .seg{flex:none;min-width:0;height:100%;padding:0;text-indent:3px;border:none;border-radius:0;box-shadow:inset -1px 0 0 var(--surface);background:var(--line);color:var(--ink);
+ font:10px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;cursor:pointer}
+.tlbar .seg:nth-child(even){background:var(--dim)}
+.tlbar .seg.on{background:var(--accent);color:var(--surface)}
+.tlbar .seg.neq{box-shadow:inset 0 0 0 2px var(--diverge)}
+.tlbar .seg.bare{color:transparent}
+.tlbar .seg:hover,.tlbar .seg:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.tltotal{font-family:var(--mono);white-space:nowrap}.tlrow.on .tltotal{font-weight:600}
+.tlaxis{position:relative;height:14px;color:var(--muted);font-family:var(--mono);font-size:10px}
+.tlaxis span{position:absolute;transform:translateX(-50%)}.tlaxis span:first-child{transform:none}
+/* beside a top-to-bottom graph, one upright bar per case: its steps stacked down in path order, as the graph runs */
+.stage.up{display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:18px;align-items:stretch}
+.timeline.up{margin:0;display:flex;flex-direction:column;min-height:240px}
+.timeline.up .tlhead{width:0;min-width:100%}
+.tlcols{flex:1;display:flex;gap:12px;min-height:0}
+.tlcol{display:flex;flex-direction:column;align-items:center;width:64px;min-height:0;font-family:var(--mono)}
+.tlcol .tlvbar{flex:1;display:flex;flex-direction:column;width:30px;min-height:0}
+.tlcol .tlvbar .room{flex-basis:0;min-height:0}
+.tlcol .tlvbar .seg{flex-basis:0;min-height:0;width:100%;padding:0;border:none;border-radius:0;box-shadow:inset 0 -1px 0 var(--surface);background:var(--line);
+ color:var(--ink);font:10px var(--mono);text-align:center;overflow:hidden;cursor:pointer}
+.tlcol .tlvbar .seg:nth-of-type(even){background:var(--dim)}
+.tlcol .tlvbar .seg.on{background:var(--accent);color:var(--surface)}
+.tlcol .tlvbar .seg.neq{box-shadow:inset 0 0 0 2px var(--diverge)}
+.tlcol .tlvbar .seg:hover,.tlcol .tlvbar .seg:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.tlcol .tltotal{margin-bottom:4px}.tlcol.on .tltotal{font-weight:600}
+.tlcol .tlname{margin-top:6px;max-width:64px;text-align:center;white-space:normal;font-family:var(--sans)}.tlcol.on .tlname{color:var(--ink);font-weight:600}
+.tlcol .tlruns{color:var(--muted);font-size:10px;text-align:center}
+@media (max-width:900px){.stage.up{display:block}.timeline.up{margin-top:10px}.tlcols{height:220px;flex:none}}
+.node.peek rect{stroke:var(--accent);stroke-width:2.6}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1.5px solid}
+footer{padding:0 20px 16px;font-size:11px;color:var(--muted)}
+.node rect{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+.node.dec rect{stroke-dasharray:4 3}
+.node text{font:13px var(--mono);fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.node.off{opacity:.55}
+.node.end rect{stroke-width:2.4}
+.node.cur rect{stroke:var(--accent);stroke-width:2.2}
+.edge{fill:none;stroke:var(--dim);stroke-width:1;stroke-dasharray:3 4}
+.edge.on{stroke:var(--accent);stroke-width:2;stroke-dasharray:none}
+.edge.todo{stroke:var(--accent);stroke-width:1.4;stroke-dasharray:5 4;opacity:.55}
+.elabel{font:11px var(--sans);fill:var(--muted)}
+.dot circle{fill:var(--accent)}.dot.m circle{fill:var(--minus)}.dot.p circle{fill:var(--plus)}
+.dot.r0 circle{fill:var(--r0)}.dot.r1 circle{fill:var(--r1)}.dot.r2 circle{fill:var(--r2)}.dot.r3 circle{fill:var(--r3)}
+.edge.on.r0,.edge.todo.r0{stroke:var(--r0)}.edge.on.r1,.edge.todo.r1{stroke:var(--r1)}.edge.on.r2,.edge.todo.r2{stroke:var(--r2)}.edge.on.r3,.edge.todo.r3{stroke:var(--r3)}
+.node.cur.r0 rect{stroke:var(--r0)}.node.cur.r1 rect{stroke:var(--r1)}.node.cur.r2 rect{stroke:var(--r2)}.node.cur.r3 rect{stroke:var(--r3)}
+.r0 .rs,.rs.r0{color:var(--r0)}.r1 .rs,.rs.r1{color:var(--r1)}.r2 .rs,.rs.r2{color:var(--r2)}.r3 .rs,.rs.r3{color:var(--r3)}
+.phead.two .r0{color:var(--r0)}.phead.two .r1{color:var(--r1)}.phead.two .r2{color:var(--r2)}.phead.two .r3{color:var(--r3)}
+.dsw.r0{background:var(--r0)}.dsw.r1{background:var(--r1)}.dsw.r2{background:var(--r2)}.dsw.r3{background:var(--r3)}
+.pass.r0 rect{stroke:var(--r0)}.pass.r0 text{fill:var(--r0)}.pass.r1 rect{stroke:var(--r1)}.pass.r1 text{fill:var(--r1)}
+.pass.r2 rect{stroke:var(--r2)}.pass.r2 text{fill:var(--r2)}.pass.r3 rect{stroke:var(--r3)}.pass.r3 text{fill:var(--r3)}
+.rclock{font-family:var(--mono);color:var(--muted);margin-left:auto}
+.rorder{display:block;margin-top:4px;font-family:var(--mono);font-size:12px}.rorder .rs{margin-right:2px}
+.tlbar .seg.done,.tlcol .tlvbar .seg.done{background:var(--accent-soft)}
+.tlrow.r0 .seg.on,.tlcol.r0 .seg.on{background:var(--r0)}.tlrow.r0 .seg.done,.tlcol.r0 .seg.done{background:color-mix(in srgb,var(--r0) 40%,var(--line))}
+.tlrow.r1 .seg.on,.tlcol.r1 .seg.on{background:var(--r1)}.tlrow.r1 .seg.done,.tlcol.r1 .seg.done{background:color-mix(in srgb,var(--r1) 40%,var(--line))}
+.tlrow.r2 .seg.on,.tlcol.r2 .seg.on{background:var(--r2)}.tlrow.r2 .seg.done,.tlcol.r2 .seg.done{background:color-mix(in srgb,var(--r2) 40%,var(--line))}
+.tlrow.r3 .seg.on,.tlcol.r3 .seg.on{background:var(--r3)}.tlrow.r3 .seg.done,.tlcol.r3 .seg.done{background:color-mix(in srgb,var(--r3) 40%,var(--line))}
+.dsign{font:700 13px var(--sans);fill:var(--surface)}
+.edge.on.m,.edge.todo.m{stroke:var(--minus)}.edge.on.p,.edge.todo.p{stroke:var(--plus)}
+.node.cur.m rect{stroke:var(--minus)}.node.cur.p rect{stroke:var(--plus)}
+.phead.two{display:flex;gap:24px;flex-wrap:wrap}.phead.two .minus{color:var(--minus)}.phead.two .plus{color:var(--plus)}
+.dsw{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;margin-right:6px;color:var(--surface);font-size:13px}
+.dsw.m{background:var(--minus)}.dsw.p{background:var(--plus)}
+.panes{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.panes.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.pane{min-width:0}
+.phead{font-weight:600;margin:0 0 4px;display:none}
+.panes.two .phead{display:block}
+.phead.minus{color:var(--minus)}.phead.plus{color:var(--plus)}
+.panes.two svg{max-height:calc(100vh - 250px)}
+.node.diverge rect{stroke:var(--diverge);stroke-width:2.6}
+.divmark{font:600 12px var(--sans);fill:var(--diverge)}
+th{font:600 11px var(--sans);color:var(--muted);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+tr.diff td.v{font-weight:600}
+.sign{color:var(--muted);margin-right:4px}
+.cap2{display:block;margin-top:4px}
+#tabs .pair{border-style:dashed}
+#variants:empty{display:none}
+#variants .lbl{align-self:center;color:var(--muted);font-size:11px;margin-right:4px}
+main.matrix{grid-template-columns:minmax(0,1fr)}
+main.matrix aside,main.matrix .legend{display:none}
+table.mx{border-collapse:collapse;width:100%}
+table.mx th,table.mx td{border:1px solid var(--line);padding:6px 8px;vertical-align:top}
+table.mx td{font-family:var(--mono);cursor:pointer;position:relative;padding-right:22px;transition:background .15s,box-shadow .15s}
+table.mx td:hover,table.mx td:focus-visible{outline:none;background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent),0 2px 8px -2px rgba(15,23,42,.25)}
+table.mx td .chev{position:absolute;right:6px;top:50%;width:8px;height:12px;margin-top:-6px;max-height:none;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.55;transition:opacity .15s,transform .15s}
+table.mx td:hover .chev,table.mx td:focus-visible .chev{opacity:1;transform:translateX(3px)}
+table.mx td.pulse{animation:ring .7s ease-in-out .4s 2}
+@keyframes ring{50%{box-shadow:inset 0 0 0 2px var(--accent)}}
+.mxs{overflow-x:auto}
+.hint{display:flex;width:fit-content;max-width:38em;gap:8px;align-items:center;margin:0 0 10px;color:var(--muted)} /* a caption under the verdict, never louder than it */
+.hint svg{width:14px;height:14px;flex:none;fill:var(--accent)}
+code{font-family:var(--mono);font-size:.95em}
+#foot a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
+#foot a:hover{color:var(--accent);text-decoration-color:var(--accent)}
+table.mx .out{display:block;font:600 13px var(--sans);color:var(--ink)}
+table.mx .out+.val{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
+table.mx tr.split th{color:var(--ink)}
+.mxkey{display:flex;flex-wrap:wrap;gap:4px 14px;font:12px var(--sans);color:var(--muted);margin:8px 0 0;max-width:60em}
+.mxkey>span{white-space:nowrap}
+table.mx .note{display:block;font:11px var(--sans);color:var(--muted)}
+table.mx+table.mx{margin-top:20px}
+table.mx .q{display:block;font:600 13px var(--sans);color:inherit;max-width:46ch}
+#tabs:empty{display:none}
+body.onmatrix #controls,body.onmatrix .bar{display:none}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:10px}
+.keys{color:var(--muted);font-size:11px}.keys kbd{font:11px var(--mono);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin:0 2px}
+ol.steps li.later{color:var(--dim)}
+#play.go{background:var(--plus);border-color:var(--plus);color:var(--surface);font-weight:600}
+.pane svg{touch-action:pan-x pan-y}
+.panes.zoomed svg{cursor:grab;touch-action:none}
+.panes.zoomed svg.drag{cursor:grabbing}
+#variants .home{margin-right:10px}
+.vnote{display:block;font:12px var(--sans);color:var(--muted);margin-top:4px;max-width:38em}
+/* the matrix beside the whole graph: a cell hovered or focused lights its path there */
+.panes.mxview{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start}
+.preview{position:sticky;top:12px;min-width:0}
+.preview .phead{display:block;color:var(--muted);font-weight:500}
+.pmore{display:flex;flex-wrap:wrap;gap:4px 16px;margin:4px 0 0;color:var(--muted)}.pmore b{color:var(--ink);font:600 13px var(--mono)}
+/* a grid case keeps its row of the matrix: where it comes from, what else it could be compared with */
+table.mx td.lit{box-shadow:inset 0 0 0 2px var(--accent)}
+table.mx.mini{margin:8px 0 4px;width:auto;table-layout:fixed;font-size:13px;font-weight:400}
+table.mx.mini th,table.mx.mini td{width:12em;padding-right:8px}
+table.mx.mini td.side{box-shadow:inset 0 0 0 2px var(--accent)}
+table.mx.mini .sgn{font-family:var(--sans);font-weight:700;float:left;margin-right:6px}
+table.mx.mini td:not(.side):hover{box-shadow:none}
+table.mx td:focus-visible{outline:2px dashed var(--ink);outline-offset:-6px} /* focus: dashed ink, never the solid blue of a picked side */
+.pickhint{font-size:12px;color:var(--muted);margin:2px 0 0}
+ol.steps button{all:unset;display:block;width:100%;cursor:pointer;border-radius:4px}
+ol.steps button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* the passes of a node a loop revisits: which visit left by which branch, written beside the branch once the dot took it */
+.pass rect{fill:var(--surface);stroke:var(--accent);stroke-width:1.2}.pass rect.hit{fill:transparent;stroke:none}
+.pass text{font:600 10px var(--mono);fill:var(--accent);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.pass.m rect{stroke:var(--minus)}.pass.m text{fill:var(--minus)}.pass.p rect{stroke:var(--plus)}.pass.p text{fill:var(--plus)}
+.pass.cur rect:not(.hit){fill:var(--accent)}.pass.cur text{fill:var(--surface)}.pass.cur.m rect:not(.hit){fill:var(--minus)}.pass.cur.p rect:not(.hit){fill:var(--plus)}
+.pass{cursor:pointer;outline:none}.pass:hover rect:not(.hit),.pass:focus-visible rect:not(.hit){stroke-width:2.4}
+.pass.fresh{transform-box:fill-box;transform-origin:center;animation:pop .16s cubic-bezier(.25,1,.5,1)}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+ol.steps li.peek{background:var(--hl);border-radius:4px}
+.sw.passw{border-radius:50%;border-color:var(--accent);color:var(--accent);font:600 8px/9px var(--mono);text-align:center}
+@media (max-width:900px){main,.panes.mxview{grid-template-columns:minmax(0,1fr)}}
+.trail circle{fill:var(--accent);pointer-events:none}.trail.m circle{fill:var(--minus)}.trail.p circle{fill:var(--plus)}
+.trail.r0 circle{fill:var(--r0)}.trail.r1 circle{fill:var(--r1)}.trail.r2 circle{fill:var(--r2)}.trail.r3 circle{fill:var(--r3)}
+.fx *{pointer-events:none;fill:none;transform-box:fill-box;transform-origin:center}
+.fx .ring{stroke:var(--accent);stroke-width:2.5;animation:ring .9s cubic-bezier(.2,.7,.3,1) forwards}
+.fx .ring.m{stroke:var(--minus)}.fx .ring.p{stroke:var(--plus)}.fx .ring.r0{stroke:var(--r0)}.fx .ring.r1{stroke:var(--r1)}.fx .ring.r2{stroke:var(--r2)}.fx .ring.r3{stroke:var(--r3)}
+.fx .land{stroke-width:3;animation:land 1.1s ease-out 2 forwards}
+@keyframes ring{from{transform:scale(1);opacity:.9}to{transform:scale(3.2);opacity:0}}
+@keyframes land{0%{transform:scale(1);opacity:.95}100%{transform:scale(1.12);opacity:0}}
+.fx .dust{fill:var(--muted);transform-box:fill-box;transform-origin:center;animation:dust .9s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes dust{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(3);opacity:0}}
+@media (prefers-reduced-motion:reduce){table.mx td.pulse,.pass.fresh,.fx *{animation:none}.fx *{opacity:0}table.mx td,table.mx td .chev{transition:none}}
+</style></head><body>
+<header><h1 id="title"></h1><p class="sub" id="sub"></p></header>
+<div class="bar">
+ <div class="grp" id="tabs" role="tablist"></div>
+ <div class="grp" id="variants"></div>
+</div>
+<main id="main">
+ <section class="card"><div class="summary" id="summary"></div><div class="stage" id="stage"><div class="panes" id="panes"></div><div class="timeline" id="timeline" hidden></div></div>
+  <div class="controls" id="controls">
+   <div class="grp" id="motion"><button id="back">◀</button><button id="play">⏸</button><button id="fwd">▶</button><button id="restart">↺</button>
+   <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div>
+   <div class="grp" id="zoom"><button id="zout">−</button><button id="zin">+</button><button id="fit"></button></div>
+   <div class="grp" id="views" hidden></div>
+   <span class="keys" id="keys"></span>
+  </div>
+  <p class="ocap" id="ocap" aria-hidden="true"></p>
+  <div class="legend" id="legend"></div></section>
+ <aside>
+  <button id="fold" aria-controls="detail"></button>
+  <div id="detail">
+   <div class="card"><div class="caption" id="caption" aria-live="polite"></div><div class="msg" id="msg"></div></div>
+   <div class="card"><table id="data"></table></div>
+   <div class="card"><ol class="steps" id="steps"></ol></div>
+  </div>
+ </aside>
+</main>
+<footer id="foot"></footer>
+<script>
+const DATA={"page": {"title": "Refund window", "subtitle": "Example: a refund asked on day 30 was refused before the fix", "source": "truepath example, self-contained", "lang": "en", "verdictSource": "port decide.js", "credit": true, "kinds": {"ok": {"label": "refunded", "color": "#15803d"}, "wrong": {"label": "store credit only", "color": "#b91c1c"}}, "nodes": {"REQ": {"label": "refund request", "kind": null, "role": "start"}, "AGE": {"label": "days since delivery", "kind": null, "role": null}, "D": {"label": "within 30 days?", "kind": null, "role": "decision"}, "REFUND": {"label": "money refunded", "kind": "ok", "role": null}, "CREDIT": {"label": "store credit", "kind": "wrong", "role": null}}, "scenarios": [{"id": "old", "tab": "Before", "summary": "Day 30: the old check reads `days \u003c 30` and refuses", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "The customer asks on the last day of the window."}, {"hop": ["AGE", "D"], "message": "30 \u003c 30 → false", "caption": "The old check excludes the last day."}, {"hop": ["D", "CREDIT"], "message": "store credit", "caption": "A refund the policy promises is refused."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "no"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "no", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "new", "tab": "After", "summary": "Same request: `days \u003c= 30` keeps day 30 in the window", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "Same request."}, {"hop": ["AGE", "D"], "message": "30 \u003c= 30 → true", "caption": "The last day counts."}, {"hop": ["D", "REFUND"], "message": "refunded", "caption": "The policy is applied as written."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "yes"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "yes", "provenance": {"kind": "port", "text": "port: decide.js"}}]}], "pairs": [{"before": "old", "after": "new", "tab": "before / after", "summary": "The one difference: does day 30 count?"}], "races": [], "grid": null}, "geo": {"width": 381, "height": 448, "lineHeight": 16, "nodes": {"REQ": {"w": 150, "h": 44, "labelLines": ["refund request"], "y": 32.0, "x": 119.2}, "AGE": {"w": 190, "h": 44, "labelLines": ["days since delivery"], "y": 140.0, "x": 99.2}, "D": {"w": 158, "h": 44, "labelLines": ["within 30 days?"], "y": 248.0, "x": 115.2}, "REFUND": {"w": 150, "h": 44, "labelLines": ["money refunded"], "y": 356.0, "x": 32.0}, "CREDIT": {"w": 135, "h": 44, "labelLines": ["store credit"], "y": 356.0, "x": 214.0}}, "edges": [{"from": "REQ", "to": "AGE", "d": "M194 76 V136", "label": null, "pass": [188, 122.0, -1], "labelPos": null}, {"from": "AGE", "to": "D", "d": "M194 184 V244", "label": null, "pass": [188, 230.0, -1], "labelPos": null}, {"from": "D", "to": "REFUND", "d": "M194 292 V324 H107 V352", "label": "yes", "pass": [162.8, 316, 1], "labelPos": [141.2, 320]}, {"from": "D", "to": "CREDIT", "d": "M194 292 V324 H282 V352", "label": "no", "pass": [247.2, 316, 1], "labelPos": [231.8, 320]}]}};
+const {page}=DATA, grid=page.grid, NS="http://www.w3.org/2000/svg";
+let geo=DATA.geo; // the view drawn: DATA.views holds every view the spec offers, when it offers more than one
+const HOP_MS=650;         // outside a race, every hop takes the same time, however long it is drawn: time on screen follows meaning, not ink (the run into an outcome lasts SLOW times longer; a fall speeds up)
+const DWELL_PASS=450;     // ms the dot stays on a node that only passes it on
+const DWELL_KEY=1700;     // ms it stays where the story is: a decision, the first divergence, an outcome
+const DOT_GAP=20;         // two dots nearer than this are set apart
+const MIN_DIAGRAM_H=320;  // px: the least a case's diagram gets
+const FOOT_ROOM=40;       // px kept below the controls and the legend
+const SEG_MIN_PX=40; // px: a timeline segment narrower than this shows no name
+const NODE_FONT=13, MIN_LABEL_PX=12; // a node label is 13 diagram units; on screen it never starts under 12px
+const OVERVIEW_PAUSE=150; // ms between two hops when the dot loops on the whole path
+const DIVERGE="var(--diverge)", TINT="10%"; // an outcome box is tinted with its kind's colour
+const $=id=>document.getElementById(id);
+/** A step's hop is [from, to], or [from, via…, to] when the dot only passes through a node, a loop's return say. */
+const legs=h=>h.slice(1).map((b,i)=>h[i]+">"+b), dest=h=>h[h.length-1];
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e;};
+/** Spec text is data, never markup: everything a spec says goes through esc(), or rich() which escapes, before innerHTML. */
+const esc=x=>String(x??"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+/** Spec text in runs: `x` is code, \` a literal backtick; a backtick left open is literal too. */
+function runs(x){const s=String(x??""),out=[];let buf="",open=-1;
+ for(let i=0;i<s.length;i++){
+  if(s[i]==="\\"&&s[i+1]==="`"){buf+="`";i++;}
+  else if(s[i]==="`"){if(open<0){out.push({code:false,text:buf});open=out.length;}else{out.push({code:true,text:buf});open=-1;}buf="";}
+  else buf+=s[i];}
+ if(open>=0){out.push({code:false,text:"`"+buf});}else out.push({code:false,text:buf});
+ return out.filter(r=>r.text||r.code);}
+/** Visible spec text: escaped, with its `code` in the code face. */
+const rich=x=>runs(x).map(r=>r.code?`<code>${esc(r.text)}</code>`:esc(r.text)).join("");
+/** Spec text where markup cannot go (a tooltip, a button label): the backticks are dropped. */
+const plain=x=>runs(x).map(r=>r.text).join("");
+/** Reduced motion: nothing advances by itself; Play, Restart and the step buttons still answer. */
+const MQ=matchMedia("(prefers-reduced-motion: reduce)");let REDUCED=MQ.matches;
+MQ.addEventListener&&MQ.addEventListener("change",e=>{REDUCED=e.matches;}); // the setting can change while the page is open
+/** The page's own words; the spec's text is written in the spec's language. */
+const words={
+ fr:{tabs:"Scénarios",variants:"Réponse comparée",back:"Étape précédente",fwd:"Étape suivante",restart:"Recommencer",speed:"Vitesse",
+  home:"← matrice",source:"Source\u00a0: ",logic:" · logique exécutée\u00a0: ",
+  path:"chemin du scénario",diverge:"≠ premier écart entre avant et après",caseCol:"Cas",cell:"Cellule\u00a0: ",outcome:"issue, puis ",hover:"Au survol\u00a0: ",
+  differs:b=>`≠ diffère de «\u00a0${b}\u00a0»`,split:"les réponses divergent",pick:"Clic ou Entrée\u00a0: comparer en +. Avec Maj\u00a0: en −.",esc:"<kbd>Échap</kbd> matrice",later:"étape à venir",
+  keys:"Clavier\u00a0: <kbd>←</kbd><kbd>→</kbd> étape · <kbd>Début</kbd><kbd>Fin</kbd> première, dernière · <kbd>Espace</kbd> lecture",tabKeys:" · onglet\u00a0: <kbd>1</kbd>…<kbd>9</kbd>, ou <kbd>↑</kbd><kbd>↓</kbd> depuis un onglet",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",viewKeys:" · <kbd>V</kbd> vue",views:"Vue",view:{flow:["↓","De haut en bas"],"flow-lr":["→","De gauche à droite"]},minusOnly:"chemin du seul −",plusOnly:"chemin du seul +",code:"✓ code",port:"⚠ portage",definition:"◇ définition",double:"◌ doublure",measure:"◉ mesuré",estimate:"≈ estimé",race:"Une course : plusieurs cas sur le même graphe, un point numéroté chacun",
+  tlHead:(stat,unit,src)=>src==="estimate"?`Temps estimé par étape, pour chaque cas (${unit})`:`Temps mesuré par étape, ${stat==="mean"?"moyenne":"médiane"} des exécutions de chaque cas (${unit})`,
+  runs:(n,left)=>`n\u00a0${n}`+(left.length?` · hors calcul\u00a0: `+left.map(([c,w])=>`${c}\u00a0${w??"en échec"}`).join(", "):""),measured:" · mesuré\u00a0: ",estimated:" · estimé\u00a0: ",
+  seg:(node,v,unit,pct)=>`${node}\u00a0: ${v}\u00a0${unit} (${pct}\u00a0%)`,segNeq:" · l'étape qui change le plus par rapport à la première ligne",segGone:" · l'étape qui change le plus\u00a0: absente des lignes suivantes",
+  passes:"n<sup>e</sup> passage par un nœud qui revient",pass:(n,node,i,m)=>`passage ${n} par «\u00a0${node}\u00a0» · étape ${i}\u00a0: ${m}`,
+  hint:b=>`Cliquez une cellule\u00a0: elle ouvre le cas pas à pas, «\u00a0${b}\u00a0» à gauche, la réponse de la colonne à droite.`,credit:"créé avec truepath",
+  real:"● cas réel",illus:"○ illustratif",undecided:"⚠️ règle non décidée · ",field:"Champ",
+  hide:"Masquer le détail ›",show:"‹ Détail pas à pas",pause:"Pause",play:"Lecture",side:"côte à côte",sep:"\u00a0: ",half:"0,5×",
+  zoom:"Zoom",zin:"Zoomer",zout:"Dézoomer",fit:"Voir tout le diagramme",fitText:"Ajuster"},
+ en:{tabs:"Scenarios",variants:"Compared answer",back:"Previous step",fwd:"Next step",restart:"Restart",speed:"Speed",
+  home:"← matrix",source:"Source: ",logic:" · logic run: ",
+  path:"scenario path",diverge:"≠ first difference between before and after",caseCol:"Case",cell:"Cell: ",outcome:"outcome, then ",hover:"On hover: ",
+  differs:b=>`≠ differs from “${b}”`,split:"the answers disagree",pick:"Click or Enter: compare as +. With Shift: as −.",esc:"<kbd>Esc</kbd> matrix",later:"step to come",
+  keys:"Keys: <kbd>←</kbd><kbd>→</kbd> step · <kbd>Home</kbd><kbd>End</kbd> first, last · <kbd>Space</kbd> play",tabKeys:" · tab: <kbd>1</kbd>…<kbd>9</kbd>, or <kbd>↑</kbd><kbd>↓</kbd> from a tab",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",viewKeys:" · <kbd>V</kbd> view",views:"View",view:{flow:["↓","Top to bottom"],"flow-lr":["→","Left to right"]},minusOnly:"path of − only",plusOnly:"path of + only",code:"✓ code",port:"⚠ ported",definition:"◇ definition",double:"◌ double",measure:"◉ measured",estimate:"≈ estimated",race:"A race: several cases on one graph, a numbered dot each",
+  tlHead:(stat,unit,src)=>src==="estimate"?`Estimated time per step, for each case (${unit})`:`Measured time per step, the ${stat} of each case's runs (${unit})`,
+  runs:(n,left)=>`n\u00a0${n}`+(left.length?` · left out: `+left.map(([c,w])=>`${c}\u00a0${w??"failed"}`).join(", "):""),measured:" · measured: ",estimated:" · estimated: ",
+  seg:(node,v,unit,pct)=>`${node}: ${v}\u00a0${unit} (${pct}%)`,segNeq:" · the step that changes most from the first row",segGone:" · the step that changes most: gone from the rows below",
+  passes:"n<sup>th</sup> pass through a node a loop revisits",pass:(n,node,i,m)=>`pass ${n} through “${node}” · step ${i}: ${m}`,
+  hint:b=>`Click a cell: it opens the case step by step, “${b}” on the left, the column's answer on the right.`,credit:"made with truepath",
+  real:"● real case",illus:"○ illustrative",undecided:"⚠️ rule not decided · ",field:"Field",
+  hide:"Hide detail ›",show:"‹ Step-by-step detail",pause:"Pause",play:"Play",side:"side by side",sep:": ",half:"0.5×",
+  zoom:"Zoom",zin:"Zoom in",zout:"Zoom out",fit:"Show the whole diagram",fitText:"Fit"}}[page.lang];
+for(const id of ["tabs","variants","back","fwd","restart","speed","zoom","zin","zout","fit"])$(id).setAttribute("aria-label",words[id]);
+for(const id of ["zin","zout","fit"])$(id).title=words[id];
+// keys: said after TABS is known, since the tab keys are said only when there are tabs to switch
+$("speed").options[0].textContent=words.half;$("fit").textContent=words.fitText;
+
+// ---- what the page shows: a matrix then one tab per case (grid), or one tab per pair and per scenario outside a pair
+const originBullet=o=>o.kind==="real"?"● ":"○ ";
+const scenario=id=>page.scenarios.find(s=>s.id===id);
+const cellOf=(caseId,variantId)=>scenario(caseId+"/"+variantId);
+const variantOf=id=>grid.variants.find(v=>v.id===id);
+/** A scenario played in a pair has no tab of its own: the pair already shows it, beside the other side. */
+const paired=new Set(page.pairs.flatMap(p=>[p.before,p.after]));
+const TABS=grid
+ ? [{matrix:true},...grid.cases.map(c=>({case:c}))]
+ : [...page.scenarios.filter(s=>!paired.has(s.id)).map(s=>({sides:[s],label:(s.undecided?"⚠️ ":"")+originBullet(s.origin)+plain(s.tab),title:plain(s.origin.text)})),
+    ...page.pairs.map(p=>({sides:[scenario(p.before),scenario(p.after)],label:"⇄ "+plain(p.tab),title:words.side,pair:p})),
+    ...(page.races||[]).map(r=>({sides:r.scenarios.map(scenario),label:"⇉ "+plain(r.tab),title:words.race,race:r}))]; // its cases keep their tabs
+/** view: "detail" plays step by step beside the panel, "overview" draws the whole path. minus/plus: the two variants a grid case compares.
+ * The page opens paused: the reader starts it. follow: a zoomed view keeps the moving dot in sight until the reader pans. */
+const st={tab:0,step:0,view:"detail",playing:false,follow:true,auto:false,readable:false,speed:1,raf:0,timer:0,section:0,
+ minus:grid?grid.baseline:null,
+ plus:grid?(grid.sections[0].columns.find(c=>c.variant!==grid.baseline)||grid.sections[0].columns[0]).variant:null};
+ // + starts on the first section's first answer, a column of the section the page opens on
+/** The scenarios a tab plays: one, or two side by side. */
+function sidesOf(tab){if(!tab.case)return tab.sides||[];
+ return st.plus===st.minus?[cellOf(tab.case.id,st.minus)]:[cellOf(tab.case.id,st.minus),cellOf(tab.case.id,st.plus)];}
+/** A variant as the open section names it: under Q1, "1A", not the answer set "1A · 2A" it runs. */
+const columnOf=v=>grid.sections[st.section].columns.find(c=>c.variant===v);
+const shortOf=v=>(columnOf(v)||variantOf(v)).short;
+const headOf=v=>{const c=columnOf(v);return c?c.head:variantOf(v).label;};
+/** The panel rows of a scenario, as build.py filled them; only the row naming a grid answer is named here. */
+const rowsOf=s=>s.rows.map(r=>r.answer?{...r,shown:shortOf(s.variant)}:r);
+/** A row's value at step i: a series row gives one value per step from its `at`, and keeps its last one. */
+const valueAt=(r,i)=>r.series?r.series[Math.max(0,Math.min(i-r.at,r.series.length-1))]:r.shown;
+/** A row is new at step i when it appears there, or when its series changes there. */
+const changedAt=(r,i)=>r.at===i||(!!r.series&&i>r.at&&valueAt(r,i)!==valueAt(r,i-1));
+/** Where a value comes from: real code, a ported behaviour, or a definition the simulation makes. */
+const basisClass=k=>k==="code"?"code":k==="port"?"port":k==="double"?"double":k==="measure"?"measure":k==="estimate"?"estimate":"def";
+/** Next to a value: the glyph alone, its full text on hover, and nothing when every value of the table has that provenance
+ *  (`only`); the words are said once, under the table (basisLegend). */
+const onlyKind=rows=>{const ks=new Set(rows.filter(r=>r.provenance).map(r=>r.provenance.kind));return ks.size===1?[...ks][0]:null;};
+const basisTitle=r=>r.provenance?` title="${esc(words[r.provenance.kind]+words.sep+plain(r.provenance.text))}"`:"";
+const provenanceTag=(r,only)=>{const p=r.provenance;if(!p||p.kind===only)return "";
+ return `<span class="basis ${basisClass(p.kind)}" title="${esc(words[p.kind]+words.sep+plain(p.text))}" aria-label="${esc(words[p.kind])}">${words[p.kind].split(" ")[0]}</span>`;};
+/** One row naming each kind of provenance the table shows, instead of the words repeated on every value. */
+const basisLegend=(rows,span)=>{const ks=[...new Set(rows.filter(r=>r.provenance).map(r=>r.provenance.kind))];
+ return ks.length?`<tr class="basisrow"><td colspan="${span}">${ks.map(k=>`<span class="basis ${basisClass(k)}">${words[k]}</span>`).join("")}</td></tr>`:"";};
+/** The first step at which the two scenarios part: their paths fork, or their data differ, whichever comes first.
+ *  The node marked is where it happens: the last node both paths share, or the one whose step produces the value. */
+function divergence(a,b){const ra=rowsOf(a),rb=rowsOf(b);let at=Infinity;
+ ra.forEach((r,i)=>{if(r.compared)return; // a compared row names what differs, it is not an effect
+  const last=r.at+Math.max(r.series?.length||1,rb[i].series?.length||1)-1;
+  for(let k=r.at;k<=last&&k<at;k++)if(valueAt(r,k)!==valueAt(rb[i],k)){at=k;break;}});
+ const fork=forkOf(a,b);
+ if(fork&&fork.step<=at)return fork;
+ return at===Infinity?null:{step:at,node:a.steps[at].hop[0]};}
+/** Where two paths part: the first step whose hops differ, at the last node they still share. */
+function forkOf(a,b){const n=Math.max(a.steps.length,b.steps.length);
+ for(let i=0;i<n;i++){const x=a.steps[i]?.hop,y=b.steps[i]?.hop;
+  if(!x||!y)return {step:i,node:dest((x?b:a).steps[i-1].hop)}; // one path stops where the other goes on
+  if(x.join(">")===y.join(">"))continue;
+  let k=0;while(k<Math.min(x.length,y.length)-1&&x[k+1]===y[k+1])k++;
+  return {step:i,node:x[k]};}
+ return null;}
+
+$("title").innerHTML=rich(page.title);$("sub").innerHTML=rich(page.subtitle);document.title=plain(page.title);
+/** The footer: where the case comes from, what ran the logic, and, unless the spec says `credit: false`, what made the page. */
+$("foot").innerHTML=esc(words.source)+rich(page.source)+esc(words.logic+page.verdictSource)
+ +(page.measure?esc((page.measure.source==="estimate"?words.estimated:words.measured)+[...new Set(page.measure.rows.map(r=>r.basis))].join(" · ")):"")
+ +(page.credit?` · <a href="https://github.com/bastien-gallay/truepath" target="_blank" rel="noopener">${words.credit}</a>`:"");
+/** A kind's swatch: its colour on the border, a tint inside; the word beside it carries the meaning. */
+const kindFill=c=>`border-color:${esc(c)};background:color-mix(in srgb, ${esc(c)} ${TINT}, transparent)`;
+const swatch=(style,text)=>{const s=document.createElement("span");s.innerHTML=`<span class="sw" style="${style}"></span>${text}`;$("legend").appendChild(s);};
+for(const k of Object.values(page.kinds))swatch(kindFill(k.color),rich(k.label));
+swatch("border-color:var(--accent);background:var(--accent);border-radius:50%",words.path);
+// a page that compares two sides says what their own colours mean: the path only one of them takes
+if(grid||page.pairs.length){swatch("border-color:var(--minus);background:var(--minus);border-radius:50%",words.minusOnly);
+ swatch("border-color:var(--plus);background:var(--plus);border-radius:50%",words.plusOnly);}
+if(grid||page.pairs.length)swatch(`border-color:${DIVERGE}`,words.diverge); // ≠ says nothing on a page with one side per tab
+
+/** Each time a step leaves a node a loop brings it back to: the node, the edge it left by, which visit, at which step.
+ *  Only nodes a scenario passes through more than once: elsewhere the order is the path itself. */
+function passesOf(s){if(s.passes)return s.passes;const n={},all=[];
+ s.steps.forEach((x,i)=>x.hop.slice(0,-1).forEach((a,m)=>{n[a]=(n[a]||0)+1;all.push({node:a,edge:a+">"+x.hop[m+1],visit:n[a],step:i});}));
+ return s.passes=all.filter(q=>n[q.node]>1);}
+if(page.scenarios.some(s=>passesOf(s).length)){const s=document.createElement("span");
+ s.innerHTML=`<span class="sw passw">1</span>${words.passes}`;$("legend").appendChild(s);}
+
+// ---- zoom: one view, in diagram units, shared by every diagram of the tab
+const ZOOM_MAX=6,ZOOM_STEP=1.25;
+const FOLLOW_MARGIN=.2; // the dot is kept out of this share of the view on each side
+const FOLLOW_EASE=.12;  // share of the remaining distance the view covers per frame: it glides, it does not jump
+const view={k:1,x:0,y:0},aim={x:0,y:0,k:null};let glideRaf=0,lastDots=[]; // aim.k: a zoom the race camera glides to
+/** A wide graph, zoomed to readable labels, grows taller than its drawn aspect: the view then takes the element's own aspect. */
+const tallSvg=()=>{const s=diagrams[0]&&diagrams[0].svg;return s&&s.style.height?s:null;};
+const viewW=()=>geo.width/view.k,viewH=()=>{const s=tallSvg(),r=s&&s.getBoundingClientRect();
+ return r&&r.width?Math.min(geo.height,viewW()*r.height/r.width):geo.height/view.k;};
+const within=(v,max)=>Math.max(0,Math.min(max,v));
+const clampView=p=>({x:within(p.x,geo.width-viewW()),y:within(p.y,geo.height-viewH())});
+function applyView(){const box=`${view.x} ${view.y} ${viewW()} ${viewH()}`;diagrams.forEach(d=>d.svg.setAttribute("viewBox",box));
+ $("panes").classList.toggle("zoomed",view.k>1);}
+/** Put the view there at once: a reader's gesture is answered without delay. */
+function setView(p){const c=clampView(p);view.x=aim.x=c.x;view.y=aim.y=c.y;applyView();}
+/** Zoom by a factor around a diagram point, which stays where it is on screen. */
+function zoomAt(f,cx,cy){const k=Math.max(1,Math.min(ZOOM_MAX,view.k*f));if(k===view.k)return;
+ const rx=(cx-view.x)/viewW(),ry=(cy-view.y)/viewH();view.k=k;setView({x:cx-rx*viewW(),y:cy-ry*viewH()});}
+/** Where a button zooms: on the dot while the view follows it, else on the middle of the view. */
+function focus(){if(st.follow&&lastDots.length){const n=lastDots.length;
+  return [lastDots.reduce((s,q)=>s+q.x,0)/n,lastDots.reduce((s,q)=>s+q.y,0)/n];}
+ return [view.x+viewW()/2,view.y+viewH()/2];}
+function zoomBy(f){st.auto=st.readable=false;aim.k=null;zoomAt(f,...focus());}
+function fit(){diagrams.forEach(d=>{d.svg.style.height="";});view.k=1;aim.k=null;st.follow=true;st.readable=false;setView({x:0,y:0});}
+/** The smallest move of one axis that keeps [lo, hi] inside the view less its margins; centred when it cannot fit. */
+function keepIn(lo,hi,start,size){const m=size*FOLLOW_MARGIN;
+ return hi-lo>size-2*m?(lo+hi-size)/2:Math.min(Math.max(start,hi+m-size),lo-m);}
+/** Zoomed in and following: aim the view at the moving dots, then glide there. */
+function follow(dots){if(!st.follow||view.k===1||!dots.length)return;
+ const xs=dots.map(q=>q.x),ys=dots.map(q=>q.y);
+ const c=clampView({x:keepIn(Math.min(...xs),Math.max(...xs),aim.x,viewW()),y:keepIn(Math.min(...ys),Math.max(...ys),aim.y,viewH())});
+ aim.x=c.x;aim.y=c.y;
+ if(REDUCED){setView(aim);return;}
+ if(!glideRaf)glideRaf=requestAnimationFrame(glide);}
+/** A race's camera keeps the leader in sight: it frames every running dot, zooming out no further than readable labels;
+ *  when they no longer fit, it follows the leader alone and zooms back in on it. Only while the reader lets it lead. */
+const CAM_MARGIN=70,CAM_CLOSE=1.25,CAM_HOLD=1500; // CAM_HOLD: ms an arrived dot stays framed, its landing in sight // units around the dots framed; how much closer than readable it comes on a lone leader
+let kRead=1; // the zoom at which labels are readable, measured by readable()
+const cam={mode:"field"}; // "field": every running way framed; "lead": the leader alone, when the field no longer fits
+const CAM_IN=1.25,CAM_SWITCH=.9,CAM_BACK=1.05,CAM_INSET=.08,ZOOM_EASE=.05; // zoom in only for a 25% gain; mode change margins
+function camera(items,lead){if(!st.follow||!st.readable||!items.length)return;
+ const W=geo.width,a=viewH()/viewW(); // a view of zoom k is W/k wide and a·W/k high
+ const boxOf=xs=>{let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const it of xs){const b=it.box;x0=Math.min(x0,b.x);y0=Math.min(y0,b.y);x1=Math.max(x1,b.x+b.width);y1=Math.max(y1,b.y+b.height);}
+  return {x0:x0-CAM_MARGIN,y0:y0-CAM_MARGIN,x1:x1+CAM_MARGIN,y1:y1+CAM_MARGIN};};
+ const fit=b=>Math.min(W/(b.x1-b.x0),a*W/(b.y1-b.y0));
+ const field=boxOf(items),kField=fit(field);
+ if(cam.mode==="field"&&kField<kRead*CAM_SWITCH)cam.mode="lead";else if(cam.mode==="lead"&&kField>kRead*CAM_BACK)cam.mode="field";
+ const b=cam.mode==="field"?field:boxOf([lead]);
+ const want=Math.max(1,Math.min(ZOOM_MAX,kRead*CAM_CLOSE,Math.max(kRead,fit(b))));
+ if(aim.k==null||want<aim.k||want>aim.k*CAM_IN)aim.k=want; // out at once when needed, in only for a real gain
+ const w=W/aim.k,h=a*w,ix=w*CAM_INSET,iy=h*CAM_INSET,ax=aim.x??view.x,ay=aim.y??view.y;
+ const inside=b.x0>=ax+ix&&b.x1<=ax+w-ix&&b.y0>=ay+iy&&b.y1<=ay+h-iy; // the frame moves only when a way leaves it
+ if(!inside){const cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2;aim.x=Math.max(0,Math.min(W-w,cx-w/2));aim.y=Math.max(0,Math.min(Math.max(0,geo.height-h),cy-h/2));}
+ if(REDUCED){view.k=aim.k;setView(aim);return;}
+ if(!glideRaf)glideRaf=requestAnimationFrame(glide);}
+const nodeBox=id=>{const b=geo.nodes[id];return {x:b.x,y:b.y,width:b.w,height:b.h};};
+/** Behind each dot of a timed page, a short fading comet: where it was a moment ago says how fast it goes. */
+const TRAIL_N=12,TRAIL_STEP=3,TRAIL_FADE=300;
+const DUST=[[-34,-4],[-22,-14],[-8,-20],[8,-20],[22,-14],[34,-4]]; // a fall lands in a puff: where each grain drifts, in units // dots in the comet; the least move, in units, that adds one
+function trail(d,j,q){if(REDUCED||!page.measure||!d.trails)return;const t=d.trails[j];const last=t.pts[t.pts.length-1];
+ if(!last||Math.hypot(last.x-q.x,last.y-q.y)>=TRAIL_STEP){t.pts.push({x:q.x,y:q.y});if(t.pts.length>TRAIL_N)t.pts.shift();}
+ t.els.forEach((c,i)=>{const p=t.pts[t.pts.length-1-i];if(!p){c.setAttribute("r",0);return;}
+  const f=1-i/TRAIL_N;c.setAttribute("cx",p.x);c.setAttribute("cy",p.y);c.setAttribute("r",(d.sides.length>1?7:4)*f);c.setAttribute("opacity",.45*f);});}
+function clearTrails(d){(d.trails||[]).forEach(t=>{t.pts.length=0;t.els.forEach(c=>c.setAttribute("r",0));});}
+/** An arrival: a ring out of the dot, two pulses round the outcome's box; once per arrival, none under reduced motion. */
+function land(d,j,q,id,fall){if(d.landed.has(j))return;d.landed.add(j);d.landedAt[j]=performance.now();if(REDUCED)return;
+ const t=d.trails&&d.trails[j];if(t)setTimeout(()=>{t.pts.length=0;t.els.forEach(c=>c.setAttribute("r",0));},TRAIL_FADE); // arrived: the comet goes
+ const gone=e=>e.target.remove();
+ if(fall)DUST.forEach(([dx,dy])=>{const c=el("circle",{cx:q.x,cy:q.y,r:5,class:"dust"},d.fx);c.style.setProperty("--dx",dx+"px");c.style.setProperty("--dy",dy+"px");c.addEventListener("animationend",gone);});
+ else el("circle",{cx:q.x,cy:q.y,r:d.sides.length>1?9:6,class:"ring"+(d.sides.length>1?" "+d.side[j]:"")},d.fx).addEventListener("animationend",gone);
+ const b=geo.nodes[id],n=page.nodes[id],col=n.kind?page.kinds[n.kind].color:"var(--accent)";
+ const r=el("rect",{x:b.x,y:b.y,width:b.w,height:b.h,rx:8,class:"land"},d.fx);r.style.stroke=col;r.addEventListener("animationend",e=>e.target.remove());}
+function glide(){if(aim.k!=null&&Math.abs(aim.k-view.k)>.002){view.k+=(aim.k-view.k)*ZOOM_EASE;const c=clampView(view);view.x=c.x;view.y=c.y;} // the zoom glides as the view does
+ const dx=aim.x-view.x,dy=aim.y-view.y;
+ if(Math.abs(dx)<.5&&Math.abs(dy)<.5&&(aim.k==null||Math.abs(aim.k-view.k)<=.002)){glideRaf=0;setView(aim);return;}
+ view.x+=dx*FOLLOW_EASE;view.y+=dy*FOLLOW_EASE;applyView();glideRaf=requestAnimationFrame(glide);}
+/** Diagram units per screen pixel; the drawing is centred in its element (preserveAspectRatio meet). */
+function unitsPerPx(svg){const r=svg.getBoundingClientRect();return Math.max(viewW()/r.width,viewH()/r.height);}
+function toDiagram(svg,px,py){const r=svg.getBoundingClientRect(),u=unitsPerPx(svg);
+ return [view.x+(px-r.left-(r.width-viewW()/u)/2)*u,view.y+(py-r.top-(r.height-viewH()/u)/2)*u];}
+/** A pan is the reader taking the view: it stops following the dot until Play or Restart. */
+function panBy(svg,dx,dy){st.follow=false;const u=unitsPerPx(svg);setView({x:view.x-dx*u,y:view.y-dy*u});}
+/** Ctrl/Cmd + wheel (a trackpad pinch arrives so) zooms at the pointer; the wheel and a drag pan once zoomed; two fingers pinch. */
+function listenZoom(svg){const pts=new Map();let pinch=null,gesture=1;
+ const spread=()=>{const [a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1;};
+ const middle=()=>{const [a,b]=[...pts.values()];return [(a.x+b.x)/2,(a.y+b.y)/2];};
+ svg.addEventListener("wheel",e=>{const px=e.deltaMode===1?16:1;
+  if(e.ctrlKey||e.metaKey){e.preventDefault();zoomAt(Math.exp(-e.deltaY*px*.0025),...toDiagram(svg,e.clientX,e.clientY));return;}
+  if(view.k===1)return; // not zoomed: the wheel scrolls the page
+  e.preventDefault();panBy(svg,-e.deltaX*px,-e.deltaY*px);},{passive:false});
+ svg.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse"&&e.button!==0)return;
+  if(e.target.closest&&e.target.closest(".pass"))return; // a badge is pressed, not dragged: a captured pointer would send its click to the svg
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(svg.setPointerCapture)svg.setPointerCapture(e.pointerId);
+  if(pts.size===2)pinch={d:spread(),k:view.k};if(view.k>1||pinch)svg.classList.add("drag");});
+ svg.addEventListener("pointermove",e=>{const last=pts.get(e.pointerId);if(!last)return;
+  const now={x:e.clientX,y:e.clientY};pts.set(e.pointerId,now);
+  if(pinch&&pts.size===2){zoomAt(pinch.k*spread()/pinch.d/view.k,...toDiagram(svg,...middle()));return;}
+  if(view.k>1)panBy(svg,now.x-last.x,now.y-last.y);});
+ const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)svg.classList.remove("drag");};
+ svg.addEventListener("pointerup",up);svg.addEventListener("pointercancel",up);
+ svg.addEventListener("gesturestart",e=>{e.preventDefault();gesture=1;}); // Safari's own pinch
+ svg.addEventListener("gesturechange",e=>{e.preventDefault();zoomAt(e.scale/gesture,...toDiagram(svg,e.clientX,e.clientY));gesture=e.scale;});}
+
+// ---- one diagram, one or two sides walking it: a fork in one drawing is easier to see than two thumbnails to compare
+const SIGN=["−","+"],SIDE=["m","p"],RSIGN=["1","2","3","4"],RSIDE=["r0","r1","r2","r3"]; // a race numbers its sides
+const signsOf=()=>TABS[st.tab].race?[RSIGN,RSIDE]:[SIGN,SIDE];
+function draw(pane,k,sides){const [sg,sd]=signsOf();
+ const svg=el("svg",{viewBox:`0 0 ${geo.width} ${geo.height}`,role:"group","aria-label":plain(page.title)},pane); // a group, not an img: an img hides the pass badges, which are buttons
+ const defs=el("defs",{},svg);
+ for(const [id,col] of [["on","var(--accent)"],["off","var(--dim)"],["m","var(--minus)"],["p","var(--plus)"],...RSIDE.map(r=>[r,`var(--${r})`])]){
+  const m=el("marker",{id:`a-${id}-${k}`,viewBox:"0 0 10 10",refX:8,refY:5,markerWidth:6,markerHeight:6,orient:"auto-start-reverse"},defs);
+  el("path",{d:"M2 1L8 5L2 9",fill:"none",stroke:col,"stroke-width":1.6,"stroke-linecap":"round"},m);}
+ const edgeEls={},nodeEls={},labelEls={},taken=new Set(sides.flatMap(s=>s.steps.flatMap(x=>legs(x.hop))));
+ const isTaken=e=>taken.has(e.from+">"+e.to);
+ for(const e of [...geo.edges].sort((x,y)=>isTaken(x)-isTaken(y))){ // the path last: it is drawn over the stubs it shares with other edges
+  edgeEls[e.from+">"+e.to]=el("path",{d:e.d,class:"edge"},svg);
+  if(e.label&&e.labelPos){(labelEls[e.from+">"+e.to]=el("text",{x:e.labelPos[0],y:e.labelPos[1],class:"elabel"},svg)).textContent=e.label;}}
+ // the dots come after the boxes, so a box never hides them; two sides carry their sign, not only their colour
+ for(const [id,box] of Object.entries(geo.nodes)){
+  const n=page.nodes[id],g=el("g",{class:"node"+(n.role==="decision"?" dec":"")},svg);
+  const r=el("rect",{x:box.x,y:box.y,width:box.w,height:box.h,rx:n.role==="start"?box.h/2:8},g); // where a path starts is round
+  if(n.kind){const c=page.kinds[n.kind].color;r.style.stroke=c;r.style.fill=`color-mix(in srgb, ${c} ${TINT}, var(--surface))`;}
+  box.labelLines.forEach((l,i)=>{el("text",{x:box.x+box.w/2,y:box.y+box.h/2+(i-(box.labelLines.length-1)/2)*geo.lineHeight},g).textContent=l;});
+  el("text",geo.across?{x:box.x+box.w-6,y:box.y-5,class:"divmark",visibility:"hidden"}:{x:box.x+box.w+6,y:box.y+12,class:"divmark",visibility:"hidden"},g).textContent="≠"; // left to right, the box's side is where its edges leave
+  nodeEls[id]=g;}
+ const passes=el("g",{class:"passes"},svg);
+ listenZoom(svg);
+ listenPasses(svg);
+ const trails=sides.map((s,j)=>{const g=el("g",{class:"trail"+(sides.length>1?" "+sd[j]:"")},svg);
+  return {pts:[],els:Array.from({length:TRAIL_N},()=>el("circle",{r:0},g))};});
+ const fx=el("g",{class:"fx"},svg);
+ const dots=sides.map((s,j)=>{const g=el("g",{class:"dot"+(sides.length>1?" "+sd[j]:""),transform:"translate(-40 -40)"},svg);
+  el("circle",{r:sides.length>1?9:5},g);
+  if(sides.length>1)el("text",{class:"dsign","text-anchor":"middle","dominant-baseline":"central"},g).textContent=sg[j];return g;});
+ return {svg,edgeEls,nodeEls,labelEls,k,sides,dots,passes,side:sd,sign:sg,trails,fx,landed:new Set(),landedAt:{}};
+}
+const PASS_R=8,PASS_GAP=3,PASS_MAX=3,PASS_CHAR=6.2,PASS_HIT=6; // PASS_HIT: unseen margin around a badge that still takes the click // a badge is a circle; beyond PASS_MAX visits on one branch, the earlier ones are one range
+const geoEdge=k=>geo.edges.find(e=>e.from+">"+e.to===k);
+/** The badges of every pass so far, laid along their branch from its anchor (layout.py's `pass`); − above +, in a pair. */
+function paintPasses(d,step,detail){const layer=d.passes,two=d.sides.length>1,n=d.sides.length,focused=document.activeElement;
+ const keep=focused&&focused.getAttribute&&focused.getAttribute("data-key");layer.textContent="";
+ d.sides.forEach((s,j)=>{const here=stepOf(s,step),by=new Map();
+  for(const q of passesOf(s))if(!detail||q.step<=here){if(!by.has(q.edge))by.set(q.edge,[]);by.get(q.edge).push(q);}
+  for(const [k,list] of by){const e=geoEdge(k);if(!e||!e.pass)continue;let [x,y0,dir]=e.pass;const y=y0+(two?(2*j-(n-1))*(PASS_R+1):0); // one row per side, − above +
+   const lab=d.labelEls[k]; // layout.py estimates a label's width; the browser knows it
+   if(lab&&lab.getComputedTextLength){const w=lab.getComputedTextLength();if(w>0)x=e.labelPos[0]+w+4;}
+   const last=list[list.length-1];
+   const items=list.length<=PASS_MAX?list.map(q=>({q,text:String(q.visit)})):[{q:list[list.length-2],text:`${list[0].visit}–${list[list.length-2].visit}`,all:list.slice(0,-1)},{q:last,text:String(last.visit)}];
+   let at=x; // layout.py leaves the room between the anchor and the line or the label
+   for(const it of dir<0?[...items].reverse():items){const w=Math.max(2*PASS_R,it.text.length*PASS_CHAR+6),cx=at+dir*w/2;at+=dir*(w+PASS_GAP);
+    const cur=detail&&it.q.step===here,node=plain(page.nodes[it.q.node].label),msg=plain(s.steps[it.q.step].message);
+    const said=(it.all||[it.q]).map(q=>words.pass(q.visit,node,q.step+1,plain(s.steps[q.step].message))).join("\n");
+    const g=el("g",{class:"pass"+(two?" "+d.side[j]:"")+(cur?" cur":"")+(cur&&!REDUCED?" fresh":""),tabindex:0,role:"button",
+     "data-step":it.q.step,"data-key":`${j}:${k}:${it.text}`,"aria-label":words.pass(it.q.visit,node,it.q.step+1,msg)},layer);
+    el("title",{},g).textContent=said;
+    el("rect",{x:cx-w/2-PASS_HIT,y:y-PASS_R-PASS_HIT,width:w+2*PASS_HIT,height:2*(PASS_R+PASS_HIT),fill:"transparent",stroke:"none",class:"hit"},g);
+    el("rect",{x:cx-w/2,y:y-PASS_R,width:w,height:2*PASS_R,rx:PASS_R},g);
+    el("text",{x:cx,y},g).textContent=it.text;}}});
+ if(keep){const again=layer.querySelector&&layer.querySelector(`[data-key="${cssq(keep)}"]`);again&&again.focus&&again.focus();}}
+/** A badge says its step in the list on hover or focus; a click or Enter takes the cursor there. */
+function listenPasses(svg){const peek=(e,on)=>{const g=e.target.closest&&e.target.closest(".pass");if(!g)return;
+  const li=$("steps").querySelector(`li[data-i="${g.getAttribute("data-step")}"]`);li&&li.classList.toggle("peek",on);};
+ const goTo=g=>{st.playing=false;engage();go(+g.getAttribute("data-step"));};
+ svg.addEventListener("mouseover",e=>peek(e,true));svg.addEventListener("mouseout",e=>peek(e,false));
+ svg.addEventListener("focusin",e=>peek(e,true));svg.addEventListener("focusout",e=>peek(e,false));
+ svg.addEventListener("click",e=>{const g=e.target.closest&&e.target.closest(".pass");if(g)goTo(g);});
+ svg.addEventListener("keydown",e=>{const g=e.target.closest&&e.target.closest(".pass");if(!g||(e.key!=="Enter"&&e.key!==" "))return;
+  e.preventDefault();e.stopPropagation();goTo(g);});} // Space on a badge goes there: it does not start Play
+let diagrams=[],preview=null;
+/** The matrix tab's graph: still, one path lit, the path of the cell under the pointer or the keyboard focus. */
+function showPreview(td){if(!preview||!td)return;const s=cellOf(grid.cases[+td.dataset.case].id,td.dataset.variant);
+ const more=grid.hover.filter(l=>l!==grid.show).map(l=>`<span class="pv">${rich(l)}${words.sep}<b>${esc(rowsOf(s).find(r=>r.label===l).shown)}</b></span>`).join("");
+ if(preview.lit)preview.lit.classList.remove("lit");td.classList.add("lit");preview.lit=td;
+ preview.sides=[s];paint(preview,s.steps.length-1,false,null);
+ preview.head.innerHTML=rich(grid.cases[+td.dataset.case].label)+" · "+rich(td.dataset.head);
+ preview.more.innerHTML=more;}
+function buildPanes(){const tab=TABS[st.tab],box=$("panes");box.innerHTML="";diagrams=[];preview=null;
+ if(tab.matrix){box.className="panes mxview";const mx=matrix();box.appendChild(mx);
+  const pane=document.createElement("div");pane.className="preview";const h=document.createElement("p");h.className="phead";
+  pane.appendChild(h);box.appendChild(pane);
+  const first=mx.querySelector("td.hit")||mx.querySelector("td[data-case]");
+  if(!first||first.dataset.case==null)return;
+  const more=document.createElement("p");more.className="pmore";more.setAttribute("aria-live","polite");pane.appendChild(more);
+  preview={...draw(pane,"mx",[cellOf(grid.cases[+first.dataset.case].id,first.dataset.variant)]),head:h,more};showPreview(first);
+  mx.addEventListener("mouseover",e=>showPreview(e.target.closest&&e.target.closest("td[data-case]")));
+  mx.addEventListener("focusin",e=>showPreview(e.target.closest&&e.target.closest("td[data-case]")));
+  return;}
+ const sides=sidesOf(tab);box.className="panes";
+ const pane=document.createElement("div");pane.className="pane";box.appendChild(pane);
+ if(sides.length>1&&!grid){const h=document.createElement("p");h.className="phead two";
+  const [sg,sd]=signsOf(),race=!!tab.race;
+  h.innerHTML=sides.map((s,k)=>`<span class="${race?sd[k]:k?"plus":"minus"}"><span class="dsw ${sd[k]}">${sg[k]}</span>${grid?rich(headOf(s.variant)):originBullet(s.origin)+rich(s.tab)}</span>`).join("")
+   +(race&&clockOn()?`<span class="rclock" id="rclock"></span>`:"");
+  pane.appendChild(h);}
+ diagrams=[draw(pane,0,sides)];}
+/** Where a scenario ends: the node its last hop reaches, when that node is an outcome (it has a kind). */
+const outcomeOf=s=>{const id=dest(s.steps[s.steps.length-1].hop),n=page.nodes[id];return n.kind?{label:n.label,kind:n.kind}:null;};
+/** A cell says how the case ends first, then the value it keeps; ≠ marks the line that differs from the baseline's cell. */
+function cellBody(s,x,base,baseX){const o=outcomeOf(s),bo=base&&outcomeOf(base),ne=d=>base&&d?"≠ ":"";
+ return (o?`<span class="out"><span class="sw" style="${kindFill(page.kinds[o.kind].color)}"></span>${ne(!bo||bo.label!==o.label)}${rich(o.label)}</span>`:"")
+  +`<span class="val">${ne(x!==baseX)}${esc(x)}</span>`;}
+/** The same cell for a screen reader: outcome, then value. */
+const cellText=(s,x)=>{const o=outcomeOf(s);return (o?plain(o.label)+", ":"")+x;};
+const POINTER=`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5l10 6.2-4.3 1 2.4 4.6-1.9 1-2.4-4.6L3 13z"/></svg>`;
+const CHEVRON=`<svg class="chev" viewBox="0 0 8 12" aria-hidden="true"><path d="M2 2l4 4-4 4"/></svg>`;
+/** One section per question: its cases against today and each answer; one field per cell, the others on hover.
+ * A cell is a button (click, Enter, Space) that opens the case; the first changed cell rings twice to show it. */
+/** Under the matrix, one line of short keys instead of a paragraph: what a cell says, each outcome's colour, ≠, the bullets. */
+function matrixKey(hover,baseName){const used=[...new Set(page.scenarios.map(s=>outcomeOf(s)).filter(Boolean).map(o=>o.kind))];
+ const keys=[words.cell+words.outcome+rich(grid.show),...used.map(k=>`<span class="sw" style="${kindFill(page.kinds[k].color)}"></span>${rich(page.kinds[k].label)}`),
+  esc(words.differs(baseName)),words.real,words.illus,...(hover.length?[words.hover+hover.map(rich).join(", ")]:[])];
+ return `<p class="mxkey">${keys.map(k=>`<span>${k}</span>`).join("")}</p>`;}
+function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filter(l=>l!==grid.show);
+ const val=(s,label)=>rowsOf(s).find(r=>r.label===label).shown,baseName=plain(variantOf(grid.baseline).short);let pulsed=false;
+ wrap.innerHTML=`<p class="hint">${POINTER}<span>${esc(words.hint(baseName))}</span></p>`+grid.sections.map((sec,si)=>{
+  const head=`<tr><th scope="col">${sec.text?`<span class="q">${rich(sec.text)}</span>`:words.caseCol}</th>${sec.columns.map(c=>
+   `<th scope="col">${rich(c.head)}${c.note?`<span class="note">${rich(c.note)}</span>`:""}</th>`).join("")}</tr>`;
+  const body=sec.cases.map(cid=>{const ci=grid.cases.findIndex(c=>c.id===cid),c=grid.cases[ci],base=cellOf(cid,grid.baseline);
+   // what the reader decides on: a case where the section's answers disagree with one another; a mere difference from
+   // the baseline (every answer agreeing) is a ≠ only, or the matrix would contradict a summary saying "changes one case"
+   const said=s=>cellText(s,val(s,grid.show)); // outcome and value: what a reader compares
+   const answers=sec.columns.filter(col=>col.variant!==grid.baseline).map(col=>said(cellOf(cid,col.variant)));
+   const split=answers.length>1?new Set(answers).size>1:answers.some(x=>x!==said(base));
+   return `<tr class="${split?"split":""}"><th scope="row" title="${esc(plain(c.origin.text))}">${originBullet(c.origin)}${rich(c.label)}</th>${sec.columns.map(col=>{const s=cellOf(cid,col.variant),x=val(s,grid.show);
+    const answer=col.variant!==grid.baseline,tip=hover.map(l=>plain(l)+words.sep+val(s,l)).join("\n");
+    const pulse=split&&answer&&!pulsed;if(pulse)pulsed=true;
+    return `<td tabindex="0" role="button" class="${[pulse&&"pulse",split&&answer&&"hit"].filter(Boolean).join(" ")}" aria-label="${esc(plain(c.label)+" · "+plain(col.head)+words.sep+cellText(s,x)+(split&&answer?" · "+words.split:""))}" data-case="${ci}" data-variant="${esc(col.variant)}" data-section="${si}" data-head="${esc(plain(col.head))}" title="${esc(tip)}">${cellBody(s,x,answer&&base,val(base,grid.show))}${CHEVRON}</td>`;}).join("")}</tr>`;}).join("");
+  return `<div class="mxs"><table class="mx">${head}${body}</table></div>`;}).join("")
+  +matrixKey(hover,baseName);
+ const open=td=>{st.plus=td.dataset.variant;st.minus=grid.baseline;st.section=+td.dataset.section;
+  st.from={case:td.dataset.case,variant:td.dataset.variant,section:td.dataset.section};openTab(+td.dataset.case+1);};
+ wrap.onclick=e=>{const td=e.target.closest("td[data-case]");if(td)open(td);};
+ wrap.onkeydown=e=>{const td=e.target.closest&&e.target.closest("td[data-case]");if(!td||(e.key!=="Enter"&&e.key!==" "))return;
+  e.preventDefault();e.stopPropagation();open(td);}; // Space opens the cell, it does not start Play
+ return wrap;}
+
+/** A side's own step at the page's step: in a pair of unequal length, the side that has arrived stays on its outcome. */
+/** A race on the clock: each side's steps last what the measure gives them (a step with none shares a timed neighbour's, see glidePer), every side on one
+ *  clock. Step i of the race is the i-th time a dot arrives somewhere; a side is on the first step it has not yet ended. */
+const RACE_MS=12000,BLINK=.005; // the slowest arrives after RACE_MS of clock at 1×; a step with no time and no timed neighbour takes BLINK of the race
+/** A step with no time (a decision, the run into an outcome) shares the time of the timed step next to it, the one
+ *  before it first: the dot glides into its outcome instead of jumping there, and the total stays what was measured. */
+function glidePer(per){const out=per.slice();let i=0;
+ while(i<out.length){if(out[i]>0){i++;continue;}let b=i;while(b+1<out.length&&!(out[b+1]>0))b++;
+  const k=i>0&&out[i-1]>0?i-1:b+1<out.length?b+1:-1;
+  if(k>=0){const share=out[k]/(b-i+2);out[k]=share;for(let x=i;x<=b;x++)out[x]=share;}
+  i=b+1;}
+ return out;}
+function clockOn(){const tab=TABS[st.tab];if(!tab||!tab.race||!page.measure)return null;if(tab.clock!==undefined)return tab.clock;
+ const rows=tab.sides.map(s=>page.measure.rows.find(r=>r.scenario===s.id));if(rows.some(r=>!r||!r.per))return tab.clock=null;
+ const real=Math.max(...rows.map(r=>r.total),1e-9),ends=rows.map(r=>{let t=0;return glidePer(r.per).map(v=>t+=v>0?v:real*BLINK);});
+ const times=[...new Set(ends.flat().map(t=>+t.toFixed(6)))].sort((a,b)=>a-b),span=Math.max(...times);
+ return tab.clock={ends,times,span,real,rows,stepAt:(side,c)=>{const e=ends[tab.sides.indexOf(side)];const k=e.findIndex(t=>t>=c-1e-6);return k<0?e.length-1:k;}};}
+const stepOf=(side,i)=>{const c=clockOn();if(c&&c.ends[TABS[st.tab].sides.indexOf(side)])return c.stepAt(side,c.times[Math.min(i,c.times.length-1)]);
+ return Math.min(i,side.steps.length-1);};
+function paint(d,step,detail,div){const two=d.sides.length>1;
+ // per side, the first step that takes each edge
+ const keys=d.sides.map(s=>{const m=new Map();s.steps.forEach((x,i)=>legs(x.hop).forEach(k=>m.has(k)||m.set(k,i)));return m;});
+ for(const [k,p] of Object.entries(d.edgeEls)){const idx=keys.map(m=>m.has(k)?m.get(k):-1),by=idx.map(i=>i>=0);let c="edge",m="off";
+  if(by.some(Boolean)){const reached=idx.some(i=>i>=0&&(!detail||i<=step));c+=reached?" on":" todo";m="on";
+   if(two&&by.filter(Boolean).length===1){const j=by.indexOf(true);c+=" "+d.side[j];m=d.side[j];}} // one side's own way
+  p.setAttribute("class",c);p.setAttribute("marker-end",`url(#a-${m}-${d.k})`);}
+ const onPath=new Set(d.sides.flatMap(s=>s.steps.flatMap(x=>x.hop)));
+ const here=d.sides.map(s=>dest(s.steps[stepOf(s,step)].hop)),ends=d.sides.map(s=>dest(s.steps[s.steps.length-1].hop));
+ for(const [id,g] of Object.entries(d.nodeEls)){let c=g.getAttribute("class").replace(/ (off|end|cur|diverge|m|p|r\d)\b/g,"");
+  if(!onPath.has(id))c+=" off";if(ends.includes(id))c+=" end"; // where each side ends is marked from the start
+  if(detail&&here.includes(id)){c+=" cur";const at=here.flatMap((h,j)=>h===id?[j]:[]);if(two&&at.length===1)c+=" "+d.side[at[0]];}
+  const diverges=div&&id===div.node&&(!detail||step>=div.step);if(diverges)c+=" diverge";
+  g.querySelector(".divmark").setAttribute("visibility",diverges?"visible":"hidden");g.setAttribute("class",c);}
+ paintPasses(d,step,detail);}
+
+/** In a grid case: back to the matrix, then which variant plays on each side, among the open section's columns. */
+/** Which answer plays on each side is picked in the case's row (miniRow); the bar keeps only the tabs of a page without grid. */
+function renderVariants(){$("variants").innerHTML="";} // a grid case's way back sits in its head, beside its row
+const originLine=o=>`<span class="origin ${o.kind==="real"?"real":"illustrative"}" title="${esc(plain(o.text))}">${o.kind==="real"?words.real:words.illus} · ${rich(o.text)}</span>`;
+/** The open case's row of its matrix section: the cells it compares marked − and +, another cell a click away. */
+function miniRow(c){const sec=grid.sections[st.section],ci=grid.cases.findIndex(x=>x.id===c.id);
+ const show=s=>rowsOf(s).find(r=>r.label===grid.show).shown;
+ return `<table class="mx mini"><tr>${sec.columns.map(col=>`<th scope="col">${rich(col.head)}</th>`).join("")}</tr><tr>${sec.columns.map(col=>{
+  const sg=col.variant===st.minus?"−":col.variant===st.plus?"+":"",s=cellOf(c.id,col.variant),base=cellOf(c.id,grid.baseline);
+  return `<td tabindex="0" role="button" class="${sg?"side":""}" data-case="${ci}" data-variant="${esc(col.variant)}" data-section="${st.section}" title="${esc(words.pick)}" aria-label="${esc(plain(col.head)+words.sep+cellText(s,show(s)))}"${sg?' aria-current="true"':""}>${sg?`<span class="sgn">${sg}</span>`:""}${cellBody(s,show(s),col.variant!==grid.baseline&&base,show(base))}</td>`;}).join("")}</tr></table>`;}
+function renderSummary(tab,sides){
+ if(grid){const notes=sides.map((s,k)=>{const v=variantOf(s.variant);return v.note?`<span class="vnote">${k?"+":"−"} ${rich(headOf(v.id))}${words.sep}${rich(v.note)}</span>`:"";}).join("");
+  $("summary").innerHTML=`<div class="casehead"><div class="casetext">${rich(tab.case.summary)+originLine(tab.case.origin)+notes}</div>`
+   +`<div class="caserow"><button class="home" data-home="1">${words.home}</button><div>${miniRow(tab.case)}<p class="pickhint">${esc(words.pick)}</p></div></div></div>`;}
+ else if(tab.race)$("summary").innerHTML=rich(tab.race.summary)+raceOrder(sides);
+ else if(sides.length>1)$("summary").innerHTML=rich(tab.pair.summary);
+ else $("summary").innerHTML=(sides[0].undecided?`<span class="warn">${words.undecided}</span>`:"")+rich(sides[0].summary)+originLine(sides[0].origin);}
+/** One scenario: its caption, its data so far, its steps. */
+function renderOne(s){const step=s.steps[st.step];$("caption").innerHTML=rich(step.caption);$("msg").innerHTML=rich(step.message);
+ const rs=rowsOf(s),only=onlyKind(rs);
+ $("data").innerHTML=rs.filter(r=>!(grid&&r.answer)).map(r=>`<tr class="${r.at>st.step?"hidden":changedAt(r,st.step)?"new":""}"><td${basisTitle(r)}>${rich(r.label)}</td><td class="v">${r.at>st.step?"…":esc(valueAt(r,st.step))+provenanceTag(r,only)}</td></tr>`).join("")+basisLegend(rs,2);
+ $("steps").innerHTML=s.steps.map((x,i)=>stepItem(i,()=>rich(x.message))).join("");}
+/** Two scenarios side by side: what they share is said once, what differs is said − then +. */
+function renderTwo(a,b){const sa=a.steps[stepOf(a,st.step)],sb=b.steps[stepOf(b,st.step)];
+ $("caption").innerHTML=sa.caption===sb.caption?rich(sa.caption):`<span class="cap2"><span class="sign">−</span>${rich(sa.caption)}</span><span class="cap2"><span class="sign">+</span>${rich(sb.caption)}</span>`;
+ $("msg").innerHTML=sa.message===sb.message?rich(sa.message):`− ${rich(sa.message)}<br>+ ${rich(sb.message)}`;
+ const ra=rowsOf(a),rb=rowsOf(b),only=onlyKind(ra.concat(rb)),cols=grid?[shortOf(a.variant),shortOf(b.variant)]:[a.tab,b.tab]; // each side by its own name: a pair is not always a before and an after
+ $("data").innerHTML=`<tr><th>${words.field}</th><th>− ${rich(cols[0])}</th><th>+ ${rich(cols[1])}</th></tr>`+ra.map((r,i)=>{if(grid&&r.answer)return ""; // the case's row above already says which answer plays on each side
+  const hid=r.at>st.step,va=valueAt(r,st.step),vb=valueAt(rb[i],st.step),diff=!hid&&!r.compared&&va!==vb; // a compared row differs by design: it names the two sides, not a change
+  return `<tr class="${hid?"hidden":diff?"new diff":changedAt(r,st.step)||changedAt(rb[i],st.step)?"new":""}"><td${basisTitle(r)}>${diff?"≠ ":""}${rich(r.label)}</td><td class="v">${hid?"…":esc(va)+provenanceTag(r,only)}</td><td class="v">${hid?"…":esc(vb)+provenanceTag(rb[i],only)}</td></tr>`;}).join("")+basisLegend(ra.concat(rb),3);
+ $("steps").innerHTML=Array.from({length:Math.max(a.steps.length,b.steps.length)},(_,i)=>stepItem(i,()=>stepLine(a.steps[i],b.steps[i]))).join("");}
+/** A race: each side's caption, values and steps under its number; nothing is compared, every way is its own. */
+function renderMany(sides){const [sg,sd]=signsOf(),ks=sides.map(s=>stepOf(s,st.step)),tag=j=>`<span class="rs ${sd[j]}">${sg[j]}</span>\u00a0`;
+ const caps=sides.map((s,j)=>s.steps[ks[j]].caption),msgs=sides.map((s,j)=>s.steps[ks[j]].message);
+ $("caption").innerHTML=caps.every(c=>c===caps[0])?rich(caps[0]):caps.map((c,j)=>`<span class="cap2">${tag(j)}${rich(c)}</span>`).join("");
+ $("msg").innerHTML=msgs.map((m,j)=>tag(j)+rich(m)).join("<br>");
+ const rs=sides.map(rowsOf),only=onlyKind(rs.flat());
+ $("data").innerHTML=`<tr><th>${words.field}</th>${sides.map((s,j)=>`<th>${tag(j)}${rich(s.tab)}</th>`).join("")}</tr>`+rs[0].map((r,i)=>
+  `<tr class="${sides.every((s,j)=>rs[j][i].at>ks[j])?"hidden":""}"><td${basisTitle(r)}>${rich(r.label)}</td>${sides.map((s,j)=>{const x=rs[j][i];
+   return `<td class="v">${x.at>ks[j]?"…":esc(valueAt(x,ks[j]))+provenanceTag(x,only)}</td>`;}).join("")}</tr>`).join("")+basisLegend(rs.flat(),sides.length+1);
+ const c=clockOn(); // on the clock, a line per arrival: the sides whose step ends at that time; else a line per step
+ $("steps").innerHTML=Array.from({length:nSteps()},(_,i)=>stepItem(i,()=>sides.map((s,j)=>{
+  const k=c?c.ends[j].findIndex(t=>Math.abs(t-c.times[i])<1e-6):i<s.steps.length?i:-1;
+  return k>=0?tag(j)+rich(s.steps[k].message)+(c&&k===s.steps.length-1?` · ${fmtT(c.rows[j].total)}\u00a0${esc(page.measure.unit)}`:""):"";}).filter(Boolean).join("<br>"))).join("");}
+/** The order of arrival, each side told once it has arrived: on the clock, with its time. */
+function raceOrder(sides){const c=clockOn(),[sg,sd]=signsOf(),unit=page.measure?page.measure.unit:"";
+ const done=sides.map((s,j)=>({j,at:c?c.rows[j].total:s.steps.length,end:stepOf(s,st.step)===s.steps.length-1&&(!c||c.times[st.step]>=c.ends[j][c.ends[j].length-1]-1e-6)}))
+  .filter(x=>x.end).sort((a,b)=>a.at-b.at);
+ return done.length?`<span class="rorder">${done.map(x=>`<span class="rs ${sd[x.j]}">${sg[x.j]}</span>\u00a0${c?fmtT(x.at)+"\u00a0"+esc(unit):"✓"}`).join(" · ")}</span>`:"";}
+/** A step of the list: told once the dot has reached it, a numbered blank before, still a click away. */
+function stepItem(i,said){const later=i>st.step;
+ return `<li class="${i===st.step?"cur":later?"later":""}" data-i="${i}"><button type="button"${i===st.step?' aria-current="step"':""}${later?` aria-label="${esc(words.later)} ${i+1}"`:""}>${later?"…":said()}</button></li>`;}
+/** One line of a pair's step list: said once when both sides say it, − then + otherwise; a side that has arrived says nothing. */
+function stepLine(x,y){if(x&&y&&x.message===y.message)return rich(x.message);
+ return [x&&"− "+rich(x.message),y&&"+ "+rich(y.message)].filter(Boolean).join("<br>");}
+/** Measured time, one bar per case, every case of the page on one scale: the current step's node is filled in each bar,
+ *  so the dot moving on the graph says where the time goes in every case at once. */
+const niceStep=x=>{const p=Math.pow(10,Math.floor(Math.log10(x))),f=x/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p;};
+const fmtT=v=>String(Math.round(v*10)/10);
+function renderTimeline(sides){const m=page.measure,box=$("timeline");if(!m){box.hidden=true;return;}
+ box.hidden=false;const up=!geo.across; // the bars run as the graph does: upright beside a top-to-bottom one
+ box.classList.toggle("up",up);$("stage").classList.toggle("up",up);const here=new Set(sides.map(s=>s.id)),s0=sides[0],race=!!TABS[st.tab].race;
+ const curOf=id=>{const s=sides.find(x=>x.id===id)||(race?null:s0);return s?new Set(s.steps[stepOf(s,st.step)].hop.slice(1)):new Set();}; // every node the hop runs through
+ const doneOf=id=>{const s=race&&sides.find(x=>x.id===id);return s?new Set(s.steps.slice(0,stepOf(s,st.step)).flatMap(x=>x.hop.slice(1))):new Set();};
+ const max=Math.max(...m.rows.map(r=>r.total),1e-9),first=Object.fromEntries(m.rows[0].segs);
+ const compared=n=>!m.compare||m.compare.includes(n); // a step left out moves with the load, not with the case
+ const neqs=m.rows.map((r,k)=>{let neq=null,most=m.tolerance;if(!k||race)return null; // a race compares no way to another // the step that moved most from the first row, beyond the tolerance
+  const mine=Object.fromEntries(r.segs);if(!Object.keys(mine).some(n=>n in first))return null; // another way, no step in common: nothing to compare
+  for(const n of new Set([...Object.keys(first),...Object.keys(mine)]))if(compared(n)){const d=Math.abs((mine[n]||0)-(first[n]||0));if(d>most){most=d;neq=n;}}
+  return neq;});
+ const gone=new Set(m.rows.map((r,k)=>neqs[k]).filter(n=>n&&!m.rows.some((r,k)=>k&&neqs[k]===n&&r.segs.some(([x])=>x===n)))); // a step that vanished: marked where it was
+ const rows=m.rows.map((r,k)=>{const neq=k?neqs[k]:null;
+  const s=scenario(r.scenario),cur=curOf(r.scenario),done=doneOf(r.scenario),segs=r.segs.map(([n,v])=>{const label=plain(page.nodes[n].label),pct=Math.round(100*v/(r.total||1));
+   const mark=n===neq?words.segNeq:!k&&gone.has(n)?words.segGone:"";
+   return `<button type="button" class="seg${cur.has(n)?" on":done.has(n)?" done":""}${mark?" neq":""}" style="${up?`flex-grow:${v.toFixed(4)}`:`width:${(100*v/max).toFixed(3)}%`}" data-row="${k}" data-node="${esc(n)}" title="${esc(words.seg(label,fmtT(v),m.unit,pct)+mark)}" aria-label="${esc(plain(s.tab)+" · "+words.seg(label,fmtT(v),m.unit,pct)+mark)}">${up?(mark?"≠":""):(mark?"≠ ":"")+esc(label)}</button>`;}).join("");
+  const j=race?sides.findIndex(x=>x.id===r.scenario):-1,runs=m.source==="estimate"?"":words.runs(r.n,r.left),on=(here.has(r.scenario)?" on":"")+(j>=0?" "+RSIDE[j]:""); // a race's bar takes its dot's colour
+  if(up)return `<div class="tlcol${on}"><span class="tltotal">${fmtT(r.total)}\u00a0${esc(m.unit)}</span><div class="tlvbar"><span class="room" style="flex-grow:${(max-r.total).toFixed(4)}"></span>${segs}</div><span class="tlname" title="${esc(r.basis)}">${rich(s.tab)}</span>${runs?`<span class="tlruns">${esc(runs)}</span>`:""}</div>`;
+  return `<div class="tlrow${on}"><span class="tlname" title="${esc(r.basis)}">${rich(s.tab)}</span><div class="tlbar">${segs}</div><span class="tltotal">${fmtT(r.total)}\u00a0${esc(m.unit)}${runs?" · "+esc(runs):""}</span></div>`;});
+ const step=niceStep(max/4),ticks=[];for(let t=0;t<=max+1e-9;t+=step)ticks.push(`<span style="left:${(100*t/max).toFixed(3)}%">${fmtT(t)}</span>`);
+ const head=`<div class="tlhead">${esc(words.tlHead(m.stat,m.unit,m.source))}</div>`;
+ if(up){box.innerHTML=head+`<div class="tlcols">${rows.join("")}</div>`;return;}
+ box.innerHTML=head+`${rows.join("")}<div class="tlrow"><span></span><div class="tlaxis">${ticks.join("")}</div><span></span></div>`;
+ for(const b of box.querySelectorAll(".seg"))b.classList.toggle("bare",b.clientWidth<SEG_MIN_PX);} // a few letters say nothing: the name waits for the hover
+/** A segment points at its node on the graph; a click opens its case on the first step that reaches that node. */
+function peekNode(n,on){diagrams.forEach(d=>{const g=d.nodeEls&&d.nodeEls[n];g&&g.classList.toggle("peek",on);});}
+function listenTimeline(){const box=$("timeline"),seg=e=>e.target.closest&&e.target.closest(".seg");
+ const over=e=>{const b=seg(e);b&&peekNode(b.dataset.node,true);},out=e=>{const b=seg(e);b&&peekNode(b.dataset.node,false);};
+ box.addEventListener("mouseover",over);box.addEventListener("focusin",over);box.addEventListener("mouseout",out);box.addEventListener("focusout",out);
+ box.addEventListener("click",e=>{const b=seg(e);if(!b)return;const r=page.measure.rows[+b.dataset.row],node=b.dataset.node;
+  const t=TABS.findIndex(x=>(x.sides||[]).some(s=>s.id===r.scenario));if(t<0)return;
+  const s=scenario(r.scenario),i=Math.max(0,s.steps.findIndex(x=>x.hop.slice(1).includes(node)));
+  st.playing=false;if(t!==st.tab)openTab(t);go(i);
+  const again=$("timeline").querySelector(`.seg[data-row="${b.dataset.row}"][data-node="${cssq(node)}"]`);again&&again.focus&&again.focus();});}
+function render(){
+ const tab=TABS[st.tab],detail=st.view==="detail";
+ renderVariants();[...document.querySelectorAll("#tabs button")].forEach((b,i)=>{b.setAttribute("aria-pressed",i===st.tab);b.setAttribute("aria-selected",i===st.tab);});
+ document.body.classList.toggle("onmatrix",!!tab.matrix);
+ if(tab.matrix){$("main").className="matrix";$("summary").innerHTML=rich(grid.summary);return;}
+ const sides=sidesOf(tab),div=sides.length===2&&!tab.race?divergence(sides[0],sides[1]):null; // a race has no first divergence: every way is its own
+ $("main").className=detail?"":"overview";
+ renderSummary(tab,sides);
+ diagrams.forEach(d=>paint(d,st.step,detail,div));
+ if(tab.race)renderMany(sides);else if(sides.length>1)renderTwo(sides[0],sides[1]);else renderOne(sides[0]);
+ renderTimeline(sides);
+ $("ocap").innerHTML=detail?"":$("caption").innerHTML; // the overview folds the panel away, not the story
+ const cur=$("steps").querySelector("li.cur");if(cur&&cur.scrollIntoView)cur.scrollIntoView({block:"nearest"});
+ $("fold").textContent=detail?words.hide:words.show;$("fold").setAttribute("aria-expanded",detail);
+ $("play").textContent=st.playing?"⏸":"⏵";$("play").setAttribute("aria-label",st.playing?words.pause:words.play);
+ $("play").classList.toggle("go",!st.playing); // paused, Play is the obvious next click
+}
+// ---- motion: a dot per side; outside a race, same hop index, same duration, a side that has arrived waiting on its outcome; a race runs on its clock (runRace)
+const easeInOut=f=>f<.5?4*f*f*f:1-Math.pow(-2*f+2,3)/2;
+/** How long the view stays after step i's hop: long where a reader has something to see, short where the dot only passes. */
+function dwellAfter(i){const tab=TABS[st.tab],sides=sidesOf(tab),div=sides.length===2&&!tab.race?divergence(sides[0],sides[1]):null;
+ if(i===nSteps()-1||(div&&div.step===i+1))return DWELL_KEY;
+ const key=sides.some(s=>{const x=s.steps[i];if(!x)return false;const n=page.nodes[dest(x.hop)];return n.role==="decision"||!!n.kind;});
+ return key?DWELL_KEY:DWELL_PASS;}
+const nSteps=()=>{const c=clockOn();if(c)return c.times.length;const s=sidesOf(TABS[st.tab]);return s.length?Math.max(...s.map(x=>x.steps.length)):1;};
+/** Dots on one point sit side by side in their order, so each stays readable. */
+function spread(qs){return qs.map((q,j)=>{const near=qs.flatMap((o,k)=>Math.hypot(o.x-q.x,o.y-q.y)<DOT_GAP?[k]:[]);
+ return near.length>1?(near.indexOf(j)-(near.length-1)/2)*DOT_GAP:0;});}
+/** A race on the clock: from the last arrival to the next, every dot where its own time puts it; the clock runs on
+ *  through the arrivals while playing, and the slowest side arrives after RACE_MS of clock at 1× (longer on screen: SLOW, ARRIVE_PAUSE). */
+const SLOW=1.8,ARRIVE_PAUSE=650; // the run into an arrival lasts SLOW times longer, easing out; the race then holds a moment
+const easeOut=f=>1-Math.pow(1-f,3);
+/** Where a dot is along its step: a "fall" covers its edge as a body falls, the distance growing with the square of the time. */
+const fallen=(step,f)=>step&&step.motion==="fall"?f*f:f;
+function runRace(c){const d=diagrams[0],c1=c.times[st.step],c0=st.step?c.times[st.step-1]:0;
+ const lands=d.sides.map((s,j)=>{const e=c.ends[j];return Math.abs(e[e.length-1]-c1)<1e-6?s.steps[s.steps.length-1]:null;});
+ const arrives=lands.some(Boolean),soft=lands.some(x=>x&&x.motion!=="fall"); // some dot reaches its outcome at the end of this run; a fall does not brake
+ const ms=RACE_MS/c.span/st.speed,dur=REDUCED?1:Math.max(1,(c1-c0)*ms*(soft?SLOW:1));let t0=null;
+ if(!st.step)clearTrails(d);
+ const place=t=>{const qs=d.sides.map((s,j)=>{const e=c.ends[j];let k=e.findIndex(x=>x>t+1e-9);const end=k<0;if(end)k=e.length-1;
+   const a=k?e[k-1]:0,f0=end?1:Math.max(0,Math.min(1,(t-a)/((e[k]-a)||1))),f=fallen(s.steps[k],f0),p=pathOf(d,s.steps[k].hop);
+   return {q:p.getPointAtLength(f*p.getTotalLength()),end,id:dest(s.steps[k].hop),p:t/e[e.length-1],box:end?geo.nodes[dest(s.steps[k].hop)]&&nodeBox(dest(s.steps[k].hop)):p.getBBox()};});
+  const dx=spread(qs.map(x=>x.q));qs.forEach((x,j)=>{d.dots[j].setAttribute("transform",`translate(${x.q.x+dx[j]} ${x.q.y})`);
+   if(x.end&&st.playing)land(d,j,x.q,x.id,d.sides[j].steps[d.sides[j].steps.length-1].motion==="fall");else if(!x.end){d.landed.delete(j);trail(d,j,x.q);}});
+  const clock=$("rclock");if(clock)clock.textContent=`⏱ ${fmtT(t*c.real/c.span)}\u00a0${page.measure.unit}`;
+  const now=performance.now(),run=qs.filter((x,j)=>!x.end||now-(d.landedAt[j]??-1e9)<CAM_HOLD);lastDots=run.map(x=>x.q); // an arrival stays in frame a moment
+  const landing=run.find(x=>x.end); // a dot just arrived: its landing is what to see, ahead of the leader
+  const lead=landing||run.filter(x=>!x.end).reduce((b,x)=>!b||x.p>b.p?x:b,null)||run[0]; // else the leader: furthest along its own way
+  if(st.readable&&lead)camera(run,lead);else follow(lastDots);};
+ const tick=ts=>{if(!st.playing){place(c1);return;}
+  t0??=ts;const f=Math.min(1,(ts-t0)/dur);place(c0+(c1-c0)*(soft?easeOut(f):f));
+  if(f<1){st.raf=requestAnimationFrame(tick);return;}
+  const last=st.step===nSteps()-1;
+  st.timer=setTimeout(()=>{if(!st.playing)return;
+   if(last&&st.view==="detail"){st.playing=false;render();return;}
+   st.step=last?0:st.step+1;render();runHop();},REDUCED?DWELL_PASS:last?OVERVIEW_PAUSE:arrives?ARRIVE_PAUSE/st.speed:0);};
+ st.raf=requestAnimationFrame(tick);}
+function runHop(){cancelAnimationFrame(st.raf);clearTimeout(st.timer);if(!diagrams.length)return;
+ const clock=clockOn();if(clock)return runRace(clock);
+ const hops=diagrams.flatMap(d=>d.sides.map((s,j)=>{const i=stepOf(s,st.step),h=s.steps[i].hop,p=pathOf(d,h);
+  return {d,j,dot:d.dots[j],p,len:p.getTotalLength(),arrived:i<st.step,n:h.length-1,end:i===s.steps.length-1,id:dest(h),fall:s.steps[i].motion==="fall"};}));
+ if(!st.step)diagrams.forEach(clearTrails);
+ const ending=hops.some(h=>h.end&&!h.arrived&&!h.fall); // a dot runs into its outcome: that hop slows down at its end, unless it falls
+ const legsNow=Math.max(1,...hops.filter(h=>!h.arrived).map(h=>h.n)); // a hop through a node takes the time of its edges
+ const dur=REDUCED?1:HOP_MS*legsNow*(ending?SLOW:1)/st.speed;let t0=null,f0=0; // reduced motion: the dots land at once, they never vanish
+ const place=f=>{const qs=hops.map(h=>h.p.getPointAtLength((h.arrived?1:h.fall?f0*f0:f)*h.len));
+  const dx=spread(qs); // dots on one point sit side by side, − left of +, so all stay readable
+  hops.forEach((h,j)=>{h.dot.setAttribute("transform",`translate(${qs[j].x+dx[j]} ${qs[j].y})`);if(!h.arrived)trail(h.d,h.j,qs[j]);});
+  lastDots=qs.filter((q,j)=>!hops[j].arrived);follow(lastDots);};
+ hops.forEach(h=>{if(!h.end)h.d.landed.delete(h.j);});
+ const tick=ts=>{if(!st.playing){place(1);return;}
+  t0??=ts;f0=Math.min(1,(ts-t0)/dur);place(ending?easeOut(f0):easeInOut(f0));
+  if(f0<1){st.raf=requestAnimationFrame(tick);return;}
+  hops.forEach(h=>{if(h.end&&!h.arrived)land(h.d,h.j,h.p.getPointAtLength(h.len),h.id,h.fall);});
+  st.timer=setTimeout(()=>{if(!st.playing)return;const last=st.step===nSteps()-1;
+   if(last&&st.view==="detail"){st.playing=false;render();return;}
+   st.step=last?0:st.step+1;render();runHop();},st.view==="detail"?dwellAfter(st.step)/st.speed:OVERVIEW_PAUSE);};
+ st.raf=requestAnimationFrame(tick);}
+/** The line a dot runs along: the edge, or for a hop through nodes its edges end to end, the dot crossing each node it passes. */
+function pathOf(d,h){if(h.length===2)return d.edgeEls[h.join(">")];const key=h.join(">");
+ d.via??={};return d.via[key]??=el("path",{d:legs(h).map((k,i)=>{const e=d.edgeEls[k].getAttribute("d");return i?e.replace(/^M/,"L"):e;}).join(" "),
+  class:"via",fill:"none",stroke:"none"},d.svg);}
+function go(i){st.step=Math.max(0,Math.min(nSteps()-1,i));render();runHop();}
+/** The case's diagram fills the screen below what sits above it, whole, outcomes included: a projected page shows the fork. */
+const WIN=typeof window==="undefined"?null:window; // absent when the page is played without a browser (tests)
+function fitHeight(){if(!WIN)return;const tl=$("timeline"),below=$("controls").offsetHeight+$("legend").offsetHeight+(tl.classList.contains("up")?0:tl.offsetHeight)+FOOT_ROOM;
+ const aside=document.querySelector("aside"),at=aside.getBoundingClientRect().top+WIN.scrollY; // the panel scrolls within the screen
+ aside.style.maxHeight=Math.max(MIN_DIAGRAM_H,WIN.innerHeight-at-8)+"px";
+ for(const d of diagrams){const top=d.svg.getBoundingClientRect().top+WIN.scrollY;
+  d.svg.style.maxHeight=Math.max(MIN_DIAGRAM_H,WIN.innerHeight-top-below)+"px";}}
+/** Step by step, labels stay readable: when the whole graph would draw them under MIN_LABEL_PX, the view zooms to that size
+ *  on where the path starts, then follows the dots. Fit, and the overview, show the whole graph again. */
+function readable(){if(!WIN||st.view!=="detail"||!diagrams.length)return;const d=diagrams[0],u=unitsPerPx(d.svg);
+ if(!isFinite(u)||NODE_FONT/u>=MIN_LABEL_PX)return;
+ view.k=kRead=Math.min(ZOOM_MAX,MIN_LABEL_PX*u/NODE_FONT);aim.k=null;cam.mode="field";st.follow=true;st.readable=true;
+ const r=d.svg.getBoundingClientRect(),tall=geo.height*MIN_LABEL_PX/NODE_FONT; // the whole height at readable size, in px
+ if(geo.width/r.width>=.99*geo.height/r.height&&tall>r.height+1)diagrams.forEach(x=>{x.svg.style.height=Math.round(tall)+"px";}); // max-height still caps it
+ const b=geo.nodes[d.sides[0].steps[0].hop[0]];setView({x:b.x+b.w/2-viewW()/2,y:b.y-viewH()*FOLLOW_MARGIN});}
+/** A case opens whole: the fork and where each side ends are in sight. The readable zoom waits for the reader to move. */
+function openTab(i){st.tab=i;st.playing=false;st.step=0;buildPanes();fit();go(0);fitHeight();st.auto=true;}
+/** The first Play or step after opening: now the view zooms to readable labels and follows the dots. */
+function engage(){if(!st.auto)return;st.auto=false;readable();}
+// ---- controls
+if(!grid)TABS.forEach((t,i)=>{const b=document.createElement("button");b.setAttribute("role","tab");b.textContent=t.label;b.title=t.title;if(t.pair)b.className="pair";b.onclick=()=>openTab(i);$("tabs").appendChild(b);});
+$("keys").innerHTML=words.keys+(!grid&&TABS.length>1?words.tabKeys:"")+words.zoomKeys+(DATA.views?words.viewKeys:"")+(grid?" · "+words.esc:"");
+/** Another view of the same paths: drawn anew, on the same step. */
+function useView(v){geo=DATA.views[v];for(const b of $("views").children)b.setAttribute("aria-pressed",String(b.dataset.view===v));
+ const keep=st.step;buildPanes();fit();if(!TABS[st.tab].matrix)go(keep);fitHeight();}
+if(DATA.views){const g=$("views");g.hidden=false;g.setAttribute("role","group");g.setAttribute("aria-label",words.views);
+ Object.keys(DATA.views).forEach((v,i)=>{const b=document.createElement("button");b.dataset.view=v;
+  [b.textContent,b.title]=words.view[v];b.setAttribute("aria-label",words.view[v][1]);b.setAttribute("aria-pressed",String(!i));
+  b.onclick=()=>useView(v);g.appendChild(b);});} // the page's own words, never spec text
+/** Another tab, the focus moved onto it: ↑ ↓ walk the row, a digit opens the tab of that rank. */
+function toTab(i){if(grid||i<0||i>=TABS.length)return;openTab(i);const b=$("tabs").children[i];b&&b.focus&&b.focus();}
+$("fold").onclick=()=>{st.view=st.view==="detail"?"overview":"detail";try{localStorage.setItem("truepath-view",st.view);}catch(e){}st.playing=!REDUCED;
+ st.auto=false;fit();go(0);fitHeight();readable();};
+try{const v=localStorage.getItem("truepath-view");if(v==="overview"||v==="detail")st.view=v;}catch(e){}
+$("play").onclick=()=>{st.playing=!st.playing;if(st.playing)engage();if(st.playing)st.follow=true;if(st.playing&&st.view==="detail"&&st.step===nSteps()-1)st.step=0;render();runHop();};
+$("fwd").onclick=()=>{st.playing=false;engage();go(st.step+1);};$("back").onclick=()=>{st.playing=false;engage();go(st.step-1);};
+$("restart").onclick=()=>{st.playing=true;engage();st.follow=true;go(0);};
+$("zin").onclick=()=>zoomBy(ZOOM_STEP);$("zout").onclick=()=>zoomBy(1/ZOOM_STEP);$("fit").onclick=()=>{st.auto=false;fit();};$("speed").onchange=e=>{st.speed=+e.target.value;};
+$("steps").onclick=e=>{const li=e.target.closest("li");if(li){st.playing=false;engage();go(+li.dataset.i);}};
+const cssq=v=>String(v).replace(/["\\]/g,"\\$&"); // a value inside a quoted attribute selector
+/** Back to the matrix, the focus on the cell the case was opened from. */
+function home(){openTab(0);const f=st.from;if(!f)return;
+ const td=$("panes").querySelector(`td[data-case="${f.case}"][data-variant="${cssq(f.variant)}"][data-section="${f.section}"]`);td&&td.focus&&td.focus();}
+/** One set of keys wherever the focus is, a tab included: the reader clicks a tab, then drives the case from the keyboard.
+ *  ← → step, Home End the first and last step, Space plays; on the tab row ↑ ↓ change tab; a digit opens that tab. */
+const onTab=t=>!!(t&&t.getAttribute&&t.getAttribute("role")==="tab");
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&grid&&!TABS[st.tab].matrix){e.preventDefault();home();return;}
+ const t=e.target;if(t.tagName==="SELECT"||t.tagName==="INPUT"||t.tagName==="TEXTAREA"||e.ctrlKey||e.metaKey||e.altKey)return;
+ const story=!TABS[st.tab].matrix;
+ if(e.key==="ArrowRight")$("fwd").click();else if(e.key==="ArrowLeft")$("back").click();
+ else if((e.key==="Home"||e.key==="End")&&story){e.preventDefault();st.playing=false;engage();go(e.key==="Home"?0:nSteps()-1);}
+ else if((e.key==="ArrowUp"||e.key==="ArrowDown")&&onTab(t)){e.preventDefault();toTab((st.tab+(e.key==="ArrowDown"?1:-1)+TABS.length)%TABS.length);}
+ else if(/^[1-9]$/.test(e.key)&&!grid&&+e.key<=TABS.length)toTab(+e.key-1);
+ else if(e.key===" "){if(t.tagName==="BUTTON"&&!onTab(t))return; // a control presses itself; a tab does not reopen, it plays
+  e.preventDefault();if(story)$("play").click();}
+ else if(e.key==="+"||e.key==="=")$("zin").click();else if(e.key==="-")$("zout").click();else if(e.key==="0")$("fit").click();
+ else if((e.key==="v"||e.key==="V")&&DATA.views){const vs=Object.keys(DATA.views),on=vs.findIndex(v=>DATA.views[v]===geo);useView(vs[(on+1)%vs.length]);}});
+document.addEventListener("keyup",e=>{if(e.key===" "&&onTab(e.target))e.preventDefault();}); // a button acts on Space's keyup: the tab would reopen
+/** A cell of the case's row: on +, or on − with Shift; the side it leaves goes to the other one rather than playing twice. */
+function pick(td,minus){const v=td.dataset.variant,[me,other]=minus?["minus","plus"]:["plus","minus"];if(v===st[me])return;
+ if(v===st[other])st[other]=st[me];st[me]=v;openTab(st.tab);
+ const again=$("summary").querySelector(`td[data-variant="${cssq(v)}"]`);again&&again.focus&&again.focus();} // the row is drawn anew: focus stays on the cell
+$("summary").addEventListener("click",e=>{if(e.target.closest&&e.target.closest("[data-home]")){home();return;}
+ const td=e.target.closest&&e.target.closest("td[data-case]");if(td)pick(td,e.shiftKey);});
+$("summary").addEventListener("keydown",e=>{const td=e.target.closest&&e.target.closest("td[data-case]");
+ if(!td||(e.key!=="Enter"&&e.key!==" "))return;e.preventDefault();e.stopPropagation();pick(td,e.shiftKey);});
+if(grid)document.body.classList.add("grid");
+WIN&&WIN.addEventListener("resize",()=>{fitHeight();if(st.readable)readable();}); // a readable zoom is measured again
+listenTimeline();
+openTab(0);
+</script></body></html>

@@ -1,0 +1,156 @@
+[
+ {
+  "week": 1,
+  "ok": true,
+  "modules": 3,
+  "duration": 152,
+  "steps": {
+   "WAIT": 5,
+   "PREP": 10,
+   "TOOLS": 34,
+   "PICK": 1,
+   "PLAN": 24,
+   "APPLY": 78
+  }
+ },
+ {
+  "week": 1,
+  "ok": true,
+  "modules": 3,
+  "duration": 150,
+  "steps": {
+   "WAIT": 3,
+   "PREP": 12,
+   "TOOLS": 41,
+   "PICK": 1,
+   "PLAN": 21,
+   "APPLY": 72
+  }
+ },
+ {
+  "week": 1,
+  "ok": true,
+  "modules": 3,
+  "duration": 151,
+  "steps": {
+   "WAIT": 4,
+   "PREP": 9,
+   "TOOLS": 29,
+   "PICK": 1,
+   "PLAN": 27,
+   "APPLY": 81
+  }
+ },
+ {
+  "week": 1,
+  "ok": true,
+  "modules": 3,
+  "duration": 156,
+  "steps": {
+   "WAIT": 6,
+   "PREP": 11,
+   "TOOLS": 37,
+   "PICK": 2,
+   "PLAN": 24,
+   "APPLY": 75
+  }
+ },
+ {
+  "week": 1,
+  "ok": false,
+  "modules": 0,
+  "duration": 103,
+  "steps": {
+   "WAIT": 4,
+   "PREP": 10,
+   "TOOLS": 88,
+   "PICK": 1,
+   "PLAN": 0,
+   "APPLY": 0
+  }
+ },
+ {
+  "week": 2,
+  "ok": true,
+  "modules": 12,
+  "duration": 177,
+  "steps": {
+   "WAIT": 2,
+   "PREP": 5,
+   "TOOLS": 1,
+   "PICK": 1,
+   "PLAN": 60,
+   "APPLY": 108
+  }
+ },
+ {
+  "week": 2,
+  "ok": true,
+  "modules": 12,
+  "duration": 190,
+  "steps": {
+   "WAIT": 3,
+   "PREP": 4,
+   "TOOLS": 1,
+   "PICK": 1,
+   "PLAN": 72,
+   "APPLY": 108
+  }
+ },
+ {
+  "week": 2,
+  "ok": true,
+  "modules": 12,
+  "duration": 189,
+  "steps": {
+   "WAIT": 2,
+   "PREP": 5,
+   "TOOLS": 1,
+   "PICK": 1,
+   "PLAN": 60,
+   "APPLY": 120
+  }
+ },
+ {
+  "week": 3,
+  "ok": true,
+  "modules": 2,
+  "duration": 67,
+  "steps": {
+   "WAIT": 2,
+   "PREP": 5,
+   "TOOLS": 1,
+   "PICK": 1,
+   "PLAN": 16,
+   "APPLY": 42
+  }
+ },
+ {
+  "week": 3,
+  "ok": true,
+  "modules": 2,
+  "duration": 61,
+  "steps": {
+   "WAIT": 2,
+   "PREP": 4,
+   "TOOLS": 1,
+   "PICK": 1,
+   "PLAN": 14,
+   "APPLY": 38
+  }
+ },
+ {
+  "week": 3,
+  "ok": true,
+  "modules": 2,
+  "duration": 66,
+  "steps": {
+   "WAIT": 3,
+   "PREP": 5,
+   "TOOLS": 1,
+   "PICK": 1,
+   "PLAN": 16,
+   "APPLY": 40
+  }
+ }
+]

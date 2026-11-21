@@ -1,0 +1,60 @@
+{
+  "title": "Refund window",
+  "subtitle": "Example: a refund asked on day 30 was refused before the fix",
+  "source": "truepath example, self-contained",
+  "lang": "en",
+  "port": "decide.js",
+  "kinds": {
+    "ok": { "label": "refunded", "color": "#15803d" },
+    "wrong": { "label": "store credit only", "color": "#b91c1c" }
+  },
+  "nodes": [
+    { "id": "REQ", "label": "refund request" },
+    { "id": "AGE", "label": "days since delivery" },
+    { "id": "D", "label": "within 30 days?", "role": "decision" },
+    { "id": "REFUND", "label": "money refunded", "kind": "ok" },
+    { "id": "CREDIT", "label": "store credit", "kind": "wrong" }
+  ],
+  "edges": [
+    ["REQ", "AGE", ""],
+    ["AGE", "D", ""],
+    ["D", "REFUND", "yes"],
+    ["D", "CREDIT", "no"]
+  ],
+  "panel": [
+    { "label": "Fix", "value": "inputs.fix", "at": 0, "labels": { "true": "yes", "false": "no" }, "compared": true },
+    { "label": "Days since delivery", "value": "inputs.days", "at": 1 },
+    { "label": "In the window", "value": "verdict.inWindow", "at": 2, "labels": { "true": "yes", "false": "no" } }
+  ],
+  "scenarios": [
+    {
+      "id": "old",
+      "tab": "Before",
+      "summary": "Day 30: the old check reads `days < 30` and refuses",
+      "origin": { "kind": "illustrative", "text": "skill example" },
+      "inputs": { "fix": false, "days": 30 },
+      "expect": { "outcome": "CREDIT" },
+      "steps": [
+        { "hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "The customer asks on the last day of the window." },
+        { "hop": ["AGE", "D"], "message": "30 < 30 → false", "caption": "The old check excludes the last day." },
+        { "hop": ["D", "CREDIT"], "message": "store credit", "caption": "A refund the policy promises is refused." }
+      ]
+    },
+    {
+      "id": "new",
+      "tab": "After",
+      "summary": "Same request: `days <= 30` keeps day 30 in the window",
+      "origin": { "kind": "illustrative", "text": "skill example" },
+      "inputs": { "fix": true, "days": 30 },
+      "expect": { "outcome": "REFUND" },
+      "steps": [
+        { "hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "Same request." },
+        { "hop": ["AGE", "D"], "message": "30 <= 30 → true", "caption": "The last day counts." },
+        { "hop": ["D", "REFUND"], "message": "refunded", "caption": "The policy is applied as written." }
+      ]
+    }
+  ],
+  "pairs": [
+    { "before": "old", "after": "new", "tab": "before / after", "summary": "The one difference: does day 30 count?" }
+  ]
+}
