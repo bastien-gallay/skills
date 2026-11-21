@@ -1,11 +1,16 @@
-name: release
+name: bfw release
 
 on:
   push:
-    tags: ['v*.*.*']
+    # monorepo tags carry the plugin prefix: bfw/vX.Y.Z
+    tags: ['bfw/v*.*.*']
 
 permissions:
   contents: write
+
+defaults:
+  run:
+    working-directory: plugins/bfw
 
 jobs:
   release:
@@ -18,7 +23,7 @@ jobs:
       - name: Assert tag matches plugin.json version
         run: |
           manifest=$(jq -r .version .claude-plugin/plugin.json)
-          tag="${GITHUB_REF_NAME#v}"
+          tag="${GITHUB_REF_NAME#bfw/v}"
           if [[ "$manifest" != "$tag" ]]; then
             echo "tag $tag ≠ plugin.json $manifest" >&2
             exit 1
@@ -32,7 +37,7 @@ jobs:
 
       - name: Extract CHANGELOG section
         run: |
-          awk -v v="$GITHUB_REF_NAME" '
+          awk -v v="${GITHUB_REF_NAME#bfw/}" '
             $0 ~ "^## "v {flag=1; next}
             /^## / && flag {exit}
             flag {print}

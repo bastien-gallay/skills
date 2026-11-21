@@ -1,12 +1,16 @@
-name: Package and Release Skill
+name: rhetorical-analysis release
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'rhetorical-analysis/v*'
 
 permissions:
   contents: write
+
+defaults:
+  run:
+    working-directory: plugins/rhetorical-analysis
 
 jobs:
   package-and-release:
@@ -47,7 +51,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.skill
+          files: plugins/rhetorical-analysis/dist/*.skill
           generate_release_notes: true
           prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
           fail_on_unmatched_files: true
