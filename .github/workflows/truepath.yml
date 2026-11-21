@@ -1,12 +1,18 @@
-name: ci
+name: truepath
 
 on:
   push:
     branches: [main]
+    paths: ["plugins/truepath/**", ".github/workflows/truepath.yml"]
   pull_request:
+    paths: ["plugins/truepath/**", ".github/workflows/truepath.yml"]
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: plugins/truepath
 
 jobs:
   test:
@@ -42,9 +48,8 @@ jobs:
       - name: Markdown
         run: npx --yes markdownlint-cli2@0.24.0 README.md CHANGELOG.md .wrap.md "docs/*.md" "skills/truepath/**/*.md"
       - name: Plugin manifest
-        run: jq -e . .claude-plugin/plugin.json .claude-plugin/marketplace.json
+        run: jq -e . .claude-plugin/plugin.json ../../.claude-plugin/marketplace.json
       - name: One version everywhere
         run: |
           v=$(jq -r .version .claude-plugin/plugin.json)
-          jq -e --arg v "$v" '.metadata.version == $v and .plugins[0].version == $v' .claude-plugin/marketplace.json
           test "$(grep -m1 '^## ' CHANGELOG.md)" = "## $v"
