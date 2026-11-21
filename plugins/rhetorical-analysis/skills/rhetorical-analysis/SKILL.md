@@ -54,9 +54,9 @@ Voir `references/fallacies-catalog.md` pour la liste complète des sophismes à 
 ### Option 1 : Génération automatique via script
 
 Cette option requiert le package Python `rhetorical-analysis-skill`, qui expose
-la commande `generate-analysis` (installer via `uv tool install
-rhetorical-analysis-skill` ou `pip install .` depuis le dépôt). Sans le package,
-utiliser l'option 2 ci-dessous.
+la commande `generate-analysis`. Le package n'est pas publié sur PyPI :
+l'installer depuis le dépôt (`uv tool install ./plugins/rhetorical-analysis`
+depuis la racine du monorepo). Sans le package, utiliser l'option 2 ci-dessous.
 
 1. Produire l'analyse au format JSON (voir `assets/example_analysis.json` pour le schéma)
 2. Exécuter la commande de génération :
