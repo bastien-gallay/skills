@@ -38,8 +38,8 @@ All three derive from a single source: [`prompt.md`](./prompt.md).
 ### Claude Code — the `/flair` command
 
 ```bash
-git clone <this-repo> flair
-cd flair
+git clone https://github.com/bastien-gallay/skills.git
+cd skills/styles/flair
 ./install.sh
 ```
 

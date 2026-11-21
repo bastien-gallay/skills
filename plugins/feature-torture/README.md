@@ -38,12 +38,13 @@ Detection is automatic; there is no flag. Standard feature-row runs are unchange
 ### Claude Code (plugin channel)
 
 ```sh
-/plugin install feature-torture@bastien-gallay/feature-torture
+/plugin marketplace add bastien-gallay/skills
+/plugin install feature-torture@skills
 ```
 
 ### Claude Desktop or claude.ai web (`.skill` archive)
 
-Download the latest `feature-torture-vX.Y.Z.skill` from the [Releases page](https://github.com/bastien-gallay/feature-torture/releases) and:
+Download the latest `feature-torture-vX.Y.Z.skill` from the [Releases page](https://github.com/bastien-gallay/skills/releases) (tags `feature-torture/vX.Y.Z`) and:
 
 - **Desktop**: double-click — `.skill` is OS-registered and opens an *Add to library* dialog.
 - **Web**: Settings → Capabilities → Skills → upload.
@@ -51,7 +52,7 @@ Download the latest `feature-torture-vX.Y.Z.skill` from the [Releases page](http
 ### vercel-labs/skills
 
 ```sh
-npx skills install bastien-gallay/feature-torture
+npx skills add bastien-gallay/skills --skill feature-torture
 ```
 
 ## Quickstart

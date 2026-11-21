@@ -37,8 +37,8 @@ All three are derived from a single source: [`prompt.md`](./prompt.md).
 ### Claude Code
 
 ```bash
-git clone <this-repo> glance
-cd glance
+git clone https://github.com/bastien-gallay/skills.git
+cd skills/styles/glance
 ./install.sh
 ```
 
