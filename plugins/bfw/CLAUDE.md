@@ -13,7 +13,7 @@ host) and loaded as a prompt at session time:
   session flow, the argument contract (`TOPIC`, `IDEAS`, `DURATION`,
   `OUTPUT`, `TECHNIQUES`), the problem-shape recipes, and the output
   document template. This is "the brain".
-- `skills/brainstorm/techniques.md` — the technique library (20
+- `skills/brainstorm/techniques.md` — the technique library (24
   techniques across 5 phases: diverge / analyze / converge /
   crystallize / adaptive). Each entry has Purpose / When / How /
   Duration / Output shape. `SKILL.md` references this file by name at

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- README and CLAUDE.md now count 24 techniques, not 20, and list
+  Pre-mortem and Atom Inventory among the adaptive techniques.
+
 ## v0.2.0 — 2026-05-07
 
 ### Added
