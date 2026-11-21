@@ -5,8 +5,8 @@
   "author": {
     "name": "Bastien Gallay"
   },
-  "homepage": "https://github.com/bastien-gallay/bfw",
-  "repository": "https://github.com/bastien-gallay/bfw",
+  "homepage": "https://github.com/bastien-gallay/skills/tree/main/plugins/bfw",
+  "repository": "https://github.com/bastien-gallay/skills",
   "license": "MIT",
   "keywords": [
     "brainstorm",

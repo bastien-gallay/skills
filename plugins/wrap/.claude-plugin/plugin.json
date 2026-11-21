@@ -5,8 +5,8 @@
   "author": {
     "name": "Bastien Gallay"
   },
-  "homepage": "https://github.com/bastien-gallay/wrap",
-  "repository": "https://github.com/bastien-gallay/wrap",
+  "homepage": "https://github.com/bastien-gallay/skills/tree/main/plugins/wrap",
+  "repository": "https://github.com/bastien-gallay/skills",
   "license": "MIT",
   "keywords": [
     "wrap",

@@ -5,8 +5,8 @@
   "author": {
     "name": "Bastien Gallay"
   },
-  "homepage": "https://github.com/bastien-gallay/show-me",
-  "repository": "https://github.com/bastien-gallay/show-me",
+  "homepage": "https://github.com/bastien-gallay/skills/tree/main/plugins/show-me",
+  "repository": "https://github.com/bastien-gallay/skills",
   "license": "MIT",
   "keywords": [
     "show-me",

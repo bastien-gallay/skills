@@ -5,8 +5,8 @@
   "author": {
     "name": "Bastien Gallay"
   },
-  "homepage": "https://github.com/bastien-gallay/meeting-screenshot-extractor",
-  "repository": "https://github.com/bastien-gallay/meeting-screenshot-extractor",
+  "homepage": "https://github.com/bastien-gallay/skills/tree/main/plugins/meeting-screenshot-extractor",
+  "repository": "https://github.com/bastien-gallay/skills",
   "license": "MIT",
   "keywords": [
     "meeting-screenshot-extractor",
