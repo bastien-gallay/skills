@@ -1,0 +1,28 @@
+{
+  "name": "market-strategist",
+  "owner": {
+    "name": "Bastien Gallay"
+  },
+  "metadata": {
+    "description": "market-strategist — single-plugin marketplace.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "market-strategist",
+      "source": "./",
+      "description": "A strategic advisor that fills the framework and lets you react — market analysis, positioning, traction, pitch, and project communication.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "homepage": "https://github.com/bastien-gallay/market-strategist",
+      "repository": "https://github.com/bastien-gallay/market-strategist",
+      "category": "productivity",
+      "tags": [
+        "strategy",
+        "positioning",
+        "traction",
+        "marketing"
+      ]
+    }
+  ]
+}

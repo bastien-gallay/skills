@@ -1,0 +1,10 @@
+{
+  // Prose hard-wraps at ~78 columns, but the framework tables, the ASCII
+  // renderings in the library, and the usage samples run wider on purpose.
+  "MD013": false,
+  // SKILL.md and the library use <topic>, <target>, [X] placeholders.
+  "MD033": false,
+  // The changelog repeats "### Added" per release; duplicates under the *same*
+  // parent still fail.
+  "MD024": { "siblings_only": true }
+}

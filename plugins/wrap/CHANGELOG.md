@@ -1,0 +1,189 @@
+# Changelog
+
+All notable changes to this skill are documented here.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
+
+## [0.7.0] — 2026-09-23
+
+### Changed
+
+- **The closing report is a markdown table**, one row per phase, with a
+  *Translation* column carrying the gloss in the session's language. A phase
+  name never appears in the output without its translation.
+- **A fact that stands alone gets no sentence.** `3 deleted`, not "I deleted
+  three files" — a new always-on directive, applied to the whole output.
+- **A changed-file list follows the table**: repo-relative paths the terminal
+  renders as links, built from `git diff --name-status`, with no detail.
+- **The next step is introduced by `### → Next — recommended in a new
+  session`**, a ranked numbered list, then the resume block last. The
+  recommendation to continue in a fresh session is explicit rather than
+  implied by the resume block.
+- Two anti-patterns and a self-check cover the prose report and the next step
+  that continues in the current context.
+
+From a direct request, not a feedback batch — nothing is archived out of
+`FEEDBACK.md` for it.
+
+## [0.6.0] — 2026-08-04
+
+### Added
+
+- **The pass no longer ends at the push.** Once the publication path completes,
+  `wrap` re-reads the entry point Shitsuke wrote and reconciles what the gate's
+  answer falsified — a version called unreleased that is released, a branch
+  called unmerged that is merged, a commit count that is now one squash. It is a
+  reconciliation, not a gate: done and reported, never asked.
+- **Shitsuke stops asserting what the gate is about to change.** The entry point
+  is written *before* publication, so "not yet published" and "nothing is
+  committed" are false within the minute if the user answers *publish*. Write
+  the state as of the writing, dated, and leave the publication claim for after
+  it happens.
+- The landing is verified, not taken from the answer: read the merge commit and
+  its parents, confirm the remote's branch state, and re-read the entry point on
+  the merged result rather than on the branch.
+- *The entry point that describes the pass instead of the result* joins the
+  anti-patterns; a hard rule and a self-check point at the same gap.
+
+Folded from two measured occurrences of the entry point itself going stale —
+`0b0fe37`, inside the release that published it, and the bullet that survived
+four merges until a refuter read it. A third commit the same day, `8b173d1`,
+fixed the same *family* of error on a different surface: release notes calling
+`0.4.0` unreleased. It supports the shape of the failure, not the count, and the
+fix shipped here would not have caught it. A refuter separated the two.
+
+## [0.5.0] — 2026-08-03
+
+### Added
+
+- Invoking wrap is stated to be the request for the only two subagents the
+  protocol uses — Orientation's collector wave and the refuter — for harnesses
+  that stand off subagents unless the user asked. Scoped deliberately: no other
+  part of the pass needs one, so the line cannot be read as a general
+  permission, and the existing degradation rule stays the exit when a harness
+  refuses anyway.
+- Seiso's blast radius now includes what landed on the default branch *while
+  the session ran*. Those commits falsify prose written minutes earlier and
+  appear in no diff of your own branch — a doc asserting a setting did not
+  exist was false the minute it was typed, because the setting had just been
+  merged.
+- An argument that does nothing never reaches the check it was meant to
+  exercise — `osascript -e 'keystroke ""'` succeeds without accessibility
+  permission. Joins the probe-hygiene directive.
+- The directive on parallel sessions now names the range direction. Before a
+  push, `git log HEAD..origin/main` is what says the default branch moved;
+  `git log origin/main..HEAD` answers a different question and returns the same
+  thing whether you are current or three commits behind. It sits there rather
+  than under probe hygiene because that is where the question is asked.
+
+## [0.4.0] — 2026-08-03
+
+### Added
+
+- A shell command's output is treated as a claim until the command is known to
+  have run. The five mechanisms that have actually produced a confidently
+  wrong number here — `$?` read after a pipeline, an unquoted expansion
+  word-splitting, a non-persisting `cd`, ANSI escapes from a colourising `ls`,
+  `grep` on a binary-classified or ISO-8859-1 file — are named in the
+  always-on directives, along with the rule that reading a cache is not
+  reading the thing. Seiso's re-derivation bullet and the self-check point at
+  it, and *the confident zero* joins the anti-patterns.
+- Seiri verifies a deletion target still exists before listing it. Remote
+  branches are the standing case — `git branch -r` is a local cache, so the
+  survey prunes first. A gate that asks for four deletions and delivers one
+  teaches the user the list is not checked.
+- The publication path reads the host off `git remote -v` — `gh` for GitHub,
+  `glab` for GitLab, stop at the push for anything else — instead of assuming
+  `gh`. Guessing fails at the last step, after every gate has been answered.
+- A pass that cannot spawn its refuter says so in the closing table and names
+  what went unverified, instead of skipping the step in silence. Re-reading
+  your own claims is not a refuter — it is the check the refuter replaces.
+  Three consecutive runs skipped it without the output showing anything.
+
+## [0.3.0] — 2026-07-31
+
+### Added
+
+- Every confirmation is now a question with named options, not prose the user
+  answers by typing. One question per gate — deletions, moves, tracker edits,
+  publication — with the list written out first and the options acting on the
+  whole batch. An option states what it does and what follows from it, and at
+  least one always does less than the recommendation, because a question with
+  no way out is a notification.
+- Two gates that were prose become questions too: the milestone check when the
+  work looks mid-flight, and Shitsuke's reminder offer.
+- The closing recommendation stays a paragraph unless its top item is
+  actionable in this session, in which case it is also a question. A ranking of
+  next week's work is not a gate.
+
+## [0.2.1] — 2026-07-26
+
+### Fixed
+
+- The config example carried `(§Seiso)` — a section-number reference inside the
+  release that forbade them. A phase has a name; it now reads `(Seiso)`. Found
+  by a wrap of this repo and routed rather than fixed mid-pass, because editing
+  `SKILL.md` while it executes is the documented hazard.
+- The rule now says what it governs: what you tell the user and what you write
+  into their files. The protocol's own numbered cross-references are addressed
+  to the agent executing it and stay, because a numbered section here has no
+  other name — a phase always does. Written down so the next pass does not
+  "fix" them.
+
+## [0.2.0] — 2026-07-26
+
+Folded from 26 runs across six repos, 2026-07-21 to 07-25. See
+[`feedback/2026-07-26-reviewed.md`](feedback/2026-07-26-reviewed.md).
+
+### Added
+
+- Orientation runs as one wave of concurrent read-only collectors — git, docs
+  (the grep fan-out), tracker, checks — then the five phases run serially in
+  one context. Collectors never edit; there is one writer.
+- A refuter pass before publication: a fresh context told to attack the closing
+  table against the files on disk, targeting the stale summary line that the
+  writing context cannot see.
+- Phase glyphs (🗂 📍 🧹 📐 🪧) and a closed verdict set (✅ ⚠️ ❌ →), so a run
+  can be scanned for judgements. Phase glosses render in the session's
+  language.
+- `tracker` config key: tickets, issues and wiki pages are part of the blast
+  radius. Seiso proposes rewordings there and never edits without confirmation
+  — a label change can move a ticket's status through an automation.
+- Shitsuke writes a copy-pasteable resume block, and offers to schedule the
+  reminder when an open item has a datable next action.
+- Free-text arguments, documented: they narrow the scope or state the intent.
+- `.wrap.md`'s `## Notes` is a Seiketsu destination — the place for what a pass
+  over this repo got wrong.
+- The commit-split recipe for one file carrying two ideas, with the
+  `git diff --stat` check that catches a substitution which silently matched
+  nothing.
+- Directives for parallel sessions in the same repo, and a ranked
+  recommendation at the end of every run.
+
+### Changed
+
+- The publication path is **one** confirmation covering branch, commits, push
+  and PR/MR, including the out-of-sandbox or signing authorisation. It was
+  three round-trips in every observed run.
+- `.wrap.md` is now **written** during Shitsuke when absent, not offered at the
+  end. The offer was swallowed by the commit proposal in four runs out of four.
+- Narration is capped at once per phase, findings are stated once, and
+  independent commands are batched. Half of a run's turns were prose between
+  tool calls, each re-reading the largest context of the day.
+- Locations are named by file and heading, never by section number.
+
+## [0.1.0] — 2026-07-21
+
+### Added
+
+- Initial `wrap` skill: a 5S pass to close out a session that reached a
+  milestone — Seiri (sort), Seiton (set in order), Seiso (clean), Seiketsu
+  (standardise), Shitsuke (sustain).
+- Per-project configuration via `.wrap.md` or `.personal/wrap/config.md`,
+  declaring canonical locations, verification commands, disposable zones, and
+  commit conventions. Runs unconfigured if absent and offers to bootstrap one.
+- Autonomy contract: prose reconciliation, index refresh, checks, and lesson
+  promotion run directly; deletions, moves, and git operations confirm first.
+- `--dry-run` and `--only <phase>` flags.
+- Config template at `skills/wrap/templates/wrap-config.md`.

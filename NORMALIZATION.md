@@ -2,6 +2,15 @@
 
 Document fondateur du hub `bastien-gallay/skills`. Source : audit du 2026-07-14.
 
+> [!IMPORTANT]
+> **Remplacé en partie le 2026-11-21 : le hub est devenu un monorepo.** Les
+> skills vivent sous `plugins/<plugin>/`, les styles sous `styles/<style>/`,
+> chacun importé avec l'historique de son ancien `main` et ses tags préfixés
+> (`truepath/v0.3.3`). La marketplace racine les sert par chemin relatif.
+> Les passages ci-dessous sur des « repos séparés » et un hub qui « ne fusionne
+> pas » décrivent l'état d'avant ; la convention de contenu de chaque skill
+> reste valable.
+
 ## 1. Deux classes, pas une
 
 | Classe | Définition | Membres | Convention cible |

@@ -4,79 +4,153 @@
     "name": "Bastien Gallay"
   },
   "metadata": {
-    "description": "Meta-marketplace aggregating Bastien Gallay's Class-A Claude skills. Each plugin is sourced from its own independently-versioned repository.",
+    "description": "Marketplace of Bastien Gallay's Claude skills. Every plugin lives in this monorepo under plugins/<name>.",
     "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "bfw",
-      "source": { "source": "github", "repo": "bastien-gallay/bfw" },
+      "source": "./plugins/bfw",
       "description": "Facilitated brainstorming skill with adaptive technique sequencing.",
       "category": "productivity",
-      "tags": ["brainstorm", "ideation", "facilitation", "decision-making"]
+      "tags": [
+        "brainstorm",
+        "ideation",
+        "facilitation",
+        "decision-making"
+      ]
     },
     {
       "name": "contre-expertise",
-      "source": { "source": "github", "repo": "bastien-gallay/contre-expertise" },
+      "source": "./plugins/contre-expertise",
       "description": "Critical, sourced counter-assessment of a working method.",
       "category": "productivity",
-      "tags": ["method-audit", "critical-review", "deep-research", "epistemology"]
+      "tags": [
+        "method-audit",
+        "critical-review",
+        "deep-research",
+        "epistemology"
+      ]
     },
     {
       "name": "feature-torture",
-      "source": { "source": "github", "repo": "bastien-gallay/feature-torture" },
+      "source": "./plugins/feature-torture",
       "description": "Pressure-test one roadmap feature per session and emit a decision report.",
       "category": "productivity",
-      "tags": ["roadmap", "decision-making", "ADR", "product-management"]
+      "tags": [
+        "roadmap",
+        "decision-making",
+        "ADR",
+        "product-management"
+      ]
     },
     {
       "name": "market-strategist",
-      "source": { "source": "github", "repo": "bastien-gallay/market-strategist" },
+      "source": "./plugins/market-strategist",
       "description": "Strategic advisor for market analysis, positioning, traction, pitch and project communication.",
       "category": "productivity",
-      "tags": ["strategy", "positioning", "traction", "marketing"]
+      "tags": [
+        "strategy",
+        "positioning",
+        "traction",
+        "marketing"
+      ]
     },
     {
       "name": "pair-with-me",
-      "source": { "source": "github", "repo": "bastien-gallay/pair-with-me" },
+      "source": "./plugins/pair-with-me",
       "description": "Work one issue as an adversarial pair, not a delegation.",
       "category": "productivity",
-      "tags": ["pairing", "tdd", "adversarial", "engineering-practice"]
+      "tags": [
+        "pairing",
+        "tdd",
+        "adversarial",
+        "engineering-practice"
+      ]
     },
     {
       "name": "redaction",
-      "source": { "source": "github", "repo": "bastien-gallay/redaction" },
+      "source": "./plugins/redaction",
       "description": "Boucle d'édition critique pour écrits longs (articles, billets, essais).",
       "category": "productivity",
-      "tags": ["writing", "editing", "critique", "french-writing"]
+      "tags": [
+        "writing",
+        "editing",
+        "critique",
+        "french-writing"
+      ]
     },
     {
       "name": "rhetorical-analysis",
-      "source": { "source": "github", "repo": "bastien-gallay/rhetorical-analysis-skill" },
+      "source": "./plugins/rhetorical-analysis",
       "description": "Analyse rhétorique et épistémologique d'articles, discours et textes argumentatifs.",
       "category": "productivity",
-      "tags": ["argumentation", "fallacies", "epistemology", "critical-thinking"]
+      "tags": [
+        "argumentation",
+        "fallacies",
+        "epistemology",
+        "critical-thinking"
+      ]
     },
     {
       "name": "meeting-screenshot-extractor",
-      "source": { "source": "github", "repo": "bastien-gallay/meeting-screenshot-extractor" },
+      "source": "./plugins/meeting-screenshot-extractor",
       "description": "Builds a CLI to extract relevant screenshots from a meeting video using a transcript and topics.",
       "category": "productivity",
-      "tags": ["video", "ffmpeg", "transcript", "vision"]
+      "tags": [
+        "video",
+        "ffmpeg",
+        "transcript",
+        "vision"
+      ]
     },
     {
       "name": "show-me",
-      "source": { "source": "github", "repo": "bastien-gallay/show-me" },
+      "source": "./plugins/show-me",
       "description": "Visual grammar: which visual the content calls for, and how it renders on each target.",
       "category": "productivity",
-      "tags": ["visual", "diagram", "mermaid", "documentation"]
+      "tags": [
+        "visual",
+        "diagram",
+        "mermaid",
+        "documentation"
+      ]
     },
     {
       "name": "truepath",
-      "source": { "source": "github", "repo": "bastien-gallay/truepath" },
+      "source": "./plugins/truepath",
       "description": "HTML simulations of a process or a bug path, checked against the repository's own code.",
       "category": "productivity",
-      "tags": ["simulation", "process", "diagram", "before-after"]
+      "tags": [
+        "simulation",
+        "process",
+        "diagram",
+        "before-after"
+      ]
+    },
+    {
+      "name": "shape",
+      "description": "Improve a document for its reader's task, and prove it rather than assert it.",
+      "category": "productivity",
+      "tags": [
+        "shape",
+        "documentation",
+        "technical-writing",
+        "access-structure"
+      ],
+      "source": "./plugins/shape"
+    },
+    {
+      "name": "wrap",
+      "description": "Close out a milestone session with a 5S pass, and leave an entry point for the next arrival.",
+      "category": "productivity",
+      "tags": [
+        "wrap",
+        "5s",
+        "milestone",
+        "handoff"
+      ],
+      "source": "./plugins/wrap"
     }
   ]
 }

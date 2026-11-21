@@ -1,0 +1,89 @@
+{
+  "title": "Free shipping threshold",
+  "subtitle": "Example: two open questions, each decided on the cases it changes",
+  "source": "truepath example, self-contained",
+  "lang": "en",
+  "port": "decide.js",
+  "kinds": {
+    "free": { "label": "free shipping", "color": "#15803d" },
+    "paid": { "label": "shipping charged", "color": "#b45309" }
+  },
+  "nodes": [
+    { "id": "BASKET", "label": "basket and coupon" },
+    { "id": "TESTED", "label": "amount tested" },
+    { "id": "D", "label": "reaches 50?", "role": "decision" },
+    { "id": "FREE", "label": "free shipping", "kind": "free" },
+    { "id": "PAID", "label": "shipping 4.90", "kind": "paid" }
+  ],
+  "edges": [
+    ["BASKET", "TESTED", ""],
+    ["TESTED", "D", ""],
+    ["D", "FREE", "yes"],
+    ["D", "PAID", "no"]
+  ],
+  "panel": [
+    { "label": "Answer", "value": "answer", "at": 0, "compared": true },
+    { "label": "Basket", "value": "inputs.basket", "at": 0 },
+    { "label": "Coupon", "value": "inputs.coupon", "at": 0, "labels": { "0": "none" } },
+    { "label": "Amount tested", "value": "verdict.tested", "at": 1 },
+    { "label": "Shipping", "value": "verdict.shipping", "at": 2 }
+  ],
+  "grid": {
+    "summary": "Today the threshold is strict and tested after the coupon. Each table shows what one answer changes.",
+    "baseline": { "id": "today", "label": "today", "inputs": { "inclusive": false, "afterCoupon": true } },
+    "questions": [
+      {
+        "id": "Q1",
+        "text": "Q1 · Does a basket of exactly 50 ship free?",
+        "cases": ["exact", "under"],
+        "options": [
+          { "id": "1A", "label": "yes, 50 counts", "inputs": { "inclusive": true } },
+          { "id": "1B", "label": "no, above 50 only", "inputs": { "inclusive": false } }
+        ]
+      },
+      {
+        "id": "Q2",
+        "text": "Q2 · Is the threshold tested before or after the coupon?",
+        "cases": ["coupon"],
+        "options": [
+          { "id": "2A", "label": "before the coupon", "inputs": { "afterCoupon": false } },
+          { "id": "2B", "label": "after the coupon", "inputs": { "afterCoupon": true } }
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "id": "exact",
+        "label": "basket of 50, no coupon",
+        "summary": "Exactly on the threshold: the only case Q1 changes.",
+        "origin": { "kind": "illustrative", "text": "skill example" },
+        "inputs": { "basket": 50, "coupon": 0 }
+      },
+      {
+        "id": "under",
+        "label": "basket of 49, no coupon",
+        "summary": "Under the threshold whatever the answer: a control.",
+        "origin": { "kind": "illustrative", "text": "skill example" },
+        "inputs": { "basket": 49, "coupon": 0 }
+      },
+      {
+        "id": "coupon",
+        "label": "basket of 60, coupon of 15",
+        "summary": "60 before the coupon, 45 after: the case Q2 decides.",
+        "origin": { "kind": "illustrative", "text": "skill example" },
+        "inputs": { "basket": 60, "coupon": 15 }
+      }
+    ],
+    "steps": [
+      { "hop": ["BASKET", "TESTED"], "message": "basket {inputs.basket}, coupon {inputs.coupon}", "caption": "The order arrives with its basket and its coupon." },
+      { "hop": ["TESTED", "D"], "message": "tested: {verdict.tested}", "caption": "The rule picks the amount it compares to 50." },
+      { "hop": ["D", "{verdict.outcome}"], "message": "shipping: {verdict.shipping}", "caption": "The threshold decides the shipping." }
+    ],
+    "expect": {
+      "exact": { "today": { "outcome": "PAID" }, "1A+2B": { "outcome": "FREE" }, "1B+2B": { "outcome": "PAID" } },
+      "coupon": { "today": { "outcome": "PAID" }, "1A+2A": { "outcome": "FREE" }, "1A+2B": { "outcome": "PAID" } }
+    },
+    "show": "Shipping",
+    "hover": ["Amount tested"]
+  }
+}

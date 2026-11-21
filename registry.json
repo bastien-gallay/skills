@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "hub": "bastien-gallay/skills",
-  "updated": "2026-11-20",
+  "updated": "2026-11-21",
   "classes": {
     "skill": "Plugin-distributable Claude Code skill (skills/<name>/SKILL.md + manifests).",
     "style": "Behavior toggle, dual-target (claude-code + claude-ai), built from a canonical prompt.md."
@@ -13,11 +13,12 @@
       "class": "skill",
       "domain": "facilitation",
       "description": "Facilitated brainstorming skill with adaptive technique sequencing.",
-      "repository": "https://github.com/bastien-gallay/bfw",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/bfw",
       "plugin": "bfw",
       "install": "/plugin install bfw@skills",
       "status": "stable",
-      "version": "0.2.0"
+      "version": "0.2.0",
+      "path": "plugins/bfw"
     },
     {
       "name": "contre-expertise",
@@ -25,10 +26,11 @@
       "class": "skill",
       "domain": "method-audit",
       "description": "Critical, sourced counter-assessment of a working method: falsifiable propositions, multi-agent deep research, adversarial verification, and a capped action plan.",
-      "repository": "https://github.com/bastien-gallay/contre-expertise",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/contre-expertise",
       "install": "/plugin install contre-expertise@skills",
       "status": "beta",
-      "version": "0.1.0"
+      "version": "0.1.0",
+      "path": "plugins/contre-expertise"
     },
     {
       "name": "feature-torture",
@@ -36,10 +38,11 @@
       "class": "skill",
       "domain": "product",
       "description": "Pressure-test one roadmap feature per session and emit a 500-900-word decision report (verdict + ADR + adjacency + spec stub).",
-      "repository": "https://github.com/bastien-gallay/feature-torture",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/feature-torture",
       "install": "/plugin install feature-torture@skills",
       "status": "stable",
-      "version": "0.2.0"
+      "version": "0.2.0",
+      "path": "plugins/feature-torture"
     },
     {
       "name": "market-strategist",
@@ -47,10 +50,11 @@
       "class": "skill",
       "domain": "strategy",
       "description": "Strategic advisor for market analysis, positioning, traction, pitch and project communication — it fills the framework and lets you react, drawing on a library of 24 well-known and lesser-known frameworks.",
-      "repository": "https://github.com/bastien-gallay/market-strategist",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/market-strategist",
       "install": "/plugin install market-strategist@skills",
       "status": "beta",
-      "version": "0.1.0"
+      "version": "0.1.0",
+      "path": "plugins/market-strategist"
     },
     {
       "name": "pair-with-me",
@@ -58,10 +62,11 @@
       "class": "skill",
       "domain": "engineering",
       "description": "Work one issue as an adversarial pair, not a delegation — reduce the triple debt (technical, cognitive, intent) and keep the human the author of their own system.",
-      "repository": "https://github.com/bastien-gallay/pair-with-me",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/pair-with-me",
       "install": "/plugin install pair-with-me@skills",
       "status": "beta",
-      "version": "0.1.0"
+      "version": "0.1.0",
+      "path": "plugins/pair-with-me"
     },
     {
       "name": "redaction",
@@ -69,10 +74,11 @@
       "class": "skill",
       "domain": "writing",
       "description": "Boucle d'édition critique pour écrits longs (articles, billets, essais).",
-      "repository": "https://github.com/bastien-gallay/redaction",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/redaction",
       "install": "/plugin install redaction@skills",
       "status": "stable",
-      "version": "0.2.0"
+      "version": "0.2.0",
+      "path": "plugins/redaction"
     },
     {
       "name": "rhetorical-analysis",
@@ -80,10 +86,11 @@
       "class": "skill",
       "domain": "critical-thinking",
       "description": "Analyse rhétorique et épistémologique d'articles, discours et textes argumentatifs.",
-      "repository": "https://github.com/bastien-gallay/rhetorical-analysis-skill",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/rhetorical-analysis",
       "install": "/plugin install rhetorical-analysis@skills",
       "status": "beta",
-      "version": "0.1.0"
+      "version": "0.1.0",
+      "path": "plugins/rhetorical-analysis"
     },
     {
       "name": "meeting-screenshot-extractor",
@@ -91,10 +98,11 @@
       "class": "skill",
       "domain": "tooling",
       "description": "Builds a CLI Python tool to automatically extract relevant screenshots from a meeting video, using a transcript and user-defined topics.",
-      "repository": "https://github.com/bastien-gallay/meeting-screenshot-extractor",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/meeting-screenshot-extractor",
       "install": "/plugin install meeting-screenshot-extractor@skills",
       "status": "beta",
-      "version": "0.1.0"
+      "version": "0.1.0",
+      "path": "plugins/meeting-screenshot-extractor"
     },
     {
       "name": "show-me",
@@ -102,10 +110,11 @@
       "class": "skill",
       "domain": "documentation",
       "description": "Visual grammar for anything written for a reader: which visual the content calls for, how it renders or falls back on each target, and the page rules that make it scannable.",
-      "repository": "https://github.com/bastien-gallay/show-me",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/show-me",
       "install": "/plugin install show-me@skills",
       "status": "beta",
-      "version": "0.4.0"
+      "version": "0.4.0",
+      "path": "plugins/show-me"
     },
     {
       "name": "truepath",
@@ -113,10 +122,11 @@
       "class": "skill",
       "domain": "documentation",
       "description": "Self-contained HTML simulations of a process or a bug path: a dot walks the real path, before and after play side by side, and the build refuses any scenario the repository's own code contradicts.",
-      "repository": "https://github.com/bastien-gallay/truepath",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/truepath",
       "install": "/plugin install truepath@skills",
       "status": "beta",
-      "version": "0.3.3"
+      "version": "0.3.3",
+      "path": "plugins/truepath"
     },
     {
       "name": "flair",
@@ -124,10 +134,11 @@
       "class": "style",
       "domain": "response-style",
       "description": "End substantive answers with a short learning-flavored anecdote stack just above the TL;DR.",
-      "repository": "https://github.com/bastien-gallay/flair",
-      "install": "clone the repo, then ./install.sh (Claude Code) or paste claude-ai/ into a claude.ai custom style",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/styles/flair",
+      "install": "clone bastien-gallay/skills, then styles/flair/install.sh (Claude Code) or paste styles/flair/claude-ai/ into a claude.ai custom style",
       "status": "stable",
-      "version": null
+      "version": null,
+      "path": "styles/flair"
     },
     {
       "name": "glance",
@@ -135,10 +146,11 @@
       "class": "style",
       "domain": "response-style",
       "description": "Optimize answers for at-a-glance readability — scannable shape first, prose only as fallback.",
-      "repository": "https://github.com/bastien-gallay/glance",
-      "install": "clone the repo, then ./install.sh (Claude Code) or paste claude-ai/ into a claude.ai custom style",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/styles/glance",
+      "install": "clone bastien-gallay/skills, then styles/glance/install.sh (Claude Code) or paste styles/glance/claude-ai/ into a claude.ai custom style",
       "status": "stable",
-      "version": null
+      "version": null,
+      "path": "styles/glance"
     },
     {
       "name": "transpeak",
@@ -146,10 +158,37 @@
       "class": "style",
       "domain": "response-style",
       "description": "Answer in code rather than prose wherever the content has a shape — types and expressions instead of paragraphs.",
-      "repository": "https://github.com/bastien-gallay/transpeak",
-      "install": "clone the repo, then ./install.sh (Claude Code) or paste claude-ai/ into a claude.ai custom style",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/styles/transpeak",
+      "install": "clone bastien-gallay/skills, then styles/transpeak/install.sh (Claude Code) or paste styles/transpeak/claude-ai/ into a claude.ai custom style",
       "status": "beta",
-      "version": null
+      "version": null,
+      "path": "styles/transpeak"
+    },
+    {
+      "name": "shape",
+      "repo": "shape",
+      "class": "skill",
+      "domain": "documentation",
+      "description": "Improve a document for its reader's task — classify audience and task, repair access structure, and prove nothing was lost with a fact-survival gate and a cold-subagent retrieval test.",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/shape",
+      "path": "plugins/shape",
+      "plugin": "shape",
+      "install": "/plugin install shape@skills",
+      "status": "beta",
+      "version": "0.1.0"
+    },
+    {
+      "name": "wrap",
+      "repo": "wrap",
+      "class": "skill",
+      "domain": "engineering",
+      "description": "Close out a session that reached a milestone with a 5S pass — sort what stays, put each thing in its canonical place, reconcile every document carrying a superseded claim, promote the durable lesson, and leave an entry point for whoever arrives next.",
+      "repository": "https://github.com/bastien-gallay/skills/tree/main/plugins/wrap",
+      "path": "plugins/wrap",
+      "plugin": "wrap",
+      "install": "/plugin install wrap@skills",
+      "status": "beta",
+      "version": "0.7.0"
     }
   ]
 }

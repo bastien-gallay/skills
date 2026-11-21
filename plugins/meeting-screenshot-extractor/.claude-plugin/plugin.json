@@ -1,0 +1,18 @@
+{
+  "name": "meeting-screenshot-extractor",
+  "version": "0.1.0",
+  "description": "Builds a CLI Python tool to automatically extract relevant screenshots from a meeting video, using a transcript and user-defined topics.",
+  "author": {
+    "name": "Bastien Gallay"
+  },
+  "homepage": "https://github.com/bastien-gallay/skills/tree/main/plugins/meeting-screenshot-extractor",
+  "repository": "https://github.com/bastien-gallay/skills",
+  "license": "MIT",
+  "keywords": [
+    "meeting-screenshot-extractor",
+    "video",
+    "ffmpeg",
+    "transcript",
+    "vision"
+  ]
+}

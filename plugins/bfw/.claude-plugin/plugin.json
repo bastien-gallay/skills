@@ -1,0 +1,18 @@
+{
+  "name": "bfw",
+  "version": "0.2.0",
+  "description": "Facilitated brainstorming skill with adaptive technique sequencing.",
+  "author": {
+    "name": "Bastien Gallay"
+  },
+  "homepage": "https://github.com/bastien-gallay/skills/tree/main/plugins/bfw",
+  "repository": "https://github.com/bastien-gallay/skills",
+  "license": "MIT",
+  "keywords": [
+    "brainstorm",
+    "ideation",
+    "facilitation",
+    "decision-making",
+    "design-thinking"
+  ]
+}
