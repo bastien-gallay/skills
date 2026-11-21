@@ -4,16 +4,13 @@
     "name": "Bastien Gallay"
   },
   "metadata": {
-    "description": "Meta-marketplace aggregating Bastien Gallay's Class-A Claude skills. Each plugin is sourced from its own independently-versioned repository.",
+    "description": "Marketplace of Bastien Gallay's Claude skills. Every plugin lives in this monorepo under plugins/<name>.",
     "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "bfw",
-      "source": {
-        "source": "github",
-        "repo": "bastien-gallay/bfw"
-      },
+      "source": "./plugins/bfw",
       "description": "Facilitated brainstorming skill with adaptive technique sequencing.",
       "category": "productivity",
       "tags": [
@@ -25,10 +22,7 @@
     },
     {
       "name": "contre-expertise",
-      "source": {
-        "source": "github",
-        "repo": "bastien-gallay/contre-expertise"
-      },
+      "source": "./plugins/contre-expertise",
       "description": "Critical, sourced counter-assessment of a working method.",
       "category": "productivity",
       "tags": [
@@ -40,10 +34,7 @@
     },
     {
       "name": "feature-torture",
-      "source": {
-        "source": "github",
-        "repo": "bastien-gallay/feature-torture"
-      },
+      "source": "./plugins/feature-torture",
       "description": "Pressure-test one roadmap feature per session and emit a decision report.",
       "category": "productivity",
       "tags": [
@@ -55,10 +46,7 @@
     },
     {
       "name": "market-strategist",
-      "source": {
-        "source": "github",
-        "repo": "bastien-gallay/market-strategist"
-      },
+      "source": "./plugins/market-strategist",
       "description": "Strategic advisor for market analysis, positioning, traction, pitch and project communication.",
       "category": "productivity",
       "tags": [
@@ -70,10 +58,7 @@
     },
     {
       "name": "pair-with-me",
-      "source": {
-        "source": "github",
-        "repo": "bastien-gallay/pair-with-me"
-      },
+      "source": "./plugins/pair-with-me",
       "description": "Work one issue as an adversarial pair, not a delegation.",
       "category": "productivity",
       "tags": [
@@ -85,10 +70,7 @@
     },
     {
       "name": "redaction",
-      "source": {
-        "source": "github",
-        "repo": "bastien-gallay/redaction"
-      },
+      "source": "./plugins/redaction",
       "description": "Boucle d'édition critique pour écrits longs (articles, billets, essais).",
       "category": "productivity",
       "tags": [
@@ -100,10 +82,7 @@
     },
     {
       "name": "rhetorical-analysis",
-      "source": {
-        "source": "github",
-        "repo": "bastien-gallay/rhetorical-analysis-skill"
-      },
+      "source": "./plugins/rhetorical-analysis",
       "description": "Analyse rhétorique et épistémologique d'articles, discours et textes argumentatifs.",
       "category": "productivity",
       "tags": [
@@ -115,10 +94,7 @@
     },
     {
       "name": "meeting-screenshot-extractor",
-      "source": {
-        "source": "github",
-        "repo": "bastien-gallay/meeting-screenshot-extractor"
-      },
+      "source": "./plugins/meeting-screenshot-extractor",
       "description": "Builds a CLI to extract relevant screenshots from a meeting video using a transcript and topics.",
       "category": "productivity",
       "tags": [
@@ -130,10 +106,7 @@
     },
     {
       "name": "show-me",
-      "source": {
-        "source": "github",
-        "repo": "bastien-gallay/show-me"
-      },
+      "source": "./plugins/show-me",
       "description": "Visual grammar: which visual the content calls for, and how it renders on each target.",
       "category": "productivity",
       "tags": [
@@ -154,6 +127,30 @@
         "diagram",
         "before-after"
       ]
+    },
+    {
+      "name": "shape",
+      "description": "Improve a document for its reader's task, and prove it rather than assert it.",
+      "category": "productivity",
+      "tags": [
+        "shape",
+        "documentation",
+        "technical-writing",
+        "access-structure"
+      ],
+      "source": "./plugins/shape"
+    },
+    {
+      "name": "wrap",
+      "description": "Close out a milestone session with a 5S pass, and leave an entry point for the next arrival.",
+      "category": "productivity",
+      "tags": [
+        "wrap",
+        "5s",
+        "milestone",
+        "handoff"
+      ],
+      "source": "./plugins/wrap"
     }
   ]
 }

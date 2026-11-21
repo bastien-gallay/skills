@@ -5,8 +5,8 @@
   "author": {
     "name": "Bastien Gallay"
   },
-  "homepage": "https://github.com/bastien-gallay/shape",
-  "repository": "https://github.com/bastien-gallay/shape",
+  "homepage": "https://github.com/bastien-gallay/skills/tree/main/plugins/shape",
+  "repository": "https://github.com/bastien-gallay/skills",
   "license": "MIT",
   "keywords": [
     "shape",
