@@ -71,7 +71,7 @@ Claude Code auto-updates the plugin at session start.
 ### Everywhere else (45+ hosts via `skills`)
 
 ```bash
-npx skills add bastien-gallay/bfw
+npx skills add bastien-gallay/skills --skill brainstorm
 ```
 
 Works in Cursor, Codex, Cline, Continue, Copilot, Windsurf, Warp,
@@ -82,7 +82,7 @@ unlike the Claude Code plugin path, updates here are manual.
 ### Claude Desktop / claude.ai (web)
 
 Download the latest `bfw-brainstorm-vX.Y.Z.skill` from the
-[releases page](https://github.com/bastien-gallay/bfw/releases/latest).
+[releases page](https://github.com/bastien-gallay/skills/releases) (tags `bfw/vX.Y.Z`).
 
 - **On Desktop:** double-click the file. Claude Desktop opens an
   **"Add to your library?"** dialog previewing the skill — click

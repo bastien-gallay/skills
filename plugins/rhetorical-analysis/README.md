@@ -29,11 +29,11 @@ content and is excluded from the distributed package and git tracking.
 
 ## Download
 
-Pre-packaged `.skill` archives are available for download from [GitHub Releases](https://github.com/bastiengallay/rhetorical-analysis-skill/releases).
+Pre-packaged `.skill` archives are available for download from [GitHub Releases](https://github.com/bastien-gallay/skills/releases) (tags `rhetorical-analysis/vX.Y.Z`).
 
 ### Installation Steps
 
-1. Navigate to the [Releases page](https://github.com/bastiengallay/rhetorical-analysis-skill/releases)
+1. Navigate to the [Releases page](https://github.com/bastien-gallay/skills/releases)
 2. Download the latest `.skill` file (e.g., `rhetorical-analysis-0.1.0.skill`)
 3. Use the `.skill` file with your Claude-compatible application
 
