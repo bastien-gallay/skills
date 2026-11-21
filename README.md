@@ -73,4 +73,4 @@ name of the former standalone repository (`rhetorical-analysis-skill`).
 ## Conventions & shared socle
 
 - [`NORMALIZATION.md`](NORMALIZATION.md) — the canonical Class-A convention and the audit that produced this hub.
-- [`shared/`](shared/) — the mutualized socle: canonical `.markdownlint.json`, a `docs/RELEASING` template, and a `skill-template/` skeleton for new Class-A skills.
+- [`shared/`](shared/) — the mutualized socle: canonical `.markdownlint.json`, a `docs/RELEASING` template, a `skill-template/` skeleton for new Class-A skills, and [`SCRIPTS.md`](shared/SCRIPTS.md), the CUPID rules for scripts shipped inside a skill.
