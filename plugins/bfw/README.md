@@ -59,11 +59,11 @@ the cross-host `skills` CLI.
 ### Claude Code (recommended)
 
 ```bash
-/plugin marketplace add bastien-gallay/bfw
-/plugin install bfw@bfw
+/plugin marketplace add bastien-gallay/skills
+/plugin install bfw@skills
 ```
 
-This installs the `bfw` plugin from its own marketplace and exposes
+This installs the `bfw` plugin from the skills monorepo's marketplace and exposes
 the `brainstorm` skill. Claude can invoke it automatically from the
 description, or you can call it explicitly via `/bfw:brainstorm`.
 Claude Code auto-updates the plugin at session start.

@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "<one-line description of what the skill does>",
   "author": { "name": "Bastien Gallay" },
-  "homepage": "https://github.com/bastien-gallay/REPO_NAME",
-  "repository": "https://github.com/bastien-gallay/REPO_NAME",
+  "homepage": "https://github.com/bastien-gallay/skills/tree/main/plugins/REPO_NAME",
+  "repository": "https://github.com/bastien-gallay/skills",
   "license": "MIT",
   "keywords": ["SKILL_NAME"]
 }

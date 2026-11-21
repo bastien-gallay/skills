@@ -41,8 +41,8 @@ dossiers created before the skill existed.
 ## Install
 
 ```sh
-git clone https://github.com/bastien-gallay/contre-expertise
-ln -s "$(pwd)/contre-expertise/skills/contre-expertise" ~/.claude/skills/contre-expertise
+git clone https://github.com/bastien-gallay/skills
+ln -s "$(pwd)/skills/plugins/contre-expertise/skills/contre-expertise" ~/.claude/skills/contre-expertise
 ```
 
 ## Usage

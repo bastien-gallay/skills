@@ -93,15 +93,15 @@ Catalogue propre au skill (cross-référencé aux codes `Axx`/`Bxx` de
 ### Comme plugin Claude Code (marketplace)
 
 ```bash
-/plugin marketplace add bastien-gallay/redaction
-/plugin install redaction@redaction
+/plugin marketplace add bastien-gallay/skills
+/plugin install redaction@skills
 ```
 
 ### Comme skill `.skill` (Claude Desktop, claude.ai web)
 
 Chaque release attache un bundle `redaction-vX.Y.Z.skill` (un zip avec
 `redaction/SKILL.md` à la racine) — voir la page
-[Releases](https://github.com/bastien-gallay/redaction/releases).
+[Releases](https://github.com/bastien-gallay/skills/releases) (tags `redaction/vX.Y.Z`).
 
 - **Claude Desktop** : double-clic sur le `.skill` téléchargé (le format
   est enregistré par l'OS pour l'installation en un clic).
@@ -118,9 +118,9 @@ Chaque release attache un bundle `redaction-vX.Y.Z.skill` (un zip avec
 ### En dev local (symlink, recommandé pour itérer sur le skill)
 
 ```bash
-git clone https://github.com/bastien-gallay/redaction.git \
-      ~/Dev/oss/skills/redaction
-ln -s ~/Dev/oss/skills/redaction/skills/redaction \
+git clone https://github.com/bastien-gallay/skills.git \
+      ~/Dev/oss/skills-mono
+ln -s ~/Dev/oss/skills-mono/plugins/redaction/skills/redaction \
       ~/.claude/skills/redaction
 ```
 
