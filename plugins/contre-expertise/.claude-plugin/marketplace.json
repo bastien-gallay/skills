@@ -1,0 +1,27 @@
+{
+  "name": "contre-expertise",
+  "owner": { "name": "Bastien Gallay" },
+  "metadata": {
+    "description": "contre-expertise — single-plugin marketplace.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "contre-expertise",
+      "source": "./",
+      "description": "Critical, sourced counter-assessment of a working method: falsifiable propositions, multi-agent deep research, adversarial verification, and a capped action plan.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "homepage": "https://github.com/bastien-gallay/contre-expertise",
+      "repository": "https://github.com/bastien-gallay/contre-expertise",
+      "category": "productivity",
+      "tags": [
+        "contre-expertise",
+        "method-audit",
+        "critical-review",
+        "deep-research",
+        "epistemology"
+      ]
+    }
+  ]
+}
