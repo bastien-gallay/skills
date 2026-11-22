@@ -1,0 +1,7 @@
+{
+  "extends": "../../.markdownlint.jsonc",
+
+  // Code spans such as `^- .* — revisit-when: ` quote a pattern whose leading
+  // or trailing space is part of it; trimming the space would change it.
+  "MD038": false
+}

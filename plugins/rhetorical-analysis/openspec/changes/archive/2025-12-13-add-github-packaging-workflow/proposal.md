@@ -49,6 +49,7 @@ Pour chaque release, le workflow génère :
 - **Fichier checksums.txt** : Contient le hash et le nom du fichier au format standard
 
 Les utilisateurs peuvent vérifier l'intégrité après téléchargement :
+
 ```bash
 # Linux/macOS
 sha256sum -c checksums.txt
@@ -72,11 +73,11 @@ Le README sera mis à jour avec :
 
 ## Impact
 
-- **Users** : 
+- **Users** :
   - Peuvent télécharger les releases directement depuis GitHub
   - Peuvent vérifier l'intégrité des packages téléchargés
   - Ont des instructions claires d'installation dans le README
-- **Development** : 
+- **Development** :
   - Workflow de release standardisé et reproductible
   - Checksums générés automatiquement pour chaque release
 - **CI/CD** : Base pour ajouter tests et validations supplémentaires

@@ -28,6 +28,7 @@ detection). React + Bun + Firecrawl + LLM scoring.
 the maintainer.
 
 **Non-negotiables**:
+
 - Shareable analysis links must keep working (URL stability).
 - LLM cost stays bounded — no full-corpus re-analysis on every visit.
 - Reliability scores remain on a 1–5 scale (don't drift to 1–10 or

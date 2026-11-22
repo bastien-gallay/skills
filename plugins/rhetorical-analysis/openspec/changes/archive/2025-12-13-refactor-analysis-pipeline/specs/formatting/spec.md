@@ -27,11 +27,11 @@ Le système **MUST** pouvoir générer un rapport d'analyse au format Markdown.
 - **WHEN** l'utilisateur demande une sortie au format `md`.
 - **THEN** le système doit générer un fichier `.md` au chemin spécifié.
 - **AND** le fichier Markdown doit contenir :
-    - Les métadonnées de l'analyse.
-    - Une section de synthèse avec les points forts, faibles et les motifs récurrents.
-    - Une section par argument analysé, présentée sous forme de tableau ou de liste, incluant la thèse, le type de raisonnement, les sophismes, la fiabilité et l'évaluation.
-    - Une section détaillant le modèle de Toulmin pour chaque argument.
-    - Une section pour l'évaluation CRAAP des sources.
+  - Les métadonnées de l'analyse.
+  - Une section de synthèse avec les points forts, faibles et les motifs récurrents.
+  - Une section par argument analysé, présentée sous forme de tableau ou de liste, incluant la thèse, le type de raisonnement, les sophismes, la fiabilité et l'évaluation.
+  - Une section détaillant le modèle de Toulmin pour chaque argument.
+  - Une section pour l'évaluation CRAAP des sources.
 
 ## ADDED Requirements
 

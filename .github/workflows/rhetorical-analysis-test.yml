@@ -1,6 +1,9 @@
 name: rhetorical-analysis tests
 
 on:
+  # Path filters only see the first 300 changed files of a push or PR, so a
+  # very large change can skip this workflow; run it by hand then.
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -25,6 +28,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Skill copies match the plugin root
+        # references/ and assets/ exist at the plugin root and inside the
+        # packaged skill; the two copies must stay byte-identical.
+        run: |
+          status=0
+          for f in $(cd skills/rhetorical-analysis && find references assets -type f); do
+            cmp "$f" "skills/rhetorical-analysis/$f" || status=1
+          done
+          exit $status
 
       - name: Set up Python
         uses: actions/setup-python@v5

@@ -119,6 +119,7 @@ recommendations:
 
 **Recommendation.** Try option 2 first — lowest blast radius, easy
 to roll back. Run SCAMPER on the qualifier vocabulary:
+
 - Substitute "re-shape" with a noun the user can act on.
 - Combine with the Kata's "Next Concrete Step" so the qualifier
   predicts the step shape.

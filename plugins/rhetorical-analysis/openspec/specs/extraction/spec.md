@@ -21,4 +21,3 @@ Le système **MUST** charger les données d'analyse à partir d'un fichier JSON 
 - **GIVEN** un chemin vers un fichier qui n'est pas un JSON valide.
 - **WHEN** le processus d'extraction est exécuté.
 - **THEN** le système doit lever une erreur `json.JSONDecodeError` et terminer le processus avec un message d'erreur indiquant le problème de format.
-
