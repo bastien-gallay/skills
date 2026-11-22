@@ -9,6 +9,7 @@ installable, so the socle is duplicated on purpose, not symlinked).
 | `.markdownlint.json` | Canonical markdownlint config (identical across all repos today) | every repo with Markdown |
 | `docs/RELEASING.template.md` | Fill-in release runbook for a single-plugin skill repo | Class-A skill repos |
 | `skill-template/` | Minimal skeleton for a brand-new Class-A skill | new skills |
+| `SCRIPTS.md` | CUPID rules for scripts shipped inside a skill | every plugin with scripts |
 
 ## Syncing a repo to the socle
 
