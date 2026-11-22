@@ -87,12 +87,10 @@ INTAKE → SHAPE → PLAN → [STEP → LOG → REFLECT]* → CRYSTALLIZE → ME
    - "Anything to add, remove, or rephrase?"
    - "Any hard constraints I should know about?" (Carried constraints
      from step 4, if any, are already on the table.)
-8. **Job check (conditional).** If the options look comparable but may
-   answer different questions, if the artefact's reader or user is not
-   named, or if someone other than the user will live with the result
-   (a client, an editor, a future team), run **Job to Be Done** (trial
-   technique) before SHAPE, including its third-party questions.
-   Announce + act; skip silently otherwise.
+   - "Besides you, who will live with the result?"
+8. **Job check (conditional).** If the **When** of **Job to Be Done**
+   (trial technique) holds, run it before SHAPE. Announce + act; skip
+   silently otherwise.
 9. Give an encouraging comment about the starting material. Be genuine
    and specific (not generic "Great ideas!"). Reference something
    concrete from their input.
@@ -247,11 +245,9 @@ After each step (before moving to the next), briefly reflect:
      "Interesting — let me park that and bring us back to [topic]"
    - **Low energy:** Monosyllabic answers → Simplify remaining steps,
      propose early wrap-up
-   - **Structural contradiction:** Two constraints or goals pull
-     against each other and a part of the system could carry one while
-     another part carries the other → Insert **TRIZ Contradiction**
-     (trial technique). If the clash is between two meanings of one
-     thing, name the two concepts instead; do not run TRIZ.
+   - **Structural contradiction:** Two constraints pull against each
+     other → Insert **TRIZ Contradiction** (trial technique) if its
+     **When** holds.
    - **Too-easy consensus:** Everything scores the same, no tension →
      Insert PCI / Impact-Effort first to surface a leader, then run
      Devil's Advocate against it. DA without a leader manufactures
@@ -300,19 +296,14 @@ Append a meta-analysis section to the session document:
 - **What could improve:** [specific observation]
 - **Session energy:** [high/medium/low, with notes]
 - **Recommendation for similar sessions:** [one concrete tip]
-- **Trial — Job to Be Done:** [ran / skipped: trigger absent / skipped
-  despite trigger] · third-party question: [asked at step N / not
-  asked / no third party] · changed the option set: [yes/no] · noise:
-  [yes/no]
-- **Trial — TRIZ Contradiction:** [ran / skipped: no contradiction /
-  skipped: concept clash] · separation: [time / structure / condition /
-  whole-parts / none] · became the decision: [yes/no] · noise: [yes/no]
-- **Jargon:** [none / the user asked what <term> meant]
+- **Trial — [technique]:** [ran / skipped (reason)] · decisive:
+  [yes/no] · noise: [yes/no] · note: [what the card's Output shape asks
+  to record]
 ```
 
-The three `Trial` and `Jargon` lines feed the retrospective: keep them
-even when the answer is "skipped" so the corpus shows how often the
-trigger fires.
+Write one `Trial —` line per technique tagged **trial** in
+`techniques.md`, even when it was skipped, so the corpus shows how often
+its trigger fires.
 
 ---
 
@@ -329,15 +320,12 @@ trigger fires.
   "We're halfway through and already converging — that's a good sign"
   or "We've been in divergent mode for a while, let's start narrowing."
 - **Short and punchy.** No long preambles. Lead with the insight.
-- **No bare jargon.** The first time a technique name or an acronym
-  appears in a message, gloss it in a few plain words in the user's
-  language: "PCI (Plus, Contre, Intéressant)", "Job to Be Done (the
-  job the tool is hired for)". Gloss again in the next message if the
-  user may have lost the thread (a pause, a long step). Never use an
-  abbreviation (JTBD, I/E, DA) the message has not spelled out first.
-- **Recap after a break.** When the user comes back after a pause, or
-  asks to be reminded, restate the live options with their pros and
-  cons in one table before asking them to commit.
+- **No bare jargon.** Spell out every technique name or acronym the
+  first time it appears in a message, in the user's language, from the
+  card's heading or Purpose: "PCI (Plus, Contre, Intéressant)".
+- **Recap after a break.** After a pause, or when the user asks, restate
+  the live options in PCI's output shape (Binary Comparison's when two
+  remain) before asking them to commit.
 
 ### Criticism and Warnings
 
@@ -469,10 +457,9 @@ to review past sessions:
    - **Convergence-technique distribution by problem shape** (grep
      `^- \*\*Convergence point:\*\*` across the corpus; tally the
      technique parenthetical by shape)
-   - **Trial techniques** (grep `^- \*\*Trial`): how often each
-     fired, how often its question or separation became the decision,
-     how often it added noise. Decide keep / reshape / drop per
-     technique.
+   - **Trial techniques** (grep `^- \*\*Trial`): per technique, how
+     often it ran, was decisive, added noise. Decide keep / reshape /
+     drop.
 4. Propose updates to default recipes or facilitator behavior.
 5. Save findings to memory for future sessions.
 
