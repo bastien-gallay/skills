@@ -22,7 +22,7 @@ The key design decisions:
   breaks trust and flow.
 - **Problem shape detection.** The same generic "brainstorm" template
   doesn't fit a blank-slate question and a 30-item backlog. `bfw`
-  classifies the input into 5 shapes and picks a recipe accordingly.
+  classifies the input into 7 shapes and picks a recipe accordingly.
 - **Meta-analysis is first-class.** Every session ends with "what
   worked, what didn't, what to try next time" — feeding back into the
   technique library for continuous improvement.
@@ -117,15 +117,18 @@ next to it).
 **What happens:**
 
 1. **Intake** — extends your ideas, adds 2-4 AI suggestions, asks for
-   constraints
+   constraints, and runs a job check (Job to Be Done, trial) when the
+   options may answer different needs
 2. **Shape** — detects whether you have too few / too many ideas, a
-   binary choice, or decision under constraints
+   binary choice, a decision under constraints, a schema lock-in, or a
+   naming question
 3. **Plan** — announces a technique sequence (Six Hats, MoSCoW,
    Impact/Effort, etc.) with estimated times
 4. **Execute** — runs each technique, presents results, collects
    feedback (closed + open questions)
 5. **Reflect** — after each step, adapts the plan if the session
-   signals convergence / stuck / new dimension
+   signals convergence / stuck / new dimension, or a structural
+   contradiction (TRIZ Contradiction, trial)
 6. **Crystallise** — selects final ideas with rationale, generates
    action items
 7. **Meta-analysis** — records what worked for future improvement
@@ -143,6 +146,8 @@ directory (default: `brainstorm/YYYYMMDD-<slug>.md`).
 | **Large backlog** | 15+ ideas | Affinity → Dot Vote (cluster) → Impact/Effort (filtered) → MoSCoW |
 | **Binary choice** | Exactly 2 ideas | PCI → Devil's Advocate → Binary Comparison |
 | **Decision under constraints** | Constraints mentioned | Constraint Mapping → Impact/Effort → MoSCoW → Action Items |
+| **Schema / lock-in** | Schema, manifest or lock-in topic with 3+ atoms | Atom Inventory → Constraint Mapping → Impact/Effort → Pre-mortem |
+| **Naming** | Name, rename, identifier or slug topic | Free Association (extended) → Affinity Grouping → PCI on top 3 → Action Items |
 
 Recipes can always be overridden with `TECHNIQUES="six-hats,moscow"`.
 Six Hats is opt-in only — request it explicitly via `TECHNIQUES` or
@@ -162,7 +167,7 @@ Random Stimulus, Free Association
 Binary Comparison, Dot Voting
 **Crystallize** — Action Items, Elevator Pitch
 **Adaptive** — Affinity Grouping, Devil's Advocate, Pre-mortem,
-TRIZ Contradiction (trial), Constraint Mapping, Atom Inventory
+Constraint Mapping, TRIZ Contradiction (trial), Atom Inventory
 
 ## Customization
 
@@ -174,6 +179,12 @@ markdown section with:
 - **How** — step-by-step instructions for the AI facilitator
 - **Duration** — typical time budget
 - **Output shape** — what the result looks like
+- **Phase** (optional) — for a technique that runs outside the STEP
+  loop, such as Job to Be Done at intake
+
+Tag a new technique's heading **trial** to measure it before adopting
+it: each session's meta-analysis gets a `Trial —` line for it, and
+retrospective mode tallies those lines to decide keep / reshape / drop.
 
 The skill reads `techniques.md` at session start, so new techniques are
 available immediately.
