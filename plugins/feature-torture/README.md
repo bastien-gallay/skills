@@ -66,7 +66,7 @@ npx skills add bastien-gallay/skills --skill feature-torture
 
 2. **Invoke the skill** in Claude Code:
 
-   ```
+   ```text
    /feature-torture
    ```
 
@@ -108,7 +108,7 @@ A typical report has 11 required sections, ~500–900 words, ≥ 1 finding per 8
 
 ## Repo layout
 
-```
+```text
 feature-torture/
 ├── README.md                       # this file
 ├── CHANGELOG.md
