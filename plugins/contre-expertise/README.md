@@ -40,6 +40,15 @@ dossiers created before the skill existed.
 
 ## Install
 
+In Claude Code, from the `bastien-gallay/skills` marketplace:
+
+```text
+/plugin marketplace add bastien-gallay/skills
+/plugin install contre-expertise@skills
+```
+
+Or link a clone into your skills directory:
+
 ```sh
 git clone https://github.com/bastien-gallay/skills
 ln -s "$(pwd)/skills/plugins/contre-expertise/skills/contre-expertise" ~/.claude/skills/contre-expertise

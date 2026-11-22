@@ -47,7 +47,7 @@ Users pick up the release via:
 
 - `just` and `jq` on `PATH`.
 - Working tree is clean and on `main`.
-- `origin` points at `github.com/bastien-gallay/bfw` and you can push.
+- `origin` points at `github.com/bastien-gallay/skills` and you can push.
 - CHANGELOG.md has an `## Unreleased` section with the changes you
   want to ship.
 
@@ -64,15 +64,15 @@ Users pick up the release via:
     - Aborts if `vX.Y.Z` already exists as a tag.
     - Rewrites both manifest version fields via `jq` (atomic per file,
       atomic across files because the whole target is one bash block).
-    - Creates a commit `chore: release vX.Y.Z`.
-    - Creates an annotated tag `vX.Y.Z`.
-3. **Push commits and tag.** `git push && git push --tags`. These are
+    - Creates a commit `chore(bfw): release vX.Y.Z`.
+    - Creates an annotated tag `bfw/vX.Y.Z`.
+3. **Push commits and tag.** `git push && git push origin bfw/vX.Y.Z`. These are
    two operations; pushing the commit without the tag leaves the
    tag local, which silently breaks the "release is visible on
    GitHub" expectation. Do both.
 4. **Verify.** Check:
     - The tag shows at
-      <https://github.com/bastien-gallay/bfw/releases/tag/vX.Y.Z>.
+      <https://github.com/bastien-gallay/skills/releases/tag/bfw/vX.Y.Z>.
     - `just check-versions` still passes on a fresh clone.
     - Install in a scratch Claude Code session:
       `/plugin marketplace update skills` then `/plugin install bfw@skills`,

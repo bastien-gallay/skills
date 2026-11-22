@@ -52,6 +52,15 @@ replaces.
 
 ## Install
 
+In Claude Code, from the `bastien-gallay/skills` marketplace:
+
+```text
+/plugin marketplace add bastien-gallay/skills
+/plugin install shape@skills
+```
+
+Or link a clone into your skills directory:
+
 ```sh
 git clone https://github.com/bastien-gallay/skills
 cd skills/plugins/shape && ./install.sh          # symlink — edits propagate live

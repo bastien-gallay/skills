@@ -82,15 +82,15 @@ as a Claude Code plugin **and** as a cross-host skill via
   archive with an OS-registered extension. Double-clicking opens
   Claude Desktop's "Add to library" dialog; the web uploader also
   accepts `.skill` directly. Built by `just package` and attached
-  to each GitHub Release by `.github/workflows/release.yml`. The
+  to each GitHub Release by `.github/workflows/bfw-release.yml`. The
   archive root must be the `brainstorm/` folder (claude.ai
   requires this layout) and the SKILL.md `description` field must
   stay ≤200 chars (enforced on upload). Updates are manual
   (re-download + re-install).
 
-Releases go through `just release X.Y.Z` which bumps both manifests
-atomically and creates an annotated git tag. The tag push then
-triggers `release.yml`, which re-packages and publishes the zip.
+Releases go through `just release X.Y.Z`, which bumps `plugin.json`
+and creates the annotated tag `bfw/vX.Y.Z`. The tag push then
+triggers `bfw-release.yml`, which re-packages and publishes the zip.
 There is no build step in the repo itself and no separate installer
 script. Full release procedure and CI integration plans live in
 `docs/RELEASING.md`.

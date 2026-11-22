@@ -12,5 +12,7 @@
     "editing",
     "critique",
     "french-writing"
-  ]
+  ],
+  "homepage": "https://github.com/bastien-gallay/skills/tree/main/plugins/redaction",
+  "repository": "https://github.com/bastien-gallay/skills"
 }

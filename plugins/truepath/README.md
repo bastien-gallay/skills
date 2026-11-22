@@ -117,7 +117,7 @@ them on Python 3.9 and 3.13, with `ruff check` on the code and
 truepath is listed in [bastien-gallay/skills](https://github.com/bastien-gallay/skills),
 the registry of the skills I maintain. Two of them meet it often:
 
-- [`show-me`](https://github.com/bastien-gallay/show-me) picks the visual a
+- [`show-me`](../show-me/) picks the visual a
   piece of content calls for; truepath builds one of them, the path through
   a process, and checks it against the code.
 - [`wrap`](../wrap/) closes a milestone; its

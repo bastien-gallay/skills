@@ -10,7 +10,7 @@ bundle; a release is a commit on `main`, a tag on it, and a line in the hub.
 | `.claude-plugin/plugin.json` | `version` |
 | `CHANGELOG.md` | a `## X.Y.Z` section, first in the file |
 | `README.md` | the first line of `## Status`: version, tag and date (CI does not read it) |
-| git | an annotated, signed tag `vX.Y.Z` on the commit that carries the above |
+| git | an annotated, signed tag `truepath/vX.Y.Z` on the commit that carries the above |
 | GitHub | a release on that tag, its notes taken from the changelog section |
 | [bastien-gallay/skills](https://github.com/bastien-gallay/skills) | `version` of the `truepath` entry in `registry.json`, and the file's `updated` |
 
@@ -30,9 +30,9 @@ reaches nobody.
 3. Tag and publish:
 
    ```sh
-   git tag -s vX.Y.Z -m "truepath X.Y.Z"
-   git push origin vX.Y.Z
-   gh release create vX.Y.Z --title "truepath X.Y.Z" --notes-file <the changelog section>
+   git tag -s truepath/vX.Y.Z -m "truepath X.Y.Z"
+   git push origin truepath/vX.Y.Z
+   gh release create truepath/vX.Y.Z --title "truepath X.Y.Z" --notes-file <the changelog section>
    ```
 
 4. In the hub, on a branch: update the `truepath` entry of `registry.json`,

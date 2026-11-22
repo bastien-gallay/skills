@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/bastien-gallay/shape/assets/blocks-schema.json",
+  "$id": "https://github.com/bastien-gallay/skills/blob/main/plugins/shape/skills/shape/assets/blocks-schema.json",
   "title": "shape block census",
   "description": "The block sequence of a document, produced by one parse. Every F12 metric is a pure function over this output; no metric re-parses the source (spec v1.1 §4).",
   "type": "object",

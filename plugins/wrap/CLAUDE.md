@@ -293,7 +293,8 @@ not, and an issue would only restate this section.
   all until then, which is why the manifests' `homepage` and `repository` URLs
   pointed at nothing through `0.1.0` and most of `0.2.0`. The first PR (#1) set
   the precedent: a merge commit, not a squash, so the per-idea commit subjects
-  survive in the history.
+  survive in the history. That repo was deleted on 2026-11-21 after the
+  move to the `bastien-gallay/skills` monorepo, which carries its history.
 
   **#6 is the exception, 2026-08-03, and the rule stands.** It was squashed —
   ten commits became `7e1e962`. GitHub kept every subject and body as bullets

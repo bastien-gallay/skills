@@ -45,8 +45,8 @@ Les utilisateurs récupèrent la release via :
 
 ```bash
 just check-versions   # sanity check
-just release X.Y.Z    # bump manifestes + commit + tag annoté
-git push && git push --tags   # déclenche le workflow release.yml
+just release X.Y.Z    # bump plugin.json + commit + tag annoté redaction/vX.Y.Z
+git push && git push origin redaction/vX.Y.Z   # déclenche redaction-release.yml
 ```
 
 Le workflow `release` :
