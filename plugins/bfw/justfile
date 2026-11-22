@@ -75,7 +75,7 @@ check-versions:
 # double-click and also accepted by the claude.ai web uploader.
 # Archive layout: brainstorm/SKILL.md at the root (no skills/ prefix).
 # The artefact is uploaded to each GitHub Release by
-# .github/workflows/release.yml.
+# .github/workflows/bfw-release.yml.
 package:
     #!/usr/bin/env bash
     set -euo pipefail

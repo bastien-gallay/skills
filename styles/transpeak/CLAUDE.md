@@ -76,7 +76,7 @@ directly — the next `./build.sh` overwrites it.
 ## Conventions
 
 - Markdown must pass `markdownlint` (per user global instructions).
-  `.markdownlint.json` disables MD041 (slash commands and style texts
+  `.markdownlint.jsonc` disables MD041 (slash commands and style texts
   open with prose by design) and MD046. `build.sh` lints only
   `prompt.md` and the generated files — run `markdownlint` yourself on
   `README.md` and `CLAUDE.md`.

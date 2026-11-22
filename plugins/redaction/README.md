@@ -36,7 +36,6 @@ symétriques :
 redaction/
 ├── .claude-plugin/
 │   └── plugin.json              # Manifeste Claude Code plugin
-├── .github/workflows/release.yml
 ├── skills/
 │   └── redaction/
 │       ├── SKILL.md             # Prompt facilitateur

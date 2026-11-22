@@ -78,7 +78,7 @@ once, in `/config` → *Output style*.
 ## Conventions
 
 - Markdown files should pass `markdownlint` (per user global instructions).
-  `.markdownlint.json` disables MD041 repo-wide: slash commands and style
+  `.markdownlint.jsonc` disables MD041 repo-wide: slash commands and style
   texts open with prose by design, so a first-line H1 does not apply here.
   Note `build.sh` only lints `prompt.md` and the two generated files —
   run `markdownlint` yourself when you touch `CLAUDE.md`, `README.md`,

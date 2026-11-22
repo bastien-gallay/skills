@@ -102,7 +102,7 @@ just lint                # markdownlint over every .md
 just check-versions      # plugin.json is semver; root marketplace has no version
 just check-fixtures      # run the scripts over fixtures/*.md
 just package             # build dist/shape-v<version>.skill
-just release 0.2.0       # bump both manifests, commit, tag
+just release 0.2.0       # bump plugin.json, commit, tag shape/v0.2.0
 
 ./install.sh             # symlink into ~/.claude/skills/shape
 ./install.sh --copy      # copy instead

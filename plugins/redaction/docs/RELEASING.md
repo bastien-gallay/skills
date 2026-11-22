@@ -17,7 +17,8 @@ Pas de build runtime dans le repo. Une release est :
    zip archive avec extension `.skill` (OS-registered Claude Desktop
    pour double-click install, accepté aussi par l'uploader web
    claude.ai). Construit par `just package` en CI
-   (`.github/workflows/release.yml`) au push du tag.
+   (`.github/workflows/redaction-release.yml`, à la racine du monorepo)
+   au push du tag `redaction/vX.Y.Z`.
 
 Les utilisateurs récupèrent la release via :
 

@@ -7,7 +7,6 @@ Minimal skeleton for a new Class-A Claude skill. Copy this directory to
 
 ```text
 .claude-plugin/plugin.json          # plugin manifest
-.markdownlint.json                  # canonical lint config
 skills/SKILL_NAME/SKILL.md          # the skill itself (name + trigger clause)
 ```
 
