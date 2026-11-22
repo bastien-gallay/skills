@@ -25,10 +25,10 @@ plugin Claude Code :
 
 - `.claude-plugin/plugin.json` — manifeste Claude Code. Plugin name =
   `redaction` ; skill auto-découvert à `skills/redaction/`.
-- `.claude-plugin/marketplace.json` — catalog single-plugin permettant
-  `/plugin marketplace add <owner>/redaction` puis
-  `/plugin install redaction@redaction`. Source `"./"` car la racine du
-  plugin = racine du marketplace.
+- Pas de marketplace ici : le `.claude-plugin/marketplace.json` racine du
+  monorepo liste le plugin par chemin. Installation :
+  `/plugin marketplace add bastien-gallay/skills` puis
+  `/plugin install redaction@skills`.
 
 ## Installation locale (dev)
 
@@ -86,7 +86,7 @@ refuse de tagger).
 Quick path :
 
 ```bash
-just check-versions   # vérifie que plugin.json et marketplace.json sont alignés
+just check-versions   # plugin.json en semver, marketplace racine sans version
 just release 0.2.0    # bump + commit + tag (nécessite une section CHANGELOG.md correspondante)
 just package          # construit dist/redaction-v<version>.skill
 ```

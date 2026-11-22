@@ -2,16 +2,19 @@
 #
 # Usage: just release 0.2.0
 #
-# Bumps version in .claude-plugin/plugin.json and .claude-plugin/marketplace.json
-# atomically, commits, and creates an annotated git tag. Prevents the
-# "forgot to bump plugin.json on release" silent-freeze failure mode.
+# Bumps the version in .claude-plugin/plugin.json, commits, and creates an
+# annotated tag <plugin>/vX.Y.Z (monorepo tags carry the plugin prefix).
+# Prevents the "forgot to bump plugin.json on release" silent-freeze failure
+# mode: plugin.json is the only place the version lives.
 
 set shell := ["bash", "-uc"]
+
+plugin := file_name(justfile_directory())
 
 default:
     @just --list
 
-# Release a new version: bump manifests, commit, tag.
+# Release a new version: bump plugin.json, commit, tag.
 release VERSION:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -26,8 +29,9 @@ release VERSION:
         exit 2
     fi
 
-    if git rev-parse "v{{VERSION}}" >/dev/null 2>&1; then
-        echo "error: tag v{{VERSION}} already exists" >&2
+    tag="{{plugin}}/v{{VERSION}}"
+    if git rev-parse "$tag" >/dev/null 2>&1; then
+        echo "error: tag $tag already exists" >&2
         exit 2
     fi
 
@@ -37,32 +41,33 @@ release VERSION:
     fi
 
     plugin=".claude-plugin/plugin.json"
-    market=".claude-plugin/marketplace.json"
-
     tmp="$(mktemp)"
     jq --arg v "{{VERSION}}" '.version = $v' "$plugin" > "$tmp" && mv "$tmp" "$plugin"
 
-    tmp="$(mktemp)"
-    jq --arg v "{{VERSION}}" '.metadata.version = $v | .plugins[0].version = $v' "$market" > "$tmp" && mv "$tmp" "$market"
+    just check-versions
+    git add "$plugin"
+    git commit -m "chore({{plugin}}): release v{{VERSION}}"
+    git tag -a "$tag" -m "Release {{plugin}} v{{VERSION}}"
 
-    git add "$plugin" "$market"
-    git commit -m "chore: release v{{VERSION}}"
-    git tag -a "v{{VERSION}}" -m "Release v{{VERSION}}"
+    echo "✓ Tagged $tag. Push with: git push && git push origin $tag"
 
-    echo "✓ Tagged v{{VERSION}}. Push with: git push && git push --tags"
-
-# Verify plugin.json and marketplace.json versions agree.
+# Check plugin.json carries a semver version and the monorepo marketplace
+# lists this plugin by path, without a version of its own to drift.
 check-versions:
     #!/usr/bin/env bash
     set -euo pipefail
     p=$(jq -r .version .claude-plugin/plugin.json)
-    m=$(jq -r .metadata.version .claude-plugin/marketplace.json)
-    mp=$(jq -r .plugins[0].version .claude-plugin/marketplace.json)
-    if [[ "$p" != "$m" || "$p" != "$mp" ]]; then
-        echo "version mismatch: plugin.json=$p marketplace.metadata=$m marketplace.plugins[0]=$mp" >&2
+    if [[ ! "$p" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+        echo "plugin.json version is not semver: $p" >&2
         exit 1
     fi
-    echo "✓ versions aligned: $p"
+    if ! jq -e --arg s "./plugins/{{plugin}}" \
+        '[.plugins[] | select(.source == $s and (has("version") | not))] | length == 1' \
+        ../../.claude-plugin/marketplace.json >/dev/null; then
+        echo "root marketplace.json must list ./plugins/{{plugin}} once, without a version" >&2
+        exit 1
+    fi
+    echo "✓ {{plugin}} $p (plugin.json is the only version)"
 
 # Build the skill bundle as a .skill file into dist/.
 # A .skill file is a plain zip archive with a .skill extension,

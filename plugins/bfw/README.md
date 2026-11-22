@@ -35,8 +35,7 @@ The key design decisions:
 ```text
 bfw/
 ├── .claude-plugin/
-│   ├── plugin.json              # Claude Code plugin manifest
-│   └── marketplace.json         # Single-plugin marketplace catalog
+│   └── plugin.json              # Claude Code plugin manifest
 ├── skills/
 │   └── brainstorm/
 │       ├── SKILL.md             # The main skill prompt — the brain

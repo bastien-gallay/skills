@@ -6,16 +6,15 @@ Maintainer-facing notes on how a release is cut. Mirrors `bfw`'s flow exactly. N
 
 There is no build step in the repo itself. A release is:
 
-1. A bumped `version` in `.claude-plugin/plugin.json`.
-2. A bumped `metadata.version` AND `plugins[0].version` in `.claude-plugin/marketplace.json` (both must match — see `just check-versions`).
-3. A commit on `main` with the above changes.
-4. An annotated git tag `vX.Y.Z` on that commit.
-5. A `CHANGELOG.md` entry describing what changed.
-6. A `feature-torture-vX.Y.Z.skill` bundle attached to the GitHub Release — a zip archive with the `.skill` extension. Built by `just package` (locally or in CI when the tag is pushed).
+1. A bumped `version` in `.claude-plugin/plugin.json`, the only place the version lives (`just check-versions` checks the root marketplace carries none).
+2. A commit on `main` with that change.
+3. An annotated git tag `feature-torture/vX.Y.Z` on that commit.
+4. A `CHANGELOG.md` entry describing what changed.
+5. A `feature-torture-vX.Y.Z.skill` bundle attached to the GitHub Release — a zip archive with the `.skill` extension. Built by `just package` (locally or in CI when the tag is pushed).
 
 Users pick up the release via:
 
-- **Claude Code plugin channel** — `/plugin marketplace update feature-torture` reads the new `plugin.json` version and refreshes its cache. Skipping the version bump is a silent freeze: users stay on the cached old code forever. **This is the single most important invariant the release process protects.**
+- **Claude Code plugin channel** — `/plugin marketplace update skills` reads the new `plugin.json` version and refreshes its cache. Skipping the version bump is a silent freeze: users stay on the cached old code forever. **This is the single most important invariant the release process protects.**
 - **vercel-labs/skills channel** — `npx skills update` re-clones the repo. No version field drives it; it always pulls latest `main`.
 - **Claude Desktop / claude.ai channel** — users download `feature-torture-vX.Y.Z.skill` from the GitHub Release page. Updates are manual (re-download + re-install).
 
