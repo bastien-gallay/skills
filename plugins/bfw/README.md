@@ -22,7 +22,7 @@ The key design decisions:
   breaks trust and flow.
 - **Problem shape detection.** The same generic "brainstorm" template
   doesn't fit a blank-slate question and a 30-item backlog. `bfw`
-  classifies the input into 5 shapes and picks a recipe accordingly.
+  classifies the input into 7 shapes and picks a recipe accordingly.
 - **Meta-analysis is first-class.** Every session ends with "what
   worked, what didn't, what to try next time" — feeding back into the
   technique library for continuous improvement.
@@ -120,7 +120,8 @@ next to it).
    constraints, and runs a job check (Job to Be Done, trial) when the
    options may answer different needs
 2. **Shape** — detects whether you have too few / too many ideas, a
-   binary choice, or decision under constraints
+   binary choice, a decision under constraints, a schema lock-in, or a
+   naming question
 3. **Plan** — announces a technique sequence (Six Hats, MoSCoW,
    Impact/Effort, etc.) with estimated times
 4. **Execute** — runs each technique, presents results, collects
@@ -145,6 +146,8 @@ directory (default: `brainstorm/YYYYMMDD-<slug>.md`).
 | **Large backlog** | 15+ ideas | Affinity → Dot Vote (cluster) → Impact/Effort (filtered) → MoSCoW |
 | **Binary choice** | Exactly 2 ideas | PCI → Devil's Advocate → Binary Comparison |
 | **Decision under constraints** | Constraints mentioned | Constraint Mapping → Impact/Effort → MoSCoW → Action Items |
+| **Schema / lock-in** | Schema, manifest or lock-in topic with 3+ atoms | Atom Inventory → Constraint Mapping → Impact/Effort → Pre-mortem |
+| **Naming** | Name, rename, identifier or slug topic | Free Association (extended) → Affinity Grouping → PCI on top 3 → Action Items |
 
 Recipes can always be overridden with `TECHNIQUES="six-hats,moscow"`.
 Six Hats is opt-in only — request it explicitly via `TECHNIQUES` or
