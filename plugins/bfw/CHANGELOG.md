@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- **Two trial techniques, from a review of BMAD's library.** *Job to
+  Be Done* runs at INTAKE when options may answer different questions
+  or when someone other than the user will live with the result; it
+  asks one question per third-party job. *TRIZ Contradiction* is
+  inserted by REFLECT when two constraints clash and a part of the
+  system could carry each one. Both are marked **trial**: the META
+  block gains `Trial —` lines and a `Jargon` line, and retrospective
+  mode tallies them to decide keep / reshape / drop.
+
 ### Changed
 
 - The facilitator glosses every technique name and acronym the first

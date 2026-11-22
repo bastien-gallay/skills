@@ -87,7 +87,13 @@ INTAKE → SHAPE → PLAN → [STEP → LOG → REFLECT]* → CRYSTALLIZE → ME
    - "Anything to add, remove, or rephrase?"
    - "Any hard constraints I should know about?" (Carried constraints
      from step 4, if any, are already on the table.)
-8. Give an encouraging comment about the starting material. Be genuine
+8. **Job check (conditional).** If the options look comparable but may
+   answer different questions, if the artefact's reader or user is not
+   named, or if someone other than the user will live with the result
+   (a client, an editor, a future team), run **Job to Be Done** (trial
+   technique) before SHAPE, including its third-party questions.
+   Announce + act; skip silently otherwise.
+9. Give an encouraging comment about the starting material. Be genuine
    and specific (not generic "Great ideas!"). Reference something
    concrete from their input.
 
@@ -241,6 +247,11 @@ After each step (before moving to the next), briefly reflect:
      "Interesting — let me park that and bring us back to [topic]"
    - **Low energy:** Monosyllabic answers → Simplify remaining steps,
      propose early wrap-up
+   - **Structural contradiction:** Two constraints or goals pull
+     against each other and a part of the system could carry one while
+     another part carries the other → Insert **TRIZ Contradiction**
+     (trial technique). If the clash is between two meanings of one
+     thing, name the two concepts instead; do not run TRIZ.
    - **Too-easy consensus:** Everything scores the same, no tension →
      Insert PCI / Impact-Effort first to surface a leader, then run
      Devil's Advocate against it. DA without a leader manufactures
@@ -289,7 +300,19 @@ Append a meta-analysis section to the session document:
 - **What could improve:** [specific observation]
 - **Session energy:** [high/medium/low, with notes]
 - **Recommendation for similar sessions:** [one concrete tip]
+- **Trial — Job to Be Done:** [ran / skipped: trigger absent / skipped
+  despite trigger] · third-party question: [asked at step N / not
+  asked / no third party] · changed the option set: [yes/no] · noise:
+  [yes/no]
+- **Trial — TRIZ Contradiction:** [ran / skipped: no contradiction /
+  skipped: concept clash] · separation: [time / structure / condition /
+  whole-parts / none] · became the decision: [yes/no] · noise: [yes/no]
+- **Jargon:** [none / the user asked what <term> meant]
 ```
+
+The three `Trial` and `Jargon` lines feed the retrospective: keep them
+even when the answer is "skipped" so the corpus shows how often the
+trigger fires.
 
 ---
 
@@ -446,6 +469,10 @@ to review past sessions:
    - **Convergence-technique distribution by problem shape** (grep
      `^- \*\*Convergence point:\*\*` across the corpus; tally the
      technique parenthetical by shape)
+   - **Trial techniques** (grep `^- \*\*Trial`): how often each
+     fired, how often its question or separation became the decision,
+     how often it added noise. Decide keep / reshape / drop per
+     technique.
 4. Propose updates to default recipes or facilitator behavior.
 5. Save findings to memory for future sessions.
 
