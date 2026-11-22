@@ -13,8 +13,10 @@ Document fondateur du hub `bastien-gallay/skills`. Source : audit du 2026-07-14.
 >
 > **Remplacé aussi le 2026-11-22.** La version ne vit plus que dans
 > `plugins/<plugin>/.claude-plugin/plugin.json` : il n'y a plus de
-> `marketplace.json` par plugin, et les tags sont `<plugin>/vX.Y.Z`. Les mentions de
-> « marketplace mono-plugin » ci-dessous décrivent l'état d'avant.
+> `marketplace.json` par plugin, et les tags sont `<plugin>/vX.Y.Z`. Le lint
+> Markdown suit un `.markdownlint.jsonc` racine, étendu par dossier. Les
+> mentions de « marketplace mono-plugin » et de `.markdownlint.json`
+> ci-dessous décrivent l'état d'avant.
 
 ## 1. Deux classes, pas une
 

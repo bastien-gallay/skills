@@ -104,7 +104,7 @@ The following patterns are excluded from the archive by default:
 | Python          | `.venv/`, `__pycache__/`, `*.egg-info/`, `*.pyc`, `*.pyo`                         |
 | Testing         | `tests/`, `.pytest_cache/`                                                        |
 | IDE/Editor      | `.claude/`, `.cursor/`, `.vscode/`, `.idea/`, `.agent/`, `.opencode/`, `.github/` |
-| Linters         | `.ruff_cache/`, `.mypy_cache/`, `.markdownlint.json`                              |
+| Linters         | `.ruff_cache/`, `.mypy_cache/`, `.markdownlint.json`, `.markdownlint.jsonc`       |
 | Build           | `uv.lock`                                                                         |
 | Development     | `openspec/`, `docs/`, `CLAUDE.md`, `AGENTS.md`                                    |
 | Data            | `benchmark/` (may contain copyrighted content)                                    |
