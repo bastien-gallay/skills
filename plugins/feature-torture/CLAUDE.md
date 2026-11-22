@@ -17,7 +17,7 @@ The skill reads project config from `.feature-torture.md` at the project root, f
 
 Three install channels, mirroring `bfw`:
 
-1. **Claude Code plugin** — version-driven. `/plugin marketplace update feature-torture` reads `.claude-plugin/plugin.json` and refreshes. **Skipping a version bump is a silent freeze**; `just release` enforces the bump.
+1. **Claude Code plugin** — version-driven. `/plugin marketplace update skills` reads `.claude-plugin/plugin.json` and refreshes. **Skipping a version bump is a silent freeze**; `just release` enforces the bump.
 2. **vercel-labs/skills** — clone-driven. Always pulls latest `main`.
 3. **Claude Desktop / claude.ai web** — `.skill` archive. Built by `just package`, attached to a GitHub Release.
 

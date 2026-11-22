@@ -13,7 +13,7 @@ skills/SKILL_NAME/SKILL.md          # the skill itself (name + trigger clause)
 
 ## Bootstrap
 
-1. Copy this folder to `plugins/REPO_NAME/` (drop `.claude-plugin/marketplace.json`:
+1. Copy this folder to `plugins/REPO_NAME/` (no `marketplace.json` of its own:
    the root marketplace serves every plugin).
 2. Rename `skills/SKILL_NAME/` to your skill's name.
 3. Replace every `SKILL_NAME` and `REPO_NAME` token across the four files.

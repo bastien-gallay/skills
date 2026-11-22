@@ -7,14 +7,13 @@ public — interne.
 
 Pas de build runtime dans le repo. Une release est :
 
-1. Une bumped `version` dans `.claude-plugin/plugin.json`.
-2. Une bumped `metadata.version` ET `plugins[0].version` dans
-   `.claude-plugin/marketplace.json` (les deux doivent matcher — voir
-   `just check-versions`).
-3. Un commit sur `main` avec ces changements.
-4. Un tag git annoté `vX.Y.Z` sur ce commit.
-5. Une entrée `CHANGELOG.md` décrivant ce qui change.
-6. Un bundle `redaction-vX.Y.Z.skill` attaché à la GitHub Release —
+1. Une `version` bumpée dans `.claude-plugin/plugin.json`, seul endroit
+   où vit la version (`just check-versions` vérifie que la marketplace
+   racine n'en porte pas).
+2. Un commit sur `main` avec ce changement.
+3. Un tag git annoté `redaction/vX.Y.Z` sur ce commit.
+4. Une entrée `CHANGELOG.md` décrivant ce qui change.
+5. Un bundle `redaction-vX.Y.Z.skill` attaché à la GitHub Release —
    zip archive avec extension `.skill` (OS-registered Claude Desktop
    pour double-click install, accepté aussi par l'uploader web
    claude.ai). Construit par `just package` en CI
@@ -22,7 +21,7 @@ Pas de build runtime dans le repo. Une release est :
 
 Les utilisateurs récupèrent la release via :
 
-- **Claude Code plugin** — `/plugin marketplace update redaction` (ou
+- **Claude Code plugin** — `/plugin marketplace update skills` (ou
   auto-update au démarrage de session) lit la nouvelle `plugin.json`
   version et rafraîchit son cache. **Sauter le bump est un silent
   freeze** : les utilisateurs restent figés sur l'ancien code en cache.

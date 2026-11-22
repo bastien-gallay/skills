@@ -90,5 +90,5 @@ table, and a self-check.
   renderings run wide on purpose; keep prose wrapped at ~78 columns to match.
 - **`.gitignore` covers five paths**: `.DS_Store`, `.personal/`, `dist/`,
   `node_modules/`, `.impeccable/`.
-- Version bumps live in `.claude-plugin/plugin.json` *and* `marketplace.json` —
-  both, or the plugin silently freezes.
+- The version lives only in `.claude-plugin/plugin.json`; skip the bump and
+  the plugin silently freezes.

@@ -35,8 +35,7 @@ symétriques :
 ```text
 redaction/
 ├── .claude-plugin/
-│   ├── plugin.json              # Manifeste Claude Code plugin
-│   └── marketplace.json         # Catalog single-plugin
+│   └── plugin.json              # Manifeste Claude Code plugin
 ├── .github/workflows/release.yml
 ├── skills/
 │   └── redaction/

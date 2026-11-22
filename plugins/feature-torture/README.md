@@ -116,8 +116,7 @@ feature-torture/
 ├── CLAUDE.md                       # repo conventions
 ├── justfile                        # release automation
 ├── .claude-plugin/
-│   ├── plugin.json
-│   └── marketplace.json
+│   └── plugin.json
 ├── skills/
 │   └── feature-torture/
 │       ├── SKILL.md                # the canonical prompt with frontmatter

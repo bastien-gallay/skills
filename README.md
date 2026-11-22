@@ -18,7 +18,7 @@ Then `/plugin install <name>@skills` for any skill below.
 | --- | --- |
 | `plugins/<plugin>/` | One Class-A skill: `.claude-plugin/plugin.json`, `skills/<name>/SKILL.md`, its README, CHANGELOG and tooling |
 | `styles/<style>/` | One Class-B style: canonical `prompt.md`, `build.sh`, `install.sh` |
-| `.claude-plugin/marketplace.json` | The marketplace; each plugin is sourced by relative path |
+| `.claude-plugin/marketplace.json` | The only marketplace; each plugin is sourced by relative path, without a version (`plugin.json` holds it) |
 | `.github/workflows/<plugin>*.yml` | Per-plugin CI and release, filtered on that plugin's path |
 | `registry.json` | The machine-readable index (see below) |
 | `shared/` | The mutualized socle: lint config, release template, skill skeleton |

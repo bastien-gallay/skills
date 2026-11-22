@@ -442,9 +442,7 @@ not, and an issue would only restate this section.
   `node_modules/`, `.impeccable/`. The last is a regenerating hook cache that
   was ignored only through this clone's `.git/info/exclude` until 2026-07-26 —
   a fresh clone saw it as an untracked file.
-- **A version bump is three strings in two files**, both under
-  `.claude-plugin/`: `plugin.json` line 3, and `marketplace.json` twice — the
-  marketplace's own version and the plugin entry's. There is no
-  `marketplace.json` at the repo root; an earlier wording here named one and
-  sent at least one reader looking for it. Miss any of the three and the plugin
-  silently freezes.
+- **A version bump is one string**: `.claude-plugin/plugin.json` line 3. The
+  plugin has no `marketplace.json` of its own since the monorepo move; the
+  monorepo root's `.claude-plugin/marketplace.json` lists wrap by path and
+  carries no version. Miss the bump and the plugin silently freezes.

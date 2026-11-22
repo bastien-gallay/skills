@@ -9,14 +9,13 @@ purpose — this is internal.
 
 There is no build step in the repo itself. A release is:
 
-1. A bumped `version` in `.claude-plugin/plugin.json`.
-2. A bumped `metadata.version` AND `plugins[0].version` in
-   `.claude-plugin/marketplace.json` (both must match — see
-   `just check-versions`).
-3. A commit on `main` with the above changes.
-4. An annotated git tag `vX.Y.Z` on that commit.
-5. A CHANGELOG.md entry describing what changed.
-6. A `bfw-brainstorm-vX.Y.Z.skill` bundle attached to the GitHub
+1. A bumped `version` in `.claude-plugin/plugin.json`, the only place
+   the version lives (`just check-versions` checks the root marketplace
+   carries none).
+2. A commit on `main` with that change.
+3. An annotated git tag `bfw/vX.Y.Z` on that commit.
+4. A CHANGELOG.md entry describing what changed.
+5. A `bfw-brainstorm-vX.Y.Z.skill` bundle attached to the GitHub
    Release — a zip archive with the `.skill` extension
    (OS-registered to Claude Desktop for double-click install, also
    accepted by the claude.ai web uploader). Built by `just package`
@@ -162,7 +161,7 @@ Lives at `.github/workflows/release.yml`.
 ### 3. `schema.yml` — plugin manifest validation (stretch)
 
 - **Trigger:** `pull_request` touching `.claude-plugin/**`.
-- **Steps:** validate `plugin.json` and `marketplace.json` against
+- **Steps:** validate `plugin.json` and the root `marketplace.json` against
   Claude Code's published JSON schemas (if/when they're published).
 - **Rationale:** today the `jq`-based bump trusts that no one
   hand-edited the manifest into an invalid state. A schema check

@@ -30,9 +30,9 @@ as a Claude Code plugin **and** as a cross-host skill via
 - `.claude-plugin/plugin.json` — Claude Code plugin manifest. Plugin
   name is `bfw`; the skill inside is auto-discovered at
   `skills/brainstorm/`.
-- `.claude-plugin/marketplace.json` — single-plugin catalog left over from
-  the standalone repo. Users install through the monorepo catalog
-  instead: `/plugin marketplace add bastien-gallay/skills` then
+- No marketplace file here: the monorepo's root
+  `.claude-plugin/marketplace.json` lists bfw by path. Users run
+  `/plugin marketplace add bastien-gallay/skills` then
   `/plugin install bfw@skills`.
 
 ## Architecture invariants worth preserving
@@ -59,10 +59,9 @@ as a Claude Code plugin **and** as a cross-host skill via
   lives at `skills/brainstorm/`. Moving it breaks both install paths
   at once. Adding a second skill means adding a sibling directory
   under `skills/`, not nesting.
-- **Version fields must stay aligned.** `.claude-plugin/plugin.json`
-  `version`, `.claude-plugin/marketplace.json` `metadata.version`, and
-  `.claude-plugin/marketplace.json` `plugins[0].version` are all
-  bumped together by `just release X.Y.Z`. Do not edit them by hand —
+- **The version lives in one place.** `.claude-plugin/plugin.json`
+  `version` is bumped by `just release X.Y.Z`; the root marketplace
+  carries no version. Do not edit it by hand —
   Claude Code caches by version, and a skipped bump means users
   silently freeze on the old code.
 
