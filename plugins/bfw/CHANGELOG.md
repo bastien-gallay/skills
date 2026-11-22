@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed
+
+- The facilitator glosses every technique name and acronym the first
+  time it appears in a message, and restates the live options in one
+  table after a break. Both came from a live replay where the user
+  stumbled on "PCI" and "JTBD" and asked for a recap before committing.
+
 ### Fixed
 
 - README and CLAUDE.md now count 24 techniques, not 20, and list

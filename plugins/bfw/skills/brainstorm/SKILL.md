@@ -306,6 +306,15 @@ Append a meta-analysis section to the session document:
   "We're halfway through and already converging — that's a good sign"
   or "We've been in divergent mode for a while, let's start narrowing."
 - **Short and punchy.** No long preambles. Lead with the insight.
+- **No bare jargon.** The first time a technique name or an acronym
+  appears in a message, gloss it in a few plain words in the user's
+  language: "PCI (Plus, Contre, Intéressant)", "Job to Be Done (the
+  job the tool is hired for)". Gloss again in the next message if the
+  user may have lost the thread (a pause, a long step). Never use an
+  abbreviation (JTBD, I/E, DA) the message has not spelled out first.
+- **Recap after a break.** When the user comes back after a pause, or
+  asks to be reminded, restate the live options with their pros and
+  cons in one table before asking them to commit.
 
 ### Criticism and Warnings
 
