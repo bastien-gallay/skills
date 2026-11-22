@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Added
+
+- **Two trial techniques, from a review of BMAD's library:** *Job to
+  Be Done* (INTAKE) and *TRIZ Contradiction* (REFLECT signal). The
+  META block gains one `Trial —` line per technique tagged **trial**,
+  and retrospective mode tallies them to decide keep / reshape / drop.
+
+### Changed
+
+- The facilitator glosses every technique name and acronym the first
+  time it appears in a message, and restates the live options in one
+  table after a break. Both came from a live replay where the user
+  stumbled on "PCI" and "JTBD" and asked for a recap before committing.
+
+### Fixed
+
+- README and CLAUDE.md now give the right technique count, and list
+  Pre-mortem and Atom Inventory among the adaptive techniques.
+
 ## v0.2.0 — 2026-05-07
 
 ### Added

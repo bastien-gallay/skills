@@ -39,7 +39,7 @@ bfw/
 ├── skills/
 │   └── brainstorm/
 │       ├── SKILL.md             # The main skill prompt — the brain
-│       └── techniques.md        # Technique library (20 techniques, 5 phases)
+│       └── techniques.md        # Technique library (26 techniques, 5 phases)
 ├── README.md                    # This file
 ├── CHANGELOG.md
 ├── CLAUDE.md                    # Orientation for Claude Code sessions
@@ -150,17 +150,19 @@ ask for stress-testing at intake.
 
 ## Technique library
 
-20 techniques across 5 phases. See
+26 techniques across 5 phases. See
 [skills/brainstorm/techniques.md](skills/brainstorm/techniques.md) for
 the full reference.
 
 **Diverge** — Starbursting, SCAMPER, Reverse Brainstorm, What-Would-X-Do,
 Random Stimulus, Free Association
-**Analyze** — Six Thinking Hats, First Principles, 5 Whys, SWOT, PCI
+**Analyze** — Six Thinking Hats, First Principles, 5 Whys, Job to Be Done
+(trial), SWOT, PCI
 **Converge** — MoSCoW, Impact/Effort Matrix, NUF Test, Decision Matrix,
 Binary Comparison, Dot Voting
 **Crystallize** — Action Items, Elevator Pitch
-**Adaptive** — Affinity Grouping, Devil's Advocate, Constraint Mapping
+**Adaptive** — Affinity Grouping, Devil's Advocate, Pre-mortem,
+TRIZ Contradiction (trial), Constraint Mapping, Atom Inventory
 
 ## Customization
 

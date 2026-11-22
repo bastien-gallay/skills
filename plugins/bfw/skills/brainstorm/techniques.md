@@ -126,6 +126,28 @@ use it, how to run it (AI facilitator instructions), and typical duration.
 - **Duration:** 3-5 min
 - **Output shape:** Chain: Problem → Why1 → Why2 → ... → Root cause.
 
+### Job to Be Done — **trial**
+
+- **Purpose:** Name the job each option (or the artefact under
+  discussion) is hired to do, before comparing options or mechanisms.
+- **Phase:** Intake — runs before SHAPE.
+- **When:** The options look comparable but may answer different
+  questions, or someone other than the user will live with the result
+  (a client, an editor, a future team or reader).
+- **How:** Ask "who hires this, and to do what job?" List 2-4 candidate
+  jobs, each phrased as "When <situation>, <who> wants to <progress>".
+  Map every option or idea to the job(s) it serves. If options serve
+  different jobs, the user picks the job first; options that serve no
+  chosen job drop out. AI proposes jobs, user confirms or corrects —
+  split jobs rather than merge them when in doubt. For every kept job
+  whose *who* is not the user, ask in the same message one concrete
+  question: "How will <who> do <step> on day one? What do they already
+  know, what will they need?" Never answer it yourself.
+- **Duration:** 3-5 min
+- **Output shape:** Table: Job | Who | Options serving it, the chosen
+  job in one line, the third-party questions. META `note`: third-party
+  question asked / unanswered / no third party; option set changed.
+
 ### SWOT (per idea)
 
 - **Purpose:** Structured strength/weakness assessment.
@@ -322,6 +344,28 @@ use it, how to run it (AI facilitator instructions), and typical duration.
   AI proposes, user validates.
 - **Duration:** 2-3 min
 - **Output shape:** Two-column table: Hard constraints | Soft constraints.
+
+### TRIZ Contradiction — **trial**
+
+- **Purpose:** Resolve a conflict between two requirements by
+  separation instead of compromise.
+- **When:** Two constraints or goals pull against each other *and*
+  some part of the system could carry one while another part carries
+  the other (a core and its add-ons, a default build and an opt-in
+  feature, now and later). **Not** when the clash is between two
+  meanings of one thing (layout vs semantics, position vs order):
+  there, name the two concepts and keep both — TRIZ tends to turn that
+  case into a refusal.
+- **How:** State the contradiction in one line: "We want A so that X,
+  but A harms B". Try the separation principles that fit — in time (A
+  now, B later), in structure (A in one part, B in another: a seam, a
+  layer, a module), on condition (A when C holds, B otherwise), between
+  the whole and its parts — and stop at the first candidate that
+  delivers both A and B.
+- **Duration:** 3-5 min
+- **Output shape:** One-line contradiction, then a table: Separation |
+  Candidate | Delivers A? | Delivers B? META `note`: the separation
+  used, or "skipped: concept clash".
 
 ### Atom Inventory
 
