@@ -62,6 +62,15 @@ theory for competitive moves.
 
 ## Install
 
+In Claude Code, from the `bastien-gallay/skills` marketplace:
+
+```text
+/plugin marketplace add bastien-gallay/skills
+/plugin install market-strategist@skills
+```
+
+Or, from a clone of this folder:
+
 ```bash
 ./install.sh                    # symlink into ~/.claude/skills (edits propagate)
 ./install.sh --copy             # copy instead

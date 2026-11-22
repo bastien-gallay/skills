@@ -22,6 +22,15 @@ The canonical protocol lives in [`SKILL.md`](skills/pair-with-me/SKILL.md). In o
 - **Async gates** that interrupt where it has leverage (continue-capped vs park).
 - **Emit-now, store-later** measurement: one JSONL line per gate, no dashboard.
 
+## Install
+
+In Claude Code, from the `bastien-gallay/skills` marketplace:
+
+```text
+/plugin marketplace add bastien-gallay/skills
+/plugin install pair-with-me@skills
+```
+
 ## Invoke
 
 ```text

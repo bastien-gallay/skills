@@ -27,6 +27,17 @@ your own articles, see the [JSON Schema documentation](assets/SCHEMA.md).
 **Note**: The `benchmark/` directory (if present) may contain analyses of copyrighted
 content and is excluded from the distributed package and git tracking.
 
+## Install
+
+In Claude Code, from the `bastien-gallay/skills` marketplace:
+
+```text
+/plugin marketplace add bastien-gallay/skills
+/plugin install rhetorical-analysis@skills
+```
+
+The `generate-analysis` command is installed separately: `uv tool install ./plugins/rhetorical-analysis` from a clone.
+
 ## Download
 
 Pre-packaged `.skill` archives are available for download from [GitHub Releases](https://github.com/bastien-gallay/skills/releases) (tags `rhetorical-analysis/vX.Y.Z`).

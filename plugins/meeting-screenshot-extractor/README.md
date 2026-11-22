@@ -7,7 +7,12 @@ iterative feedback loop.
 
 ## Install
 
-Add this repository as a Claude Code plugin marketplace and install the
-`meeting-screenshot-extractor` plugin, or copy
-`skills/meeting-screenshot-extractor/` into your project's `.claude/skills/`
-directory.
+In Claude Code, from the `bastien-gallay/skills` marketplace:
+
+```text
+/plugin marketplace add bastien-gallay/skills
+/plugin install meeting-screenshot-extractor@skills
+```
+
+Or copy `skills/meeting-screenshot-extractor/` into your project's
+`.claude/skills/` directory.

@@ -57,6 +57,15 @@ of the session.
 
 ## Install
 
+In Claude Code, from the `bastien-gallay/skills` marketplace:
+
+```text
+/plugin marketplace add bastien-gallay/skills
+/plugin install wrap@skills
+```
+
+Or, from a clone of this folder:
+
 ```bash
 ./install.sh          # symlink into ~/.claude/skills/wrap (edits propagate)
 ./install.sh --copy   # copy instead
