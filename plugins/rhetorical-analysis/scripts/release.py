@@ -2,9 +2,11 @@
 """Release management script for version bumping and tagging.
 
 This script automates the release process by:
-- Bumping version in pyproject.toml (patch/minor/major or explicit)
+- Bumping version in pyproject.toml and .claude-plugin/plugin.json
+  (patch/minor/major or explicit)
 - Validating/generating release notes in RELEASE.md
-- Creating annotated git tags
+- Creating annotated git tags `rhetorical-analysis/vX.Y.Z` (the monorepo
+  prefix that .github/workflows/rhetorical-analysis-release.yml listens for)
 - Pushing tags with user confirmation
 
 Usage:
@@ -21,12 +23,16 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
 from datetime import date
 from pathlib import Path
 from typing import NamedTuple
+
+# Monorepo tags carry the plugin prefix; a bare `vX.Y.Z` triggers nothing.
+TAG_PREFIX = "rhetorical-analysis/v"
 
 
 class ReleaseError(Exception):
@@ -146,6 +152,27 @@ def write_pyproject_version(project_dir: Path, new_version: str) -> None:
     pyproject.write_text(new_content, encoding="utf-8")
 
 
+def write_plugin_version(project_dir: Path, new_version: str) -> None:
+    """Update version in .claude-plugin/plugin.json.
+
+    Claude Code caches a plugin by this version: a release that skips it
+    leaves every installed copy frozen on the old code.
+
+    Args:
+        project_dir: Project root directory
+        new_version: New version string to write
+    """
+    manifest = project_dir / ".claude-plugin" / "plugin.json"
+    if not manifest.exists():
+        raise ReleaseError(f"plugin.json not found at {manifest}")
+
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    data["version"] = new_version
+    manifest.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+
+
 # --- Git Operations ---
 
 
@@ -238,7 +265,9 @@ def get_last_tag() -> str | None:
         Tag name or None if no tags exist
     """
     try:
-        return run_git(["describe", "--tags", "--abbrev=0"])
+        return run_git(
+            ["describe", "--tags", "--abbrev=0", "--match", f"{TAG_PREFIX}*"]
+        )
     except ReleaseError:
         return None
 
@@ -250,7 +279,7 @@ def get_all_version_tags() -> list[tuple[str, Version]]:
         List of (tag_name, Version) tuples, newest first
     """
     try:
-        output = run_git(["tag", "-l", "v*"])
+        output = run_git(["tag", "-l", f"{TAG_PREFIX}*"])
     except ReleaseError:
         return []
 
@@ -259,8 +288,9 @@ def get_all_version_tags() -> list[tuple[str, Version]]:
         tag = line.strip()
         if not tag:
             continue
-        # Extract version from tag (remove 'v' prefix)
-        version_str = tag.lstrip("v")
+        if not tag.startswith(TAG_PREFIX):
+            continue
+        version_str = tag.removeprefix(TAG_PREFIX)
         if is_valid_semver(version_str):
             try:
                 version = Version.parse(version_str)
@@ -323,9 +353,11 @@ def get_commits_since(ref: str | None = None) -> list[str]:
         List of commit messages (one line each)
     """
     if ref:
-        commits = run_git(["log", f"{ref}..HEAD", "--oneline", "--no-decorate"])
+        commits = run_git(
+            ["log", f"{ref}..HEAD", "--oneline", "--no-decorate", "--", "."]
+        )
     else:
-        commits = run_git(["log", "--oneline", "--no-decorate"])
+        commits = run_git(["log", "--oneline", "--no-decorate", "--", "."])
 
     return [line for line in commits.split("\n") if line.strip()]
 
@@ -514,7 +546,7 @@ def do_release(
             )
         target_version = Version.parse(bump_or_version)
 
-    tag_name = f"v{target_version}"
+    tag_name = f"{TAG_PREFIX}{target_version}"
     print(f"Current version: {current_version}")
     print(f"Target version:  {target_version}")
     print(f"Tag name:        {tag_name}")
@@ -570,7 +602,7 @@ def do_release(
 
     # Preview actions
     print("\nActions to perform:")
-    print(f"  1. Update pyproject.toml version to {target_version}")
+    print(f"  1. Update pyproject.toml and plugin.json version to {target_version}")
     print("  2. Add release notes to RELEASE.md")
     print(f"  3. Create annotated tag {tag_name}")
     if not skip_push:
@@ -584,6 +616,7 @@ def do_release(
     # Execute
     print("Updating pyproject.toml...")
     write_pyproject_version(project_dir, str(target_version))
+    write_plugin_version(project_dir, str(target_version))
 
     print("Updating RELEASE.md...")
     create_initial_release_md(project_dir)
@@ -591,8 +624,8 @@ def do_release(
 
     # Commit changes
     print("Committing version bump...")
-    run_git(["add", "pyproject.toml", "RELEASE.md"])
-    run_git(["commit", "-m", f"chore: release v{target_version}"])
+    run_git(["add", "pyproject.toml", ".claude-plugin/plugin.json", "RELEASE.md"])
+    run_git(["commit", "-m", f"chore(rhetorical-analysis): release v{target_version}"])
 
     print(f"Creating tag {tag_name}...")
     create_tag(tag_name, notes)
