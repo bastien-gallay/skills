@@ -364,7 +364,7 @@ $("title").innerHTML=rich(page.title);$("sub").innerHTML=rich(page.subtitle);doc
 /** The footer: where the case comes from, what ran the logic, and, unless the spec says `credit: false`, what made the page. */
 $("foot").innerHTML=esc(words.source)+rich(page.source)+esc(words.logic+page.verdictSource)
  +(page.measure?esc((page.measure.source==="estimate"?words.estimated:words.measured)+[...new Set(page.measure.rows.map(r=>r.basis))].join(" · ")):"")
- +(page.credit?` · <a href="https://github.com/bastien-gallay/truepath" target="_blank" rel="noopener">${words.credit}</a>`:"");
+ +(page.credit?` · <a href="https://github.com/bastien-gallay/skills/tree/main/plugins/truepath" target="_blank" rel="noopener">${words.credit}</a>`:"");
 /** A kind's swatch: its colour on the border, a tint inside; the word beside it carries the meaning. */
 const kindFill=c=>`border-color:${esc(c)};background:color-mix(in srgb, ${esc(c)} ${TINT}, transparent)`;
 const swatch=(style,text)=>{const s=document.createElement("span");s.innerHTML=`<span class="sw" style="${style}"></span>${text}`;$("legend").appendChild(s);};

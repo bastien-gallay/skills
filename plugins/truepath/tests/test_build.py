@@ -895,7 +895,7 @@ class Page(Case):
         self.assertEqual(self.play(self.build(self.spec(change))[0])["tabs"], 2)  # the lone scenario, the pair
 
     def test_the_credit_is_shown_unless_the_spec_turns_it_off(self):
-        link = '<a href="https://github.com/bastien-gallay/truepath" target="_blank" rel="noopener">'
+        link = '<a href="https://github.com/bastien-gallay/skills/tree/main/plugins/truepath" target="_blank" rel="noopener">'
         on = self.play(self.build(self.spec())[0])["html"]
         self.assertTrue(any(link + "made with truepath</a>" in h for h in on))
         off = self.play(self.build(self.spec(lambda s: s.update(credit=False)))[0])["html"]

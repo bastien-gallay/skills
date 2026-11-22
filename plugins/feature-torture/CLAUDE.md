@@ -30,4 +30,4 @@ Three install channels, mirroring `bfw`:
 
 ## Release flow
 
-`just release X.Y.Z` (after `## vX.Y.Z` header in CHANGELOG.md) → bumps both manifests → commits → tags. `just package` builds the `.skill` archive into `dist/`. `docs/RELEASING.md` has the full process notes.
+`just release X.Y.Z` (after `## vX.Y.Z` header in CHANGELOG.md) → bumps `plugin.json` → commits → tags `feature-torture/vX.Y.Z`. `just package` builds the `.skill` archive into `dist/`. `docs/RELEASING.md` has the full process notes.

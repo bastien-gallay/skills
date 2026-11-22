@@ -33,7 +33,7 @@ Users pick up the release via:
 just release 0.2.0
 
 # 2. Push commit + tag
-git push && git push --tags
+git push && git push origin feature-torture/vX.Y.Z
 
 # 3. Build the .skill artefact
 just package

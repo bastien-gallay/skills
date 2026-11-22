@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/bastien-gallay/shape/assets/facts-schema.json",
+  "$id": "https://github.com/bastien-gallay/skills/blob/main/plugins/shape/skills/shape/assets/facts-schema.json",
   "title": "shape fact inventory",
   "description": "Inventory of load-bearing spans extracted from a document BEFORE any edit. Every entry must survive the pass verbatim; the gate is 100%.",
   "type": "object",

@@ -79,8 +79,8 @@ table, and a self-check.
   sessions.** Reading the TOC then three entries is the design. Nobody has yet
   measured whether a `--goal full` session, which touches four frameworks and
   the heuristics, ends up loading most of the file anyway.
-- **Unreleased publicly.** The manifests' `homepage` and `repository` point at
-  `github.com/bastien-gallay/market-strategist`, which does not exist yet.
+- **Unreleased publicly.** No `market-strategist/v*` tag yet; the manifest's
+  `homepage` points at `plugins/market-strategist` in `bastien-gallay/skills`.
 
 ## Conventions
 

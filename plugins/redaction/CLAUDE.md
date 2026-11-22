@@ -32,13 +32,13 @@ plugin Claude Code :
 
 ## Installation locale (dev)
 
-Symlink `~/.claude/skills/redaction → skills/redaction` (créé à
-l'initialisation du repo). Toute édition de `SKILL.md` ou de
+Symlink `~/.claude/skills/redaction → plugins/redaction/skills/redaction`
+du monorepo. Toute édition de `SKILL.md` ou de
 `suivi-template.md` est immédiatement reflétée dans Claude Code, sans
 réinstallation.
 
 ```bash
-ln -s ~/Dev/personal/skills/redaction/skills/redaction \
+ln -s <monorepo>/plugins/redaction/skills/redaction \
       ~/.claude/skills/redaction
 ```
 
@@ -91,9 +91,10 @@ just release 0.2.0    # bump + commit + tag (nécessite une section CHANGELOG.md
 just package          # construit dist/redaction-v<version>.skill
 ```
 
-Le push du tag déclenche `.github/workflows/release.yml`, qui rebuild le
-bundle `.skill` et crée la GitHub Release avec l'asset attaché —
-`git push --tags` n'est donc pas optionnel.
+Le push du tag `redaction/vX.Y.Z` déclenche
+`.github/workflows/redaction-release.yml`, qui rebuild le bundle `.skill`
+et crée la GitHub Release avec l'asset attaché — pousser le tag n'est donc
+pas optionnel.
 
 Voir `docs/RELEASING.md` pour les détails du processus et les failure
 modes.
