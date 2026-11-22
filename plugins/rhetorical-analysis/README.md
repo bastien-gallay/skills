@@ -1,7 +1,5 @@
 # Rhetorical Analysis Skill
 
-![GitHub Release](https://img.shields.io/github/v/release/bastiengallay/rhetorical-analysis-skill?label=latest%20release)
-
 A Claude skill for rhetorical and epistemological analysis of articles, speeches, and argumentative texts.
 
 ## Features
