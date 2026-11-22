@@ -1,6 +1,9 @@
 name: truepath
 
 on:
+  # Path filters only see the first 300 changed files; run by hand for a
+  # larger change.
+  workflow_dispatch:
   push:
     branches: [main]
     paths: ["plugins/truepath/**", ".github/workflows/truepath.yml"]

@@ -1,0 +1,27 @@
+name: markdown
+
+on:
+  # Path filters only see the first 300 changed files; run by hand for a
+  # larger change.
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["**.md", "**/.markdownlint.jsonc", ".github/workflows/markdown.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["**.md", "**/.markdownlint.jsonc", ".github/workflows/markdown.yml"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: markdownlint, every tracked Markdown file, from the repo root
+        run: git ls-files -z '*.md' | xargs -0 npx --yes markdownlint-cli2@0.24.0

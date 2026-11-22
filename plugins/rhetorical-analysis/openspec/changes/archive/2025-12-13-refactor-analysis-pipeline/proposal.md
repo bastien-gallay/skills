@@ -2,7 +2,8 @@
 
 ## Problème
 
-Actuellement, le script `generate_analysis.py` est monolithique. Il lit une analyse rhétorique au format JSON et génère **uniquement** un fichier XLSX. Cette conception rigide empêche d'étendre facilement le skill pour produire d'autres types de rapports (par exemple, Markdown ou JSON brut), qui peuvent être plus adaptés à d'autres usages (intégration avec d'autres outils, relecture rapide, etc.).
+Actuellement, le script `generate_analysis.py` est monolithique. Il lit une analyse rhétorique au format JSON et génère **uniquement** un fichier XLSX.
+Cette conception rigide empêche d'étendre facilement le skill pour produire d'autres types de rapports (par exemple, Markdown ou JSON brut), qui peuvent être plus adaptés à d'autres usages (intégration avec d'autres outils, relecture rapide, etc.).
 
 Le script couple la logique de lecture des données avec la logique de mise en forme spécifique à Excel (`openpyxl`), ce qui le rend difficile à maintenir et à faire évoluer.
 

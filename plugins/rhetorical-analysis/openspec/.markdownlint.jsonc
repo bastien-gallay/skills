@@ -1,0 +1,6 @@
+{
+  "extends": "../.markdownlint.jsonc",
+
+  // OpenSpec delta files repeat "## ADDED Requirements" and the like by format.
+  "MD024": false
+}

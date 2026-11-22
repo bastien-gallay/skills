@@ -61,4 +61,3 @@ Le système SHALL extraire la version depuis pyproject.toml pour nommer l'archiv
 
 - **WHEN** pyproject.toml ne contient pas de version
 - **THEN** le suffixe `dev` est utilisé (ex: `rhetorical-analysis-dev.skill`)
-

@@ -56,6 +56,7 @@ Voir `references/fallacies-catalog.md` pour la liste complète des sophismes à 
    ```
 
 **Exemples :**
+
 ```bash
 python scripts/generate_analysis.py analysis.json rapport_analyse.xlsx --format xlsx
 python scripts/generate_analysis.py analysis.json analysis_output.json --format json

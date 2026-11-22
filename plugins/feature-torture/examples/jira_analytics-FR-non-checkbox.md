@@ -28,6 +28,7 @@ with Lean / cycle-time / SLA / quality metrics.
 the rendered report.
 
 **Non-negotiables**:
+
 - Deterministic — same Jira export → same report.
 - Speed (the tool runs ad-hoc; report generation should stay quick).
 - Single-file deployable (one Python script + a templates/ folder).

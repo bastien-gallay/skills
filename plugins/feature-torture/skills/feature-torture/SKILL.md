@@ -178,7 +178,7 @@ again.
 Five phases. The middle phase is a **diamond** that loops 1 to 3
 times. Hard features take more diamonds. Simple ones close after one.
 
-```
+```text
 Phase 1 — Intake              ≤ 10 min
   Read the feature + linked context. Probe adjacent F-IDs via repo
   grep. Resolve placeholders from project config.
@@ -395,7 +395,7 @@ Add **only if they earn their space**. Default: skip.
 
 ## Output location
 
-```
+```text
 {{REPORTS_DIR}}/<F-id>.md          # standard feature run
 {{REPORTS_DIR}}/policy-<slug>.md   # shape-check path (b) only
 ```
@@ -404,7 +404,7 @@ Add **only if they earn their space**. Default: skip.
 - If re-tortured: append `-v2`, `-v3`.
 - At the very bottom, declare:
 
-  ```
+  ```text
   promote-worthy: yes / no / conditional-on-<one-line-condition>
   output-type: decision-only / decision+spec
   ```

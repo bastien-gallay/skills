@@ -21,4 +21,3 @@ Le script principal **MUST** permettre à l'utilisateur de choisir le format de 
 - **GIVEN** un format de sortie non valide (ex: `pdf`).
 - **WHEN** le script `generate_analysis.py` est exécuté.
 - **THEN** le système doit afficher un message d'erreur listant les formats valides et se terminer.
-
