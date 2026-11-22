@@ -11,9 +11,12 @@ __pycache__/
 *.pyc
 dist/
 
-# Local session outputs (users run brainstorms here)
-brainstorm/
-wip/
+# Local session outputs (users run brainstorms here) — anchored so they never
+# collide with the packaged skill at skills/brainstorm/
+/brainstorm/
+/wip/
 
 .claude/settings.local.json
+# Local skill-install dir (old manual install location); canonical is skills/brainstorm/
+.claude/skills/
 .personal/
