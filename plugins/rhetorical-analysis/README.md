@@ -141,35 +141,45 @@ uv run pytest tests/ -v
 
 ### Creating a Release (Maintainers)
 
-Releases are automated via GitHub Actions when version tags are pushed.
+Releases are automated via GitHub Actions when a `rhetorical-analysis/v*`
+tag is pushed. This plugin lives in the `bastien-gallay/skills` monorepo,
+where every tag carries its plugin's prefix: a bare `v0.1.0` tag triggers
+nothing.
 
 #### Release Process
 
-1. **Update version** in `pyproject.toml` to match the release version (e.g., `0.1.0`)
-2. **Commit changes** and push to main branch
-3. **Create and push tag** with the version number:
+1. **Run the release script** from `plugins/rhetorical-analysis`, on a clean
+   `main`:
 
    ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
+   uv run python scripts/release.py --dry-run patch   # preview
+   uv run python scripts/release.py patch             # or minor / major / X.Y.Z
    ```
 
-4. **GitHub Actions automatically**:
+   It bumps `pyproject.toml` and `.claude-plugin/plugin.json` together (Claude
+   Code caches the plugin by the `plugin.json` version), adds the notes to
+   `RELEASE.md`, commits, creates the annotated tag `rhetorical-analysis/vX.Y.Z`
+   and offers to push it.
+2. **Push the release commit** to `main`.
+3. **GitHub Actions automatically**:
    - Runs the packaging script (`scripts/package_skill.py`)
    - Creates a GitHub Release with the tag name
    - Uploads the `.skill` archive as release asset
 
 #### Tagging Conventions
 
-- **Standard releases**: `v<major>.<minor>.<patch>` (e.g., `v1.0.0`, `v0.2.1`)
-- **Pre-releases**: Include suffix `-alpha`, `-beta`, or `-rc` (e.g., `v0.1.0-alpha`, `v1.0.0-rc1`)
+- **Standard releases**: `rhetorical-analysis/v<major>.<minor>.<patch>` (e.g., `rhetorical-analysis/v0.2.1`)
+- **Pre-releases**: Include suffix `-alpha`, `-beta`, or `-rc` (e.g., `rhetorical-analysis/v1.0.0-rc1`)
   - Pre-releases are automatically marked as such on GitHub
+  - `release.py` only cuts plain `X.Y.Z` versions; tag a pre-release by hand
 
 #### Version Consistency
 
-Ensure the Git tag version matches the `version` field in `pyproject.toml`:
+`release.py` keeps the tag, `pyproject.toml` and `plugin.json` on one version.
+If you tag by hand, keep them aligned yourself:
 
-- Tag `v0.1.0` should correspond to `version = "0.1.0"` in `pyproject.toml`
+- Tag `rhetorical-analysis/v0.1.0` should correspond to `version = "0.1.0"` in
+  `pyproject.toml` and `"version": "0.1.0"` in `.claude-plugin/plugin.json`
 - The `.skill` archive name is derived from `pyproject.toml`
 - Mismatches will be visible to users but won't fail the workflow
 
@@ -186,8 +196,8 @@ Ensure the Git tag version matches the `version` field in `pyproject.toml`:
 1. Delete the tag locally and remotely:
 
    ```bash
-   git tag -d v0.1.0
-   git push origin :refs/tags/v0.1.0
+   git tag -d rhetorical-analysis/v0.1.0
+   git push origin :refs/tags/rhetorical-analysis/v0.1.0
    ```
 
 2. Delete the GitHub Release in the web interface

@@ -9,13 +9,13 @@ The CI system SHALL trigger the packaging workflow when version tags are pushed.
 
 #### Scenario: Version tag pushed
 
-- **WHEN** a Git tag matching the pattern `v*` is pushed to the repository (e.g., `v0.1.0`, `v1.2.3`)
+- **WHEN** a Git tag matching the pattern `rhetorical-analysis/v*` is pushed to the repository (e.g., `rhetorical-analysis/v0.1.0`, `rhetorical-analysis/v1.2.3`)
 - **THEN** the packaging workflow is triggered automatically
 - **AND** the workflow has access to the tag name and commit SHA
 
 #### Scenario: Non-version tag pushed
 
-- **WHEN** a Git tag not matching the pattern `v*` is pushed (e.g., `test-tag`, `release-candidate`)
+- **WHEN** a Git tag not matching the pattern `rhetorical-analysis/v*` is pushed (e.g., `v0.1.0`, `bfw/v0.2.0`, `test-tag`)
 - **THEN** the packaging workflow is NOT triggered
 
 #### Scenario: Regular commit pushed
@@ -128,16 +128,16 @@ The CI system SHALL ensure the artifact name matches the package metadata.
 
 #### Scenario: Version consistency check (informational)
 
-- **WHEN** the tag is `v0.1.0` and `pyproject.toml` contains `version = "0.1.0"`
+- **WHEN** the tag is `rhetorical-analysis/v0.1.0` and `pyproject.toml` contains `version = "0.1.0"`
 - **THEN** the generated archive is named `rhetorical-analysis-0.1.0.skill`
-- **AND** the release title is `v0.1.0`
+- **AND** the release title is `rhetorical-analysis/v0.1.0`
 
 #### Scenario: Version mismatch visibility
 
-- **WHEN** the tag is `v0.2.0` but `pyproject.toml` contains `version = "0.1.0"`
+- **WHEN** the tag is `rhetorical-analysis/v0.2.0` but `pyproject.toml` contains `version = "0.1.0"`
 - **THEN** the workflow still succeeds
 - **AND** the archive is named `rhetorical-analysis-0.1.0.skill` (from pyproject.toml)
-- **AND** the release title is `v0.2.0` (from tag)
+- **AND** the release title is `rhetorical-analysis/v0.2.0` (from tag)
 - **AND** the mismatch is visible to users downloading the release
 
 **Note**: This scenario documents expected behavior but does not enforce synchronization. Maintainers are responsible for ensuring tag and version consistency.

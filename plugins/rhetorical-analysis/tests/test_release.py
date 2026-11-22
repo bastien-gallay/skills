@@ -331,6 +331,33 @@ class TestGitOperations:
             assert len(commits) == 2
             assert "abc123 First commit" in commits
 
+    def test_get_commits_since_limits_to_plugin_dir(self):
+        """Release notes list only commits that touched this plugin."""
+        from scripts.release import get_commits_since
+
+        with mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(stdout="", returncode=0)
+
+            get_commits_since("rhetorical-analysis/v0.1.3")
+
+        args = mock_run.call_args[0][0]
+        assert args[-2:] == ["--", "."]
+
+    def test_get_last_tag_matches_plugin_prefix(self):
+        """git describe must not return another plugin's tag."""
+        from scripts.release import get_last_tag
+
+        with mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(
+                stdout="rhetorical-analysis/v0.1.3\n", returncode=0
+            )
+
+            assert get_last_tag() == "rhetorical-analysis/v0.1.3"
+
+        args = mock_run.call_args[0][0]
+        assert "--match" in args
+        assert args[args.index("--match") + 1] == "rhetorical-analysis/v*"
+
     def test_clean_working_directory_check_passes(self):
         """Test clean directory check with clean status."""
         from scripts.release import check_clean_working_directory
@@ -360,7 +387,7 @@ class TestGetAllVersionTags:
         """Test that tags are sorted by version descending."""
         with mock.patch("subprocess.run") as mock_run:
             mock_run.return_value = mock.Mock(
-                stdout="v1.0.0\nv2.0.0\nv1.1.0\nv0.9.0\n",
+                stdout="rhetorical-analysis/v1.0.0\nrhetorical-analysis/v2.0.0\nrhetorical-analysis/v1.1.0\nrhetorical-analysis/v0.9.0\n",
                 returncode=0,
             )
 
@@ -372,16 +399,42 @@ class TestGetAllVersionTags:
         """Test that non-semver tags are filtered out."""
         with mock.patch("subprocess.run") as mock_run:
             mock_run.return_value = mock.Mock(
-                stdout="v1.0.0\nvbeta\nv2.0.0\nv1.0.0-rc1\n",
+                stdout="rhetorical-analysis/v1.0.0\nrhetorical-analysis/vbeta\nrhetorical-analysis/v2.0.0\nrhetorical-analysis/v1.0.0-rc1\n",
                 returncode=0,
             )
 
             tags = get_all_version_tags()
             tag_names = [name for name, _ in tags]
-            assert "v1.0.0" in tag_names
-            assert "v2.0.0" in tag_names
-            assert "vbeta" not in tag_names
-            assert "v1.0.0-rc1" not in tag_names
+            assert "rhetorical-analysis/v1.0.0" in tag_names
+            assert "rhetorical-analysis/v2.0.0" in tag_names
+            assert "rhetorical-analysis/vbeta" not in tag_names
+            assert "rhetorical-analysis/v1.0.0-rc1" not in tag_names
+
+    def test_lists_only_this_plugins_tags(self):
+        """The monorepo holds every plugin's tags; only ours count."""
+        with mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(
+                stdout="rhetorical-analysis/v0.1.3\n", returncode=0
+            )
+
+            tags = get_all_version_tags()
+
+        args = mock_run.call_args[0][0]
+        assert args[-1] == "rhetorical-analysis/v*"
+        assert tags == [("rhetorical-analysis/v0.1.3", Version(0, 1, 3))]
+
+    def test_ignores_bare_and_foreign_tags(self):
+        """A bare v-tag or another plugin's tag is never a version of ours."""
+        with mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(
+                stdout="v9.9.9\nbfw/v0.2.0\nrhetorical-analysis/v0.1.0\n",
+                returncode=0,
+            )
+
+            tags = get_all_version_tags()
+
+        assert [name for name, _ in tags] == ["rhetorical-analysis/v0.1.0"]
+
 
     def test_empty_tags(self):
         """Test with no tags."""
@@ -409,19 +462,19 @@ class TestGetLastTagOfLevel:
         """Patch release should return last tag in same minor series."""
         with mock.patch("subprocess.run") as mock_run:
             mock_run.return_value = mock.Mock(
-                stdout="v1.2.5\nv1.2.4\nv1.2.3\nv1.1.0\nv1.0.0\n",
+                stdout="rhetorical-analysis/v1.2.5\nrhetorical-analysis/v1.2.4\nrhetorical-analysis/v1.2.3\nrhetorical-analysis/v1.1.0\nrhetorical-analysis/v1.0.0\n",
                 returncode=0,
             )
 
             current = Version(1, 2, 3)
             tag = get_last_tag_of_level("patch", current)
-            assert tag == "v1.2.5"
+            assert tag == "rhetorical-analysis/v1.2.5"
 
     def test_patch_no_match_in_series(self):
         """Patch release with no tags in current minor series."""
         with mock.patch("subprocess.run") as mock_run:
             mock_run.return_value = mock.Mock(
-                stdout="v1.1.0\nv1.0.0\n",
+                stdout="rhetorical-analysis/v1.1.0\nrhetorical-analysis/v1.0.0\n",
                 returncode=0,
             )
 
@@ -433,49 +486,49 @@ class TestGetLastTagOfLevel:
         """Minor release should return last X.Y.0 tag in same major."""
         with mock.patch("subprocess.run") as mock_run:
             mock_run.return_value = mock.Mock(
-                stdout="v1.3.2\nv1.3.0\nv1.2.5\nv1.2.0\nv1.1.0\nv1.0.0\n",
+                stdout="rhetorical-analysis/v1.3.2\nrhetorical-analysis/v1.3.0\nrhetorical-analysis/v1.2.5\nrhetorical-analysis/v1.2.0\nrhetorical-analysis/v1.1.0\nrhetorical-analysis/v1.0.0\n",
                 returncode=0,
             )
 
             current = Version(1, 2, 5)
             tag = get_last_tag_of_level("minor", current)
-            assert tag == "v1.3.0"
+            assert tag == "rhetorical-analysis/v1.3.0"
 
     def test_minor_skips_patch_versions(self):
         """Minor should only match X.Y.0 tags, not X.Y.Z."""
         with mock.patch("subprocess.run") as mock_run:
             mock_run.return_value = mock.Mock(
-                stdout="v1.2.5\nv1.2.3\nv1.1.0\nv1.0.0\n",
+                stdout="rhetorical-analysis/v1.2.5\nrhetorical-analysis/v1.2.3\nrhetorical-analysis/v1.1.0\nrhetorical-analysis/v1.0.0\n",
                 returncode=0,
             )
 
             current = Version(1, 2, 5)
             tag = get_last_tag_of_level("minor", current)
-            assert tag == "v1.1.0"
+            assert tag == "rhetorical-analysis/v1.1.0"
 
     def test_major_returns_last_x_0_0(self):
         """Major release should return last X.0.0 tag."""
         with mock.patch("subprocess.run") as mock_run:
             mock_run.return_value = mock.Mock(
-                stdout="v2.1.0\nv2.0.0\nv1.5.3\nv1.0.0\n",
+                stdout="rhetorical-analysis/v2.1.0\nrhetorical-analysis/v2.0.0\nrhetorical-analysis/v1.5.3\nrhetorical-analysis/v1.0.0\n",
                 returncode=0,
             )
 
             current = Version(1, 5, 3)
             tag = get_last_tag_of_level("major", current)
-            assert tag == "v2.0.0"
+            assert tag == "rhetorical-analysis/v2.0.0"
 
     def test_major_skips_non_major_versions(self):
         """Major should only match X.0.0 tags."""
         with mock.patch("subprocess.run") as mock_run:
             mock_run.return_value = mock.Mock(
-                stdout="v2.1.0\nv1.5.3\nv1.2.0\nv1.0.0\n",
+                stdout="rhetorical-analysis/v2.1.0\nrhetorical-analysis/v1.5.3\nrhetorical-analysis/v1.2.0\nrhetorical-analysis/v1.0.0\n",
                 returncode=0,
             )
 
             current = Version(1, 5, 3)
             tag = get_last_tag_of_level("major", current)
-            assert tag == "v1.0.0"
+            assert tag == "rhetorical-analysis/v1.0.0"
 
     def test_no_tags_returns_none(self):
         """No tags should return None."""
@@ -519,7 +572,7 @@ version = "1.0.0"
 
         with (
             mock.patch("scripts.release.tag_exists", return_value=(False, False)),
-            mock.patch("scripts.release.get_last_tag_of_level", return_value="v1.0.0"),
+            mock.patch("scripts.release.get_last_tag_of_level", return_value="rhetorical-analysis/v1.0.0"),
             mock.patch(
                 "scripts.release.get_commits_since",
                 return_value=["abc123 feat: new feature"],
@@ -535,3 +588,32 @@ version = "1.0.0"
         captured = capsys.readouterr()
         assert "dry-run" in captured.out.lower()
         assert "1.0.1" in captured.out  # Target version
+        assert "rhetorical-analysis/v1.0.1" in captured.out  # Tag name
+
+
+class TestWritePluginVersion:
+    """plugin.json carries the version Claude Code caches by."""
+
+    def test_updates_version_and_keeps_other_fields(self, tmp_path):
+        from scripts.release import write_plugin_version
+
+        manifest = tmp_path / ".claude-plugin" / "plugin.json"
+        manifest.parent.mkdir()
+        manifest.write_text(
+            '{\n  "name": "rhetorical-analysis",\n  "version": "0.1.0",\n'
+            '  "description": "café"\n}\n',
+            encoding="utf-8",
+        )
+
+        write_plugin_version(tmp_path, "0.1.4")
+
+        text = manifest.read_text(encoding="utf-8")
+        assert '"version": "0.1.4"' in text
+        assert '"description": "café"' in text
+        assert text.endswith("}\n")
+
+    def test_missing_manifest_raises(self, tmp_path):
+        from scripts.release import write_plugin_version
+
+        with pytest.raises(ReleaseError, match="plugin.json"):
+            write_plugin_version(tmp_path, "0.1.4")

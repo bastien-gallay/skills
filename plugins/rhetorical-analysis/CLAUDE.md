@@ -66,6 +66,10 @@ uv run python scripts/release.py --dry-run patch
 uv run python scripts/release.py --no-push patch
 ```
 
+`release.py` aligne `pyproject.toml` et `.claude-plugin/plugin.json`, et tague
+`rhetorical-analysis/vX.Y.Z` : dans le monorepo, c'est le seul préfixe qui
+déclenche `.github/workflows/rhetorical-analysis-release.yml`.
+
 ## Conventions
 
 - **Python** : Python 3.10+, type hints, docstrings Google style
