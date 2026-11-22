@@ -117,7 +117,8 @@ next to it).
 **What happens:**
 
 1. **Intake** — extends your ideas, adds 2-4 AI suggestions, asks for
-   constraints
+   constraints, and runs a job check (Job to Be Done, trial) when the
+   options may answer different needs
 2. **Shape** — detects whether you have too few / too many ideas, a
    binary choice, or decision under constraints
 3. **Plan** — announces a technique sequence (Six Hats, MoSCoW,
@@ -125,7 +126,8 @@ next to it).
 4. **Execute** — runs each technique, presents results, collects
    feedback (closed + open questions)
 5. **Reflect** — after each step, adapts the plan if the session
-   signals convergence / stuck / new dimension
+   signals convergence / stuck / new dimension, or a structural
+   contradiction (TRIZ Contradiction, trial)
 6. **Crystallise** — selects final ideas with rationale, generates
    action items
 7. **Meta-analysis** — records what worked for future improvement
@@ -162,7 +164,7 @@ Random Stimulus, Free Association
 Binary Comparison, Dot Voting
 **Crystallize** — Action Items, Elevator Pitch
 **Adaptive** — Affinity Grouping, Devil's Advocate, Pre-mortem,
-TRIZ Contradiction (trial), Constraint Mapping, Atom Inventory
+Constraint Mapping, TRIZ Contradiction (trial), Atom Inventory
 
 ## Customization
 
@@ -174,6 +176,12 @@ markdown section with:
 - **How** — step-by-step instructions for the AI facilitator
 - **Duration** — typical time budget
 - **Output shape** — what the result looks like
+- **Phase** (optional) — for a technique that runs outside the STEP
+  loop, such as Job to Be Done at intake
+
+Tag a new technique's heading **trial** to measure it before adopting
+it: each session's meta-analysis gets a `Trial —` line for it, and
+retrospective mode tallies those lines to decide keep / reshape / drop.
 
 The skill reads `techniques.md` at session start, so new techniques are
 available immediately.

@@ -16,7 +16,7 @@ host) and loaded as a prompt at session time:
 - `skills/brainstorm/techniques.md` — the technique library (26
   techniques across 5 phases: diverge / analyze / converge /
   crystallize / adaptive). Each entry has Purpose / When / How /
-  Duration / Output shape. `SKILL.md` references this file by name at
+  Duration / Output shape, plus an optional Phase and a **trial** tag. `SKILL.md` references this file by name at
   session start and treats it as hot-swappable content.
 
 These two files are tightly coupled by convention: the recipe tables in
