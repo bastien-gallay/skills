@@ -138,7 +138,7 @@ Process design pulled from:
 - **SCAMPER** and **Devil's Advocate** as stress techniques.
 - **Kano model**, **RICE / ICE**, **T-shirt sizing**, **Crazy-8s** as the PM-flavor branch.
 
-Distribution scaffolding mirrors **[bfw](https://github.com/bastien-gallay/bfw)** — same justfile, same release flow, same `.skill` package shape.
+Distribution scaffolding mirrors **[bfw](../bfw/)** — same justfile, same release flow, same `.skill` package shape.
 
 ## License
 

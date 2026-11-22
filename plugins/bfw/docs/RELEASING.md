@@ -24,14 +24,14 @@ There is no build step in the repo itself. A release is:
 
 Users pick up the release via:
 
-- **Claude Code plugin channel** — `/plugin marketplace update bfw`
+- **Claude Code plugin channel** — `/plugin marketplace update skills`
   (or auto-update at session start) reads the new `plugin.json` version
   and refreshes its cache. Skipping the version bump is a silent
   freeze: users stay on the cached old code forever. This is the
   single most important invariant the release process protects.
 - **vercel-labs/skills channel** — `npx skills update` re-clones the
   repo. No version field drives it; it always pulls latest `main`.
-  The tag is useful for humans browsing `bastien-gallay/bfw` on
+  The tag is useful for humans browsing `bastien-gallay/skills` on
   GitHub, not for this install path.
 - **Claude Desktop / claude.ai channel** — users download
   `bfw-brainstorm-vX.Y.Z.skill` from the GitHub Release page. On
@@ -76,11 +76,11 @@ Users pick up the release via:
       <https://github.com/bastien-gallay/bfw/releases/tag/vX.Y.Z>.
     - `just check-versions` still passes on a fresh clone.
     - Install in a scratch Claude Code session:
-      `/plugin marketplace update bfw` then `/plugin install bfw@bfw`,
+      `/plugin marketplace update skills` then `/plugin install bfw@skills`,
       and confirm the new version is what you just released.
     - Cross-host install in a scratch directory:
-      `npx skills add bastien-gallay/bfw`, then inspect the copied
-      `SKILL.md` for the expected changes.
+      `npx skills add bastien-gallay/skills --skill brainstorm`, then
+      inspect the copied `SKILL.md` for the expected changes.
 
 ### Guardrails `just release` enforces
 

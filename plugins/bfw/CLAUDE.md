@@ -30,10 +30,10 @@ as a Claude Code plugin **and** as a cross-host skill via
 - `.claude-plugin/plugin.json` — Claude Code plugin manifest. Plugin
   name is `bfw`; the skill inside is auto-discovered at
   `skills/brainstorm/`.
-- `.claude-plugin/marketplace.json` — single-plugin marketplace catalog
-  that lets users run `/plugin marketplace add bastien-gallay/bfw` then
-  `/plugin install bfw@bfw`. Plugin source is `"./"` because the
-  plugin root IS the marketplace root.
+- `.claude-plugin/marketplace.json` — single-plugin catalog left over from
+  the standalone repo. Users install through the monorepo catalog
+  instead: `/plugin marketplace add bastien-gallay/skills` then
+  `/plugin install bfw@skills`.
 
 ## Architecture invariants worth preserving
 
@@ -71,11 +71,12 @@ as a Claude Code plugin **and** as a cross-host skill via
 `bfw` distributes through three channels that all target the same
 `skills/brainstorm/` directory:
 
-- **Claude Code plugin** via `/plugin marketplace add bastien-gallay/bfw`
-  then `/plugin install bfw@bfw`. Auto-updates at session start.
-  Driven by `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
-- **Cross-host** via `npx skills add bastien-gallay/bfw` (vercel-labs/skills),
-  which discovers `skills/brainstorm/SKILL.md` and copies it to the
+- **Claude Code plugin** via `/plugin marketplace add bastien-gallay/skills`
+  then `/plugin install bfw@skills`. Auto-updates at session start.
+  Driven by `.claude-plugin/plugin.json` and the repo-root
+  `.claude-plugin/marketplace.json`.
+- **Cross-host** via `npx skills add bastien-gallay/skills --skill brainstorm`
+  (vercel-labs/skills), which discovers `skills/brainstorm/SKILL.md` and copies it to the
   target host's skill directory. Updates are manual
   (`npx skills update`).
 - **Claude Desktop / claude.ai (web)** via a `.skill` file — a zip

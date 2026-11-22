@@ -120,7 +120,7 @@ the registry of the skills I maintain. Two of them meet it often:
 - [`show-me`](https://github.com/bastien-gallay/show-me) picks the visual a
   piece of content calls for; truepath builds one of them, the path through
   a process, and checks it against the code.
-- [`wrap`](https://github.com/bastien-gallay/wrap) closes a milestone; its
+- [`wrap`](../wrap/) closes a milestone; its
   configuration for this repository is [`.wrap.md`](.wrap.md).
 
 ## Influences
