@@ -19,7 +19,7 @@ There is no build step in the repo itself. A release is:
    Release — a zip archive with the `.skill` extension
    (OS-registered to Claude Desktop for double-click install, also
    accepted by the claude.ai web uploader). Built by `just package`
-   in CI (`.github/workflows/release.yml`) when the tag is pushed.
+   in CI (`.github/workflows/bfw-release.yml`) when the tag is pushed.
 
 Users pick up the release via:
 
@@ -87,11 +87,11 @@ Users pick up the release via:
 - Clean working tree.
 - Tag uniqueness.
 - CHANGELOG.md contains a `## vX.Y.Z` section for the version being
-  released (added after a `release.yml` run failed because the
+  released (added after a release-workflow run failed because the
   maintainer had run `just release 0.1.1` without first renaming
   `## Unreleased`).
-- Atomic version bump across both manifests (drift is impossible if
-  this target runs to completion).
+- The version is bumped in `plugin.json` only; the root marketplace
+  carries none, so there is no second copy to drift.
 - Annotated tag (not lightweight) so `git describe` and GitHub's
   release UI treat it as a real release.
 
@@ -110,15 +110,18 @@ These are the gaps the planned CI workflows are meant to cover:
 
 ## Planned CI integration (GitHub Actions)
 
-No workflows exist yet. These are the ones to add under
-`.github/workflows/`, in order of priority.
+Superseded 2026-11-22: two of these now exist at the monorepo root.
+Markdown lint runs in `.github/workflows/markdown.yml` (every tracked
+`*.md`, root `.markdownlint.jsonc` plus the per-folder files that extend it), and the release workflow below
+shipped as `bfw-release.yml`. `check-versions` still runs only inside
+the release workflow. The plan is kept for its rationale.
 
 ### 1. `lint.yml` — PR & push validation
 
 - **Triggers:** `pull_request`, `push` to `main`.
 - **Jobs:**
   - `markdownlint` — runs `markdownlint-cli2` against changed `*.md`
-    files, honoring `.markdownlint.json`. `paths:` filter to `**.md`
+    files, honoring `.markdownlint.jsonc`. `paths:` filter to `**.md`
     so non-doc PRs don't run it at all.
   - `check-versions` — runs `just check-versions` to catch the
     version-drift failure mode even outside a release cut.
@@ -127,15 +130,16 @@ No workflows exist yet. These are the ones to add under
   forgotten version bump" failure mode identified in the 2026-04-11
   distribution brainstorm.
 
-### 2. `release.yml` — tag push → GitHub Release (SHIPPED)
+### 2. `bfw-release.yml` — tag push → GitHub Release (SHIPPED)
 
-Lives at `.github/workflows/release.yml`.
+Lives at the monorepo root, `.github/workflows/bfw-release.yml`, and
+runs in `plugins/bfw`.
 
-- **Trigger:** `push` on tags matching `v*.*.*`.
+- **Trigger:** `push` on tags matching `bfw/v*.*.*`.
 - **Steps:**
     1. Checkout at the tag.
     2. Assert `jq -r .version .claude-plugin/plugin.json` equals
-       `${GITHUB_REF_NAME#v}`. Hard fail on mismatch — this is the
+       `${GITHUB_REF_NAME#bfw/v}`. Hard fail on mismatch — this is the
        belt-and-braces check on `just release`.
     3. Run `just check-versions`.
     4. Run `just package` to build `dist/bfw-brainstorm-vX.Y.Z.skill`.
@@ -171,14 +175,14 @@ Lives at `.github/workflows/release.yml`.
 
 ## Possible future: fully automated release from CI
 
-Once `lint.yml` + `release.yml` are in place, the next step is a
+With `markdown.yml` and `bfw-release.yml` in place, the next step is a
 `release-dispatch.yml` workflow that:
 
 1. Is triggered via `workflow_dispatch` with a `version` input.
 2. Runs `just release $version` inside the runner.
 3. Pushes the resulting commit and tag with a PAT that has `contents:
    write`.
-4. Chains into `release.yml` via the tag push.
+4. Chains into `bfw-release.yml` via the tag push.
 
 This is explicitly a **later** concern. Reasons it's not urgent:
 

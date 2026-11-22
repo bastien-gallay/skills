@@ -39,23 +39,24 @@ git push && git push origin feature-torture/vX.Y.Z
 just package
 
 # 4. Create the GitHub Release and upload dist/feature-torture-v0.2.0.skill
-gh release create v0.2.0 dist/feature-torture-v0.2.0.skill \
-  --title "v0.2.0" \
+gh release create feature-torture/v0.2.0 dist/feature-torture-v0.2.0.skill \
+  --title "feature-torture/v0.2.0" \
   --notes-from-tag
 ```
 
 ### Failure modes the process protects against
 
-- **Forgot to bump `plugin.json`.** `just release` is the only way to bump versions; it edits both manifests atomically. If you ever bump by hand, run `just check-versions` to confirm alignment.
+- **Forgot to bump `plugin.json`.** `just release` is the only way to bump versions; it edits `plugin.json`, the only file that carries the version. If you ever bump by hand, run `just check-versions` to confirm the root marketplace still carries none.
 - **CHANGELOG drift.** `just release X.Y.Z` refuses to run unless `## vX.Y.Z` is present in `CHANGELOG.md`. No more "released v0.2.0 with v0.1.0 in the changelog."
 - **Dirty working tree.** `just release` aborts if the tree is dirty.
 - **Tag re-use.** Aborts if the tag already exists.
 
 ## Future automation
 
-When this repo gains a `.github/workflows/release.yml`, the workflow will:
+When the monorepo gains a `.github/workflows/feature-torture-release.yml`
+(modelled on `bfw-release.yml`), the workflow will:
 
-1. Trigger on `push` of a `v*` tag.
+1. Trigger on `push` of a `feature-torture/v*` tag.
 2. Run `just package`.
 3. Create the GitHub Release with the `.skill` artefact attached.
 4. Run `just check-versions` as a sanity gate.
