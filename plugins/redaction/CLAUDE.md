@@ -67,13 +67,14 @@ ln -s ~/Dev/personal/skills/redaction/skills/redaction \
 
 Les deux fichiers produits du skill (`SKILL.md`, `suivi-template.md`) sont
 chargés tels quels comme prompts par Claude Code — un markdown cassé
-pollue le contexte de chaque session consommatrice. Lint avant commit :
+pollue le contexte de chaque session consommatrice. Lint avant commit,
+depuis la racine du monorepo :
 
 ```bash
-markdownlint '**/*.md' --ignore node_modules
+npx markdownlint-cli2 'plugins/redaction/**/*.md'
 ```
 
-Configuration dans `.markdownlint.json`.
+Configuration : `.markdownlint.jsonc` à la racine du monorepo.
 
 ## Release
 

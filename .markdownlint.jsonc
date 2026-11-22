@@ -1,0 +1,25 @@
+// One config for the whole monorepo. Run markdownlint from the repo root.
+// A plugin that needs something different keeps a .markdownlint.jsonc that
+// starts with "extends" and lists only what it changes.
+{
+  "default": true,
+
+  // Prose is wrapped by the editor or by hand; tables, ASCII diagrams and
+  // usage samples run wider on purpose.
+  "MD013": false,
+
+  // Changelogs and feedback archives repeat "### Added" or "### What worked"
+  // per dated section; duplicates under the same parent still fail.
+  "MD024": { "siblings_only": true },
+
+  // SKILL.md files and templates use <placeholder> syntax, which markdownlint
+  // reads as inline HTML.
+  "MD033": false,
+
+  // Command and style files, templates and frontmatter-led docs open with
+  // prose rather than an H1.
+  "MD041": false,
+
+  // Table pipe spacing: compact (|---|) and aligned tables both stay valid.
+  "MD060": false
+}

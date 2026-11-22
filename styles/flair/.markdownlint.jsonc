@@ -1,7 +1,0 @@
-{
-  // Mirrors the daily-ops convention: prose lines are editor-wrapped, and the
-  // generated command/style files deliberately open with prose, not a heading.
-  "default": true,
-  "MD013": false, // line-length — prose paragraphs are wrapped by editors
-  "MD041": false  // first-line-h1 — derived command/style files open with prose
-}
