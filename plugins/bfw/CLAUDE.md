@@ -99,8 +99,9 @@ script. Full release procedure and CI integration plans live in
 ## Working on the markdown
 
 - Per user global instruction: run markdownlint on any modified markdown
-  file. Repo config is in `.markdownlint.json` (MD013 / MD033 / MD041
-  disabled — long lines, inline HTML, and missing H1 are OK).
+  file, from the monorepo root. Config is the root `.markdownlint.jsonc`
+  (MD013 / MD033 / MD041 / MD060 disabled — long lines, inline HTML,
+  missing H1 and table pipe spacing are OK).
 - `brainstorm/` and `wip/` are gitignored: they are where *users* of the
   skill write session outputs, not repo content. Do not commit example
   sessions there — `examples/` is the curated location.

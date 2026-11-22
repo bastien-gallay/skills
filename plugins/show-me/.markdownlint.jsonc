@@ -1,0 +1,6 @@
+{
+  "extends": "../../.markdownlint.jsonc",
+
+  // Prose here is held to 80 columns; tables and code blocks are exempt.
+  "MD013": { "tables": false, "code_blocks": false }
+}

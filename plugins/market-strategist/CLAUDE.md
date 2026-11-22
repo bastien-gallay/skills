@@ -84,7 +84,8 @@ table, and a self-check.
 
 ## Conventions
 
-- **Markdown is linted with markdownlint** against `.markdownlint.jsonc`.
+- **Markdown is linted with markdownlint** against the repo-root
+  `.markdownlint.jsonc`.
   `MD013` is disabled because the framework tables and the library's ASCII
   renderings run wide on purpose; keep prose wrapped at ~78 columns to match.
 - **`.gitignore` covers five paths**: `.DS_Store`, `.personal/`, `dist/`,

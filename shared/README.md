@@ -6,16 +6,12 @@ installable, so the socle is duplicated on purpose, not symlinked).
 
 | File | Purpose | Consumers |
 | --- | --- | --- |
-| `.markdownlint.json` | Canonical markdownlint config (identical across all repos today) | every repo with Markdown |
 | `docs/RELEASING.template.md` | Fill-in release runbook for a single-plugin skill repo | Class-A skill repos |
 | `skill-template/` | Minimal skeleton for a brand-new Class-A skill | new skills |
 | `SCRIPTS.md` | CUPID rules for scripts shipped inside a skill | every plugin with scripts |
 
-## Syncing a repo to the socle
-
-There is intentionally no automatic sync. When the canonical version changes,
-copy it into the target repo and commit there. To check a repo is aligned:
-
-```sh
-diff shared/.markdownlint.json ../<repo>/.markdownlint.json
-```
+The markdownlint config is not copied: one `.markdownlint.jsonc` at the repo
+root covers every plugin. A plugin that needs a different rule keeps its own
+`.markdownlint.jsonc` that starts with
+`"extends": "../../.markdownlint.jsonc"` and lists only what it changes. Run
+markdownlint from the repo root.

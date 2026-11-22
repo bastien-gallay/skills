@@ -1,0 +1,11 @@
+{
+  "extends": "../../.markdownlint.jsonc",
+
+  // Kept from the standalone repo: long lines up to 300 columns, and the
+  // spacing, emphasis-as-heading and fence-language rules off.
+  "MD013": { "line_length": 300, "code_blocks": false, "tables": false },
+  "MD022": false,
+  "MD032": false,
+  "MD036": false,
+  "MD040": false
+}

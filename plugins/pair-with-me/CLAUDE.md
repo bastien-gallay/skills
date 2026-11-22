@@ -44,7 +44,8 @@ there rather than letting the reasoning live only in git history.
 
 ## Conventions
 
-- **Markdown is linted with markdownlint** against `.markdownlint.jsonc`. Two
+- **Markdown is linted with markdownlint** against the repo-root
+  `.markdownlint.jsonc`. Two
   rules are deliberately disabled: `MD013` (line length — prose hard-wraps at 80
   but the ASCII phase/loop tables run wider on purpose) and `MD033` (inline HTML
   — the `<issue>` / `<slug>` / `<n>` placeholders trip it). Keep prose wrapped at

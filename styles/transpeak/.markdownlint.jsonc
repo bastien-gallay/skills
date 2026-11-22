@@ -1,0 +1,6 @@
+{
+  "extends": "../../.markdownlint.jsonc",
+
+  // The style prompts mix indented and fenced code blocks.
+  "MD046": false
+}

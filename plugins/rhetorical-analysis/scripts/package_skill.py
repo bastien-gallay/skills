@@ -53,6 +53,7 @@ DEFAULT_EXCLUSIONS = [
     ".ruff_cache/",
     ".mypy_cache/",
     ".markdownlint.json",
+    ".markdownlint.jsonc",
     # OS files
     ".DS_Store",
     # OpenSpec (development proposals)

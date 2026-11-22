@@ -428,7 +428,8 @@ not, and an issue would only restate this section.
 
 ## Conventions
 
-- **Markdown is linted with markdownlint** against `.markdownlint.jsonc`.
+- **Markdown is linted with markdownlint** against the repo-root
+  `.markdownlint.jsonc`.
   `MD013` (line length) is disabled because the phase tables run wide on
   purpose; keep prose wrapped at ~78 columns to match existing style. `MD024`
   is scoped to siblings, because the changelog repeats `### Added` per release
