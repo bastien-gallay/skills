@@ -9,7 +9,7 @@ Geometry comes from layout.py, next to this file. Python 3.9+, standard library 
 The build is a line of steps, each handing the next what it made:
 
     read -> validate -> scenarios (plain, or grid cells) -> verdicts -> templates
-         -> checks C1..C15 -> page data -> page
+         -> checks C1..C19 -> page data -> page
 
 The spec is read, never rewritten: what the page receives is built on purpose by
 `page_data`, so nothing of the spec reaches it by accident.
