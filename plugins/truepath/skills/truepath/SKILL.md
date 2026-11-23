@@ -12,7 +12,7 @@ offline `.html` — or nothing.
 
 ```text
 spec.json ──┐
-oracle/port ├─► build.py ──► checks C1–C18 ─► sim.html   (or nothing)
+oracle/port ├─► build.py ──► checks C1–C19 ─► sim.html   (or nothing)
 layout.py ──┘                                └► fixture.json (--export)
 ```
 
@@ -68,14 +68,21 @@ The same spec gives every view: nodes, edges and steps are not rewritten.
 2. Copy the nearest example next to the subject's notes (see *Files*),
    rename `spec.json` to `<subject>.spec.json`.
 3. Describe nodes and edges. Every sink node (an outcome) gets a `kind`;
-   kinds are the only colours, each with a legend label. Choose the view
-   (see *Then, the view*).
+   kinds are the only colours, each with a legend label. A branch's name
+   leads to one place: when one answer can end two ways, what picks the way
+   is a decision node of its own (C19). Choose the view (see *Then, the
+   view*).
 4. Choose where the verdicts come from (see below). By default, an `oracle`
    that runs the unit alone, its collaborators replaced by doubles, as a
    unit test would (see *Running the unit, not the system*); a JS `port`
    when the rule has no code yet.
 5. Write the scenarios. Each declares its `origin`, its `inputs`, the
-   `expect`ed verdict fields, and its `steps` along real edges.
+   `expect`ed verdict fields, and its `steps` along real edges. A page
+   that shows a bug fix takes the bug as its `title`, said as the reader
+   sees it (*the trail shows one transaction per territory*), the ticket
+   and the change in `subtitle`. Name a case by what decides its path; an
+   input that changes nothing on the path (a file format, say) stays out of
+   the case's name.
 6. Run `build.py --check`: the checks that need no verdict (paths, layout,
    texts), without the logic, nothing written. Write down your doubts: an
    open one is printed `?`, a question to ask, not a violation. Ask the
@@ -100,13 +107,24 @@ tab, and `1`…`9` open the tab of that rank. `V` switches to the next view,
 when the spec offers more than one.
 
 When a path comes back to a node (a loop), each branch leaving that node
-gets a numbered badge per pass, once the dot has taken it, right after the
-branch's label: *timeout* `① ②`, *ok* `③` says the third try got
-through. Up to three badges sit side by side, more read as a range
-(`1–11`) and the last pass. The pass
-under way is filled; a badge names its step on hover or focus, and a click
-or `Enter` takes the cursor there. Nodes passed once get none: there the
-order is the path itself.
+gets a numbered badge per pass, right after the branch's label: *timeout*
+`① ②`, *ok* `③` says the third try got through. A badge appears once
+the dot has run that hop, with a short pop. Up to three badges sit side by
+side, more read as a range (`1–11`) and the last pass. On a horizontal run
+they sit above the line, never on it; in a pair, the side alone on a branch
+keeps that row, and when both sides took it the `+` row mirrors the `−`
+one under the line. The pass under way is filled; a badge names its step on
+hover or focus, and a click or `Enter` takes the cursor there. Nodes passed
+once get none: there the order is the path itself.
+
+A click (or `Enter`) on a node of the path takes the cursor to the first
+step that reaches it; on a node the cursor is already at, to the next one,
+then round again: a loop's node walks its passes.
+
+The address follows the reader: opening a case, picking another side or
+another view adds an entry to the browser's history (`#case=…&minus=…&plus=…`,
+`#tab=…`, `&view=…`), so Back and Forward retrace the way and a copied link
+opens the same case.
 
 The page opens paused on the first tab, with the detail panel open; the green
 play button, under the diagram with the other controls and the keys that
@@ -371,7 +389,7 @@ and run in CI. `examples/loyalty-tier/src/oracle.js` does both.
 | `scenarios` | `[{id, tab, summary, origin, inputs, expect, steps, undecided?, caseName?}]` | `origin`: `{kind: real\|illustrative, text}`; `steps`: `[{hop: [from, to], message, caption}]`, or `hop: [from, via…, to]` to run through a node without stopping (a loop's return); a step with `motion: "fall"` speeds up as a body falls, lands in a puff of dust, and does not brake into its outcome; `undecided: true` flags a rule not decided yet; `caseName` names the case in an exported fixture |
 | `races` | `[{scenarios, tab, summary}]` | 2 to 4 scenario ids run at once on one graph, a numbered dot each, in a tab of its own: unlike a pair, each scenario keeps its tab, and nothing is compared (no `≠`). With a `measure` for each, the race runs on one clock (see *Measured time*); otherwise the dots take a step together |
 | `pairs` | `[{before, after, tab, summary}]` | two scenario ids, played as `−` and `+` on one graph, in one tab: a scenario in a pair gets no tab of its own; they may differ in length: the shorter stays on its outcome while the other goes on |
-| `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
+| `grid` | `{baseline, questions \| variants, cases, steps, expect?, show?, hover, summary?, caseHead?}` | cases × answers (or rules, fixes), instead of `scenarios` and `pairs`: see below |
 | `oracle` | `{repo, ref, paths, link?, files?, doubles?, cwd, cmd}` | see above; `doubles` is required when `files` is given |
 | `doubts` | `[{id, question, scenarios, answer?, assumed?}]` | what was asked before building, and the answer: see *Doubts* |
 | `port` | path to a CommonJS file exporting `decide(inputs)` | used when there is no oracle |
@@ -395,7 +413,10 @@ question by question, so the page should be laid out that way.
 - `expect`: `{case: {variant: {field: value}}}`, checked by C3;
 - `show`: the one panel row a matrix cell shows (by default the first of
   `hover`); `hover`: the rows a cell shows on hover;
-- `summary`: a line above the matrix.
+- `summary`: a line above the matrix: what the reader decides, in the
+  business's words;
+- `caseHead`: the head of the column of cases, when *Case* does not say
+  what a row is (*Œuvre envoyée*, *Run*).
 
 A flat `variants: [{id, label, short?, note?, inputs}]` with `baseline` as
 an id still works: the matrix then has one section, every case against every variant.
@@ -409,13 +430,26 @@ is highlighted: one mark for change, so the eye lands on what changed.
 
 Beside the matrix, the whole graph is drawn still: the cell under the
 pointer or the keyboard focus lights its path there, so a row reads as a
-route, not only as a value. There is no tab per case: a click on a cell
-opens it, today next to that answer, with the first divergence marked. The
-case keeps its row of the matrix above the diagrams, the two cells it
-compares marked `−` and `+`: a click (or Enter) on another cell puts it on
-`+`, with Shift on `−`, so 1A plays next to 1B, not only next to today; the
-row says so on screen. `← matrix` or Escape goes back, the focus on the cell
-the case was opened from. A row with `"value": "answer"` and
+route, not only as a value. The hint over the table starts above the cells,
+not above the column of cases: it speaks of the cells. There is no tab per
+case: a click on a cell opens it, today next to that answer, with the first
+divergence marked. A click on a case's name opens it too, today next to the
+section's first answer; under the pointer or the focus it lights that
+cell's path, as the cell would.
+
+The open case heads its page with `← matrix`, then the case itself as a
+native select among the cases of its section (labelled by `caseHead`), and
+`↑` `↓` buttons for its neighbours; the arrow keys do the same while the
+case plays. Changing case keeps the `−` and `+` answers the reader chose,
+so walking the section compares the same two answers case after case; the
+buttons are disabled at the ends of the section. The case keeps its row of
+the matrix under its summary, the two cells it compares marked `−` and
+`+`; when both walk the same path, the case says so under its summary and
+names the values that still differ (or none: a control case). A click (or
+Enter) on another cell puts it on `+`, with Shift on `−`, so 1A plays next
+to 1B, not only next to today; a one-line hint under the row says so on
+screen. `← matrix` or Escape goes back, the focus on the cell the case was
+opened from. A row with `"value": "answer"` and
 `"compared": true` names the answer played; in a grid the case's row already
 says it, so the panel leaves it out.
 
@@ -446,6 +480,7 @@ serve every rule.
 | C16 | measured steps that do not add up to the run's total, within `tolerance` |
 | C17 | a time measured on a node that does not exist, or that the scenario's path does not reach |
 | C18 | a measure without its `total`, its number of runs `n` (1 or more, not asked of an estimate) or its `basis`; a negative time |
+| C19 | two branches leaving one node under one name: what picks one of them is a decision of its own, drawn as a node |
 
 C3 and C4 are the point: a scenario that says something the code does not do
 cannot be published. C6 guards the layout rather than the spec: boxes are
@@ -474,6 +509,7 @@ runs no logic, measures them unfilled):
 | a grid question's `text` | 90 |
 | a step `caption` | 70 |
 | a step `message` | 40 |
+| a grid's `caseHead` | 40 |
 
 Detail that does not fit belongs in `source`, which lands in the footer, or
 in a `basis` text, shown on hover.
