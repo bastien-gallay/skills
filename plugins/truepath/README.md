@@ -31,6 +31,8 @@ on 2026-11-23. The spec vocabulary may still change before
 1.0; [`CHANGELOG.md`](CHANGELOG.md) says what did. The examples build with 0
 violations, and the four that keep their page rebuild it byte for byte; the
 tests check both on every push to `main` and every pull request.
+The README's pictures predate 0.4.0 (the grid and the pair were taken on
+0.2.0, the race on 0.3.3): pass badges and the grid's case head changed since.
 Known limits are listed under *Limits* in
 [`SKILL.md`](skills/truepath/SKILL.md).
 
