@@ -10,9 +10,12 @@ stand beside its source, it first runs under their row in a corridor of its own.
 cross a box on its way down steps aside just past the boxes in its way, on the nearer side:
 sent around the whole drawing, it was the longest line on the page and widened it for nothing.
 `pass` is where the page writes, along an edge, which visits of a node revisited by a loop left
-by it: [x, y, side], the badges laid from (x, y) towards side (-1 left, 1 right). A labelled
+by it: [x, y, side, stack], the badges laid from (x, y) towards side (-1 left, 1 right). A labelled
 edge has them right after its label, which already names the branch ("no 1 2", "yes 3"); an
-unlabelled one, on a stretch of the edge no other edge leaving the same node shares.
+unlabelled one, on a stretch of the edge no other edge leaving the same node shares. With two
+sides (a pair), each side with badges on the edge gets a row: `stack` -1 when the badges sit
+above a horizontal run, (x, y) the row just above it, a second row (+) mirrored just under it,
+so no badge ever lies on the line; 0 when they sit beside a vertical one, the rows centred on (x, y).
 `across` lays the ranks out left to right instead (see `across`): the same layout, run on boxes
 turned a quarter, then turned back, its labels set again since text does not turn.
 Pure stdlib, deterministic: the same graph gives the same file.
@@ -40,6 +43,9 @@ LABEL_GAP = 4       # between an edge and its label
 CLEARANCE = 6       # how near a box side an edge may pass before it is sent around
 PASS_ROOM = 3       # between an edge label and the first pass badge after it
 PASS_W = 19         # a pass badge and the gap after it, in the page's units (runtime.html PASS_R, PASS_GAP)
+PASS_R = 8          # a badge's radius (runtime.html PASS_R)
+PASS_ABOVE = 3      # between a horizontal run and the badges written above it
+PASS_ROWS = 2 * PASS_R + 2  # two rows of badges, one per side of a pair, centred on their anchor
 
 
 def wrap(label):
@@ -239,14 +245,15 @@ def route(edges, ids, box, rank, back, gaps, near=False, lefts=()):
             w = len(label or "") * EDGE_CHAR_W
             room = 3 * PASS_W if a in in_loop(edges, back) else 0  # its badges, between its name and its lane
             pos = [lane - LABEL_GAP - room - (w + PASS_ROOM if w else 0), sy - LABEL_GAP]  # just above where it leaves
-            badge = [pos[0] + w + PASS_ROOM, pos[1] - 4, 1] if label else [lane - LABEL_GAP - room, sy - LANE, 1]
-            out.append({"from": a, "to": b, "d": d, "label": label or None, "pass": [round(badge[0], 1), round(badge[1], 1), 1],
+            above = sy - PASS_ABOVE - PASS_R  # above the run leaving the source, as its name is
+            badge = [pos[0] + w + PASS_ROOM, above] if label else [lane - LABEL_GAP - room, above]
+            out.append({"from": a, "to": b, "d": d, "label": label or None, "pass": [round(badge[0], 1), round(badge[1], 1), 1, -1],
                         "labelPos": [round(pos[0], 1), round(pos[1], 1)] if label else None})
             continue
         if (a, b) in back:  # out of the source's side, up its lane, into the target's side
             d, lane, climb, low = loops[a, b]
             pos = [lane + LABEL_GAP, climb]
-            badge = [lane + PASS_ROOM * 2, low - LANE, 1]  # at the foot of its own lane, which no other edge climbs
+            badge = [lane + PASS_ROOM * 2, low - LANE, 1, 0]  # at the foot of its own lane, which no other edge climbs
         elif any(o["x"] - CLEARANCE <= tx <= o["x"] + o["w"] + CLEARANCE for o in passed):  # a box is in the way
             lane, side = detour(tx, passed, taken)
             lane = round(lane)
@@ -254,23 +261,30 @@ def route(edges, ids, box, rank, back, gaps, near=False, lefts=()):
             before = gaps[rank[b] - 1]
             low = round(t["y"] - (before - LANE if near else before / 2))
             d = f"M{sx} {y1} V{rail} H{lane} V{low} H{tx} V{y2}"
-            badge = [tx - PASS_ROOM * 2, (low + y2) / 2, -1]
+            badge = [tx - PASS_ROOM * 2, min((low + y2) / 2, y2 - PASS_ROWS), -1, 0]  # both rows clear the box below
             # the label sits on the outer side of the detour, away from the boxes it steps around
             pos = [lane + LABEL_GAP if side > 0 else lane - LABEL_GAP - len(label) * EDGE_CHAR_W, (rail + low) / 2]
         elif sx == tx:
             d = f"M{sx} {y1} V{y2}"
-            badge = [sx - PASS_ROOM * 2, (rail + y2) / 2, -1]  # past the rail: above it, the stub is shared with the source's other edges
+            # past the rail: above it, the stub is shared with the source's other edges; both rows clear the box below
+            badge = [sx - PASS_ROOM * 2, min((rail + y2) / 2, y2 - PASS_ROWS), -1, 0]
             # below the rail: above it, the stub is shared with the source's other edges, and a label there names them all
             pos = [sx + CLEARANCE, (rail + y2) / 2 + LABEL_GAP]
         else:
             d = f"M{sx} {y1} V{rail} H{tx} V{y2}"
-            badge = [tx - PASS_ROOM * 2, (rail + y2) / 2, -1]
+            # above its own stretch of the rail, from the source towards the target: the run into the target may be
+            # shared with the other edges entering it, and their badges would land on one another
+            out_dir = 1 if tx > sx else -1
+            badge = [sx + out_dir * PASS_ROOM * 2, rail - PASS_ABOVE - PASS_R, out_dir, -1]
             pos = [(sx + tx) / 2 - len(label) * EDGE_CHAR_W / 2, rail - LABEL_GAP]  # centred on the rail
-        if label:  # after the branch's name, on its baseline's middle: the badges read as part of the label
-            badge = [pos[0] + len(label) * EDGE_CHAR_W + PASS_ROOM, pos[1] - 4, 1]
+        if label:  # after the branch's name: the badges read as part of the label
+            if lane is None and sx != tx:  # the name sits on the rail: the badges too, above it, never on it
+                badge = [pos[0] + len(label) * EDGE_CHAR_W + PASS_ROOM, rail - PASS_ABOVE - PASS_R, 1, -1]
+            else:  # the name beside a vertical run: the badges on its baseline's middle
+                badge = [pos[0] + len(label) * EDGE_CHAR_W + PASS_ROOM, pos[1] - 4, 1, 0]
         if lane is not None:
             reach = max(reach, lane, lane + LABEL_GAP + len(label) * EDGE_CHAR_W + 3 * PASS_W if label else lane)
-        out.append({"from": a, "to": b, "d": d, "label": label or None, "pass": [round(badge[0], 1), round(badge[1], 1), badge[2]],
+        out.append({"from": a, "to": b, "d": d, "label": label or None, "pass": [round(badge[0], 1), round(badge[1], 1), *badge[2:]],
                     "labelPos": [round(pos[0], 1), round(pos[1], 1)] if label else None})
     return out, reach
 
@@ -391,10 +405,11 @@ def turn(geo, back):
             if len(pts) == 2:  # a straight edge: its source's other branches leave on a rail just past it
                 x1 += LANE
             pos = [x1 + LABEL_GAP, y - LABEL_GAP]
-        badge = [pos[0] + w + PASS_ROOM, pos[1] - 4, 1] if e["label"] else [pos[0], y - 10, 1]
+        # above the horizontal run its name is written on, never on it
+        badge = [pos[0] + w + PASS_ROOM if e["label"] else pos[0], y - PASS_ABOVE - PASS_R, 1, -1]
         bottom = max(bottom, max(p[1] for p in pts) + MARGIN)
         right = max(right, max(p[0] for p in pts) + MARGIN)  # a corridor under the last rank runs past its boxes
-        edges.append({**e, "d": d, "pass": [round(badge[0], 1), round(badge[1], 1), 1],
+        edges.append({**e, "d": d, "pass": [round(badge[0], 1), round(badge[1], 1), 1, -1],
                       "labelPos": [round(pos[0], 1), round(pos[1], 1)] if e["label"] else None})
     return {"width": round(right), "height": round(bottom), "lineHeight": geo["lineHeight"], "nodes": nodes, "edges": edges,
             "across": True}

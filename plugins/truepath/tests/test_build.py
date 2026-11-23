@@ -165,6 +165,11 @@ class Checks(Case):
     def test_c1_hop_off_the_edges(self):
         self.refused(lambda s: s["scenarios"][0]["steps"][1].update(hop=["AGE", "REFUND"]), "C1")
 
+    def test_c19_two_branches_of_one_node_under_one_name(self):
+        def change(s):
+            s["edges"][3][2] = "yes"
+        self.refused(change, "C19")
+
     def test_c2_broken_path(self):
         self.refused(lambda s: s["scenarios"][0]["steps"].pop(1), "C2")
 
@@ -476,7 +481,8 @@ class Across(unittest.TestCase):
         for e in geo["edges"]:
             for x, y in self.corners(e["d"]):
                 self.assertTrue(0 <= x <= geo["width"] and 0 <= y <= geo["height"], (e["from"], e["to"], e["d"]))
-            x, y, _ = e["pass"]
+            x, y, _, stack = e["pass"]
+            self.assertIn(stack, (-1, 0), e)
             self.assertTrue(0 <= x <= geo["width"] and 0 <= y <= geo["height"], e)
             if e["label"]:
                 lx, ly = e["labelPos"]
@@ -944,6 +950,12 @@ class Page(Case):
         marks = {h.count('aria-current="true"') for h in minis}
         self.assertEqual(marks, {1, 2})  # today alone marks one cell; a comparison marks two, − and +
         self.assertTrue(all('class="pickhint"' in h for h in minis))  # Shift is said on screen, not only on hover
+        self.assertEqual(mx.count('class="caselink" data-open-case='), 2)  # a case's name opens it, as a button
+        heads = [h for h in played["html"] if 'class="casenav"' in h]  # an open case heads its page with a picker
+        self.assertTrue(heads)
+        self.assertTrue(all(h.count("<option ") == 2 and 'id="casesel"' in h for h in heads))  # every case of its section
+        self.assertTrue(all('data-step-case="-1"' in h and 'data-step-case="1"' in h for h in heads))  # ↑ ↓ as buttons too
+        self.assertTrue(any('data-step-case="-1" aria-label' in h and " disabled>" in h for h in heads))  # an end is said, not hidden
         for h in played["html"]:
             self.assertNotIn("<img", h)
 
@@ -1113,9 +1125,45 @@ class Passes(unittest.TestCase):
         geo = build.layout([{"id": i, "label": i} for i in "ABCD"],
                            [["A", "B", ""], ["B", "C", "next"], ["C", "B", "again"], ["C", "D", "done"]])
         for e in geo["edges"]:
-            x, y, side = e["pass"]
+            x, y, side, stack = e["pass"]
             self.assertIn(side, (-1, 1))
+            self.assertIn(stack, (-1, 0))
             self.assertTrue(0 <= x <= geo["width"] and 0 <= y <= geo["height"], e)
+
+    def test_badges_on_a_named_branch_sit_above_its_rail_never_on_it(self):
+        """A loop's decision: its two named branches leave on one rail; a side's badges sit above it, clear of the boxes."""
+        import layout
+        geo = build.layout([{"id": i, "label": i} for i in ("S", "D", "N", "Y", "M", "E")],
+                           [["S", "D", ""], ["D", "N", "no"], ["D", "Y", "yes"], ["N", "M", ""], ["Y", "M", ""],
+                            ["M", "S", "yes"], ["M", "E", "no"]])
+        d = geo["nodes"]["D"]
+        for e in geo["edges"]:
+            if e["from"] == "D":
+                rail = layout.points(e["d"])[1][1]
+                _, y, _, stack = e["pass"]
+                self.assertEqual(stack, -1, e)
+                self.assertLessEqual(y + layout.PASS_R, rail - layout.PASS_ABOVE, e)  # the first row clears the line
+                self.assertGreaterEqual(y - layout.PASS_R, d["y"] + d["h"], e)  # and the box above
+                below = y + 2 * (layout.PASS_R + layout.PASS_ABOVE)  # a pair's + row, mirrored under the line
+                self.assertGreaterEqual(below - layout.PASS_R, rail + layout.PASS_ABOVE, e)
+                self.assertLessEqual(below + layout.PASS_R, geo["nodes"][e["to"]]["y"], e)
+
+    def test_two_edges_into_one_node_write_their_badges_apart(self):
+        geo = build.layout([{"id": i, "label": i} for i in ("S", "D", "N", "Y", "M", "E")],
+                           [["S", "D", ""], ["D", "N", "no"], ["D", "Y", "yes"], ["N", "M", ""], ["Y", "M", ""],
+                            ["M", "S", "yes"], ["M", "E", "no"]])
+        into = [e["pass"] for e in geo["edges"] if e["to"] == "M" and e["from"] in "NY"]
+        self.assertEqual(len(into), 2)
+        self.assertNotEqual(into[0][:2], into[1][:2])
+        self.assertEqual(into[0][2], -into[1][2])  # each laid towards its own side's target, from its own source
+
+    def test_badges_beside_a_straight_edge_clear_the_box_it_enters(self):
+        import layout
+        geo = build.layout([{"id": i, "label": i} for i in "ABC"], [["A", "B", ""], ["B", "A", "again"], ["B", "C", "done"]])
+        e = next(e for e in geo["edges"] if (e["from"], e["to"]) == ("A", "B"))
+        _, y, _, stack = e["pass"]
+        self.assertEqual(stack, 0)
+        self.assertLessEqual(y + layout.PASS_R + 1 + layout.PASS_R, geo["nodes"]["B"]["y"] - layout.STUB)  # two rows fit above it
 
     def test_a_double_basis_is_its_own_provenance(self):
         self.assertEqual(build.provenance("double: the stub answers"), "double")

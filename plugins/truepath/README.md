@@ -19,15 +19,15 @@ writes nothing if one disagrees.
 
 ```text
 spec.json ──┐
-oracle/port ├─► build.py ──► checks C1–C18 ─► sim.html   (or nothing)
+oracle/port ├─► build.py ──► checks C1–C19 ─► sim.html   (or nothing)
 layout.py ──┘                                └► fixture.json (--export)
 ```
 
 ## Status
 
-0.3.3, tagged
-[`truepath/v0.3.3`](https://github.com/bastien-gallay/skills/tree/truepath/v0.3.3)
-on 2026-11-20. The spec vocabulary may still change before
+0.4.0, tagged
+[`truepath/v0.4.0`](https://github.com/bastien-gallay/skills/tree/truepath/v0.4.0)
+on 2026-11-23. The spec vocabulary may still change before
 1.0; [`CHANGELOG.md`](CHANGELOG.md) says what did. The examples build with 0
 violations, and the four that keep their page rebuild it byte for byte; the
 tests check both on every push to `main` and every pull request.

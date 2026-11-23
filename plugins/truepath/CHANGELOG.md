@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.4.0
+
+From a real fix page read by someone who had not built it: where the eye
+lost the path, and what it reached for and did not find.
+
+- **C19** refuses two branches of one node under one name (two `no`
+  leading to different outcomes): what picks one of them is a decision of
+  its own, drawn as a node. A spec that built under 0.3.3 may stop
+  building here; split the node, nothing else changes.
+- Pass badges sit above the rail of their edge, `−` over the line and `+`
+  mirrored under it, and appear only once the dot has passed, with a short
+  pop (none under reduced motion). Unlabelled edges into one node no longer
+  stack their badges on each other.
+- A click on a node on the path moves the cursor to its first visit, or
+  to the next one when it is already there.
+- The browser history follows the reader: the matrix, a case, its `−` and
+  `+`, the view; Back and Forward restore them.
+- A case where both sides walk the same path says so under its summary and
+  names the values that still differ, instead of showing no alternative.
+- Grid: `caseHead` names the column of cases (40 characters). The open
+  case heads its page with a native select among the cases of its section
+  and `↑` `↓` buttons (and keys) for its neighbours, keeping the `−` and
+  `+` answers; a case's name in the matrix opens it too. The hints are one
+  line: the matrix's over the cells, the case's under its row.
+
+`SKILL.md` adds the authoring rules behind these: a fix page takes the bug
+as its title, a case is named by what decides its path.
+
 ## 0.3.3
 
 A race example the repository can keep, and a dot that falls.

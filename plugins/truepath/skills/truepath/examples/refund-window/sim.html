@@ -26,14 +26,27 @@ main.overview #fold{writing-mode:vertical-rl;padding:12px 6px;align-self:stretch
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
 svg{width:100%;height:auto;display:block;max-height:calc(100vh - 210px)}
 .summary{margin:0 0 8px;font-size:16px;font-weight:500;min-width:0}
-.summary>:not(.casehead),.casetext{max-width:38em}
+.summary>:not(.casehead):not(.casenav),.casetext{max-width:38em}
 .casehead{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:flex-start;justify-content:space-between}
-.caserow{display:flex;gap:10px;align-items:flex-start}.caserow .home{font-size:13px;margin-top:8px}
+.caserow{display:flex;gap:10px;align-items:flex-start}
+/* a grid case's head: the way back, the case itself as the title, a pick among the section's cases, its neighbours a key away */
+.casenav{display:flex;align-items:center;gap:6px 12px;margin:0 0 10px}
+.casenav .home{flex:none}
+@media (max-width:520px){.casenav{flex-wrap:wrap}}
+.casenav button{font-size:13px}
+.casepick{display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 auto}
+.casepick .pickctl{display:flex;align-items:stretch;gap:4px;min-width:0}
+.casepick .cplabel{font:12px var(--sans);color:var(--muted);white-space:nowrap}
+.casepick select{font:600 16px var(--sans);padding:3px 8px;min-width:8em;max-width:26em;flex:0 1 auto;text-overflow:ellipsis}
+.casepick .cplabel{flex:none}.casestep{flex:none}
+.casestep{display:flex;gap:4px}.casestep button{font:15px/1 var(--sans);padding:0 10px}
+button:disabled{opacity:.4;cursor:default}
 body.grid .bar{display:none}
 .ocap{display:none;margin:8px 0 0;font-size:16px}main.overview .ocap{display:block}
 .ocap .cap2{display:inline;margin-right:16px}
 .origin{display:block;font:11px var(--sans);font-weight:400;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.origin.real{color:var(--accent)}
 .summary .warn{color:var(--diverge);font-weight:600}
+.same{display:block;font:13px var(--sans);color:var(--muted);margin-top:4px}
 aside{display:flex;flex-direction:column;gap:12px;position:sticky;top:8px;align-self:start;max-height:calc(100vh - 16px);overflow:auto}
 .caption{font-size:16px;min-height:4.4em}
 .msg{font-family:var(--mono);font-size:13px;color:var(--accent);margin-top:6px}
@@ -90,6 +103,7 @@ footer{padding:0 20px 16px;font-size:11px;color:var(--muted)}
 .node.off{opacity:.55}
 .node.end rect{stroke-width:2.4}
 .node.cur rect{stroke:var(--accent);stroke-width:2.2}
+.node.goto{cursor:pointer;outline:none}.node.goto:hover rect,.node.goto:focus-visible rect{stroke-width:2.6}.node.goto:focus-visible rect{stroke-dasharray:none;stroke:var(--accent)}
 .edge{fill:none;stroke:var(--dim);stroke-width:1;stroke-dasharray:3 4}
 .edge.on{stroke:var(--accent);stroke-width:2;stroke-dasharray:none}
 .edge.todo{stroke:var(--accent);stroke-width:1.4;stroke-dasharray:5 4;opacity:.55}
@@ -101,8 +115,8 @@ footer{padding:0 20px 16px;font-size:11px;color:var(--muted)}
 .r0 .rs,.rs.r0{color:var(--r0)}.r1 .rs,.rs.r1{color:var(--r1)}.r2 .rs,.rs.r2{color:var(--r2)}.r3 .rs,.rs.r3{color:var(--r3)}
 .phead.two .r0{color:var(--r0)}.phead.two .r1{color:var(--r1)}.phead.two .r2{color:var(--r2)}.phead.two .r3{color:var(--r3)}
 .dsw.r0{background:var(--r0)}.dsw.r1{background:var(--r1)}.dsw.r2{background:var(--r2)}.dsw.r3{background:var(--r3)}
-.pass.r0 rect{stroke:var(--r0)}.pass.r0 text{fill:var(--r0)}.pass.r1 rect{stroke:var(--r1)}.pass.r1 text{fill:var(--r1)}
-.pass.r2 rect{stroke:var(--r2)}.pass.r2 text{fill:var(--r2)}.pass.r3 rect{stroke:var(--r3)}.pass.r3 text{fill:var(--r3)}
+.pass.r0 rect:not(.hit){stroke:var(--r0)}.pass.r0 text{fill:var(--r0)}.pass.r1 rect:not(.hit){stroke:var(--r1)}.pass.r1 text{fill:var(--r1)}
+.pass.r2 rect:not(.hit){stroke:var(--r2)}.pass.r2 text{fill:var(--r2)}.pass.r3 rect:not(.hit){stroke:var(--r3)}.pass.r3 text{fill:var(--r3)}
 .rclock{font-family:var(--mono);color:var(--muted);margin-left:auto}
 .rorder{display:block;margin-top:4px;font-family:var(--mono);font-size:12px}.rorder .rs{margin-right:2px}
 .tlbar .seg.done,.tlcol .tlvbar .seg.done{background:var(--accent-soft)}
@@ -180,17 +194,20 @@ table.mx.mini td.side{box-shadow:inset 0 0 0 2px var(--accent)}
 table.mx.mini .sgn{font-family:var(--sans);font-weight:700;float:left;margin-right:6px}
 table.mx.mini td:not(.side):hover{box-shadow:none}
 table.mx td:focus-visible{outline:2px dashed var(--ink);outline-offset:-6px} /* focus: dashed ink, never the solid blue of a picked side */
-.pickhint{font-size:12px;color:var(--muted);margin:2px 0 0}
+table.mx th .caselink{all:unset;display:block;cursor:pointer;border-radius:4px}
+table.mx th .caselink:hover .lbl{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+table.mx th .caselink:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pickhint{font-size:11px;color:var(--muted);margin:4px 0 0}.pickhint kbd{font:11px var(--mono);border:1px solid var(--line);border-radius:4px;padding:0 4px}
 ol.steps button{all:unset;display:block;width:100%;cursor:pointer;border-radius:4px}
 ol.steps button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* the passes of a node a loop revisits: which visit left by which branch, written beside the branch once the dot took it */
 .pass rect{fill:var(--surface);stroke:var(--accent);stroke-width:1.2}.pass rect.hit{fill:transparent;stroke:none}
 .pass text{font:600 10px var(--mono);fill:var(--accent);text-anchor:middle;dominant-baseline:central;pointer-events:none}
-.pass.m rect{stroke:var(--minus)}.pass.m text{fill:var(--minus)}.pass.p rect{stroke:var(--plus)}.pass.p text{fill:var(--plus)}
+.pass.m rect:not(.hit){stroke:var(--minus)}.pass.m text{fill:var(--minus)}.pass.p rect:not(.hit){stroke:var(--plus)}.pass.p text{fill:var(--plus)}
 .pass.cur rect:not(.hit){fill:var(--accent)}.pass.cur text{fill:var(--surface)}.pass.cur.m rect:not(.hit){fill:var(--minus)}.pass.cur.p rect:not(.hit){fill:var(--plus)}
 .pass{cursor:pointer;outline:none}.pass:hover rect:not(.hit),.pass:focus-visible rect:not(.hit){stroke-width:2.4}
-.pass.fresh{transform-box:fill-box;transform-origin:center;animation:pop .16s cubic-bezier(.25,1,.5,1)}
-@keyframes pop{from{transform:scale(.4);opacity:0}}
+.pass.fresh{transform-box:fill-box;transform-origin:center;animation:pop .32s cubic-bezier(.25,1,.5,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
 ol.steps li.peek{background:var(--hl);border-radius:4px}
 .sw.passw{border-radius:50%;border-color:var(--accent);color:var(--accent);font:600 8px/9px var(--mono);text-align:center}
 @media (max-width:900px){main,.panes.mxview{grid-template-columns:minmax(0,1fr)}}
@@ -233,7 +250,7 @@ ol.steps li.peek{background:var(--hl);border-radius:4px}
 </main>
 <footer id="foot"></footer>
 <script>
-const DATA={"page": {"title": "Refund window", "subtitle": "Example: a refund asked on day 30 was refused before the fix", "source": "truepath example, self-contained", "lang": "en", "verdictSource": "port decide.js", "credit": true, "kinds": {"ok": {"label": "refunded", "color": "#15803d"}, "wrong": {"label": "store credit only", "color": "#b91c1c"}}, "nodes": {"REQ": {"label": "refund request", "kind": null, "role": "start"}, "AGE": {"label": "days since delivery", "kind": null, "role": null}, "D": {"label": "within 30 days?", "kind": null, "role": "decision"}, "REFUND": {"label": "money refunded", "kind": "ok", "role": null}, "CREDIT": {"label": "store credit", "kind": "wrong", "role": null}}, "scenarios": [{"id": "old", "tab": "Before", "summary": "Day 30: the old check reads `days \u003c 30` and refuses", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "The customer asks on the last day of the window."}, {"hop": ["AGE", "D"], "message": "30 \u003c 30 → false", "caption": "The old check excludes the last day."}, {"hop": ["D", "CREDIT"], "message": "store credit", "caption": "A refund the policy promises is refused."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "no"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "no", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "new", "tab": "After", "summary": "Same request: `days \u003c= 30` keeps day 30 in the window", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "Same request."}, {"hop": ["AGE", "D"], "message": "30 \u003c= 30 → true", "caption": "The last day counts."}, {"hop": ["D", "REFUND"], "message": "refunded", "caption": "The policy is applied as written."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "yes"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "yes", "provenance": {"kind": "port", "text": "port: decide.js"}}]}], "pairs": [{"before": "old", "after": "new", "tab": "before / after", "summary": "The one difference: does day 30 count?"}], "races": [], "grid": null}, "geo": {"width": 381, "height": 448, "lineHeight": 16, "nodes": {"REQ": {"w": 150, "h": 44, "labelLines": ["refund request"], "y": 32.0, "x": 119.2}, "AGE": {"w": 190, "h": 44, "labelLines": ["days since delivery"], "y": 140.0, "x": 99.2}, "D": {"w": 158, "h": 44, "labelLines": ["within 30 days?"], "y": 248.0, "x": 115.2}, "REFUND": {"w": 150, "h": 44, "labelLines": ["money refunded"], "y": 356.0, "x": 32.0}, "CREDIT": {"w": 135, "h": 44, "labelLines": ["store credit"], "y": 356.0, "x": 214.0}}, "edges": [{"from": "REQ", "to": "AGE", "d": "M194 76 V136", "label": null, "pass": [188, 122.0, -1], "labelPos": null}, {"from": "AGE", "to": "D", "d": "M194 184 V244", "label": null, "pass": [188, 230.0, -1], "labelPos": null}, {"from": "D", "to": "REFUND", "d": "M194 292 V324 H107 V352", "label": "yes", "pass": [162.8, 316, 1], "labelPos": [141.2, 320]}, {"from": "D", "to": "CREDIT", "d": "M194 292 V324 H282 V352", "label": "no", "pass": [247.2, 316, 1], "labelPos": [231.8, 320]}]}};
+const DATA={"page": {"title": "Refund window", "subtitle": "Example: a refund asked on day 30 was refused before the fix", "source": "truepath example, self-contained", "lang": "en", "verdictSource": "port decide.js", "credit": true, "kinds": {"ok": {"label": "refunded", "color": "#15803d"}, "wrong": {"label": "store credit only", "color": "#b91c1c"}}, "nodes": {"REQ": {"label": "refund request", "kind": null, "role": "start"}, "AGE": {"label": "days since delivery", "kind": null, "role": null}, "D": {"label": "within 30 days?", "kind": null, "role": "decision"}, "REFUND": {"label": "money refunded", "kind": "ok", "role": null}, "CREDIT": {"label": "store credit", "kind": "wrong", "role": null}}, "scenarios": [{"id": "old", "tab": "Before", "summary": "Day 30: the old check reads `days \u003c 30` and refuses", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "The customer asks on the last day of the window."}, {"hop": ["AGE", "D"], "message": "30 \u003c 30 → false", "caption": "The old check excludes the last day."}, {"hop": ["D", "CREDIT"], "message": "store credit", "caption": "A refund the policy promises is refused."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "no"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "no", "provenance": {"kind": "port", "text": "port: decide.js"}}]}, {"id": "new", "tab": "After", "summary": "Same request: `days \u003c= 30` keeps day 30 in the window", "origin": {"kind": "illustrative", "text": "skill example"}, "undecided": false, "case": null, "variant": null, "steps": [{"hop": ["REQ", "AGE"], "message": "delivered 30 days ago", "caption": "Same request."}, {"hop": ["AGE", "D"], "message": "30 \u003c= 30 → true", "caption": "The last day counts."}, {"hop": ["D", "REFUND"], "message": "refunded", "caption": "The policy is applied as written."}], "rows": [{"label": "Fix", "at": 0, "compared": true, "shown": "yes"}, {"label": "Days since delivery", "at": 1, "compared": false, "shown": "30"}, {"label": "In the window", "at": 2, "compared": false, "shown": "yes", "provenance": {"kind": "port", "text": "port: decide.js"}}]}], "pairs": [{"before": "old", "after": "new", "tab": "before / after", "summary": "The one difference: does day 30 count?"}], "races": [], "grid": null}, "geo": {"width": 381, "height": 448, "lineHeight": 16, "nodes": {"REQ": {"w": 150, "h": 44, "labelLines": ["refund request"], "y": 32.0, "x": 119.2}, "AGE": {"w": 190, "h": 44, "labelLines": ["days since delivery"], "y": 140.0, "x": 99.2}, "D": {"w": 158, "h": 44, "labelLines": ["within 30 days?"], "y": 248.0, "x": 115.2}, "REFUND": {"w": 150, "h": 44, "labelLines": ["money refunded"], "y": 356.0, "x": 32.0}, "CREDIT": {"w": 135, "h": 44, "labelLines": ["store credit"], "y": 356.0, "x": 214.0}}, "edges": [{"from": "REQ", "to": "AGE", "d": "M194 76 V136", "label": null, "pass": [188, 118, -1, 0], "labelPos": null}, {"from": "AGE", "to": "D", "d": "M194 184 V244", "label": null, "pass": [188, 226, -1, 0], "labelPos": null}, {"from": "D", "to": "REFUND", "d": "M194 292 V324 H107 V352", "label": "yes", "pass": [162.8, 313, 1, -1], "labelPos": [141.2, 320]}, {"from": "D", "to": "CREDIT", "d": "M194 292 V324 H282 V352", "label": "no", "pass": [247.2, 313, 1, -1], "labelPos": [231.8, 320]}]}};
 const {page}=DATA, grid=page.grid, NS="http://www.w3.org/2000/svg";
 let geo=DATA.geo; // the view drawn: DATA.views holds every view the spec offers, when it offers more than one
 const HOP_MS=650;         // outside a race, every hop takes the same time, however long it is drawn: time on screen follows meaning, not ink (the run into an outcome lasts SLOW times longer; a fall speeds up)
@@ -272,26 +289,28 @@ const words={
  fr:{tabs:"Scénarios",variants:"Réponse comparée",back:"Étape précédente",fwd:"Étape suivante",restart:"Recommencer",speed:"Vitesse",
   home:"← matrice",source:"Source\u00a0: ",logic:" · logique exécutée\u00a0: ",
   path:"chemin du scénario",diverge:"≠ premier écart entre avant et après",caseCol:"Cas",cell:"Cellule\u00a0: ",outcome:"issue, puis ",hover:"Au survol\u00a0: ",
-  differs:b=>`≠ diffère de «\u00a0${b}\u00a0»`,split:"les réponses divergent",pick:"Clic ou Entrée\u00a0: comparer en +. Avec Maj\u00a0: en −.",esc:"<kbd>Échap</kbd> matrice",later:"étape à venir",
+  differs:b=>`≠ diffère de «\u00a0${b}\u00a0»`,split:"les réponses divergent",pick:"Clic ou Entrée\u00a0: comparer en +. Avec Maj\u00a0: en −.",pickShort:"<kbd>clic</kbd> en + · <kbd>Maj</kbd>+<kbd>clic</kbd> en −",prevCase:"Cas précédent (↑)",nextCase:"Cas suivant (↓)",caseKeys:" · <kbd>↑</kbd><kbd>↓</kbd> cas",esc:"<kbd>Échap</kbd> matrice",later:"étape à venir",
   keys:"Clavier\u00a0: <kbd>←</kbd><kbd>→</kbd> étape · <kbd>Début</kbd><kbd>Fin</kbd> première, dernière · <kbd>Espace</kbd> lecture",tabKeys:" · onglet\u00a0: <kbd>1</kbd>…<kbd>9</kbd>, ou <kbd>↑</kbd><kbd>↓</kbd> depuis un onglet",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",viewKeys:" · <kbd>V</kbd> vue",views:"Vue",view:{flow:["↓","De haut en bas"],"flow-lr":["→","De gauche à droite"]},minusOnly:"chemin du seul −",plusOnly:"chemin du seul +",code:"✓ code",port:"⚠ portage",definition:"◇ définition",double:"◌ doublure",measure:"◉ mesuré",estimate:"≈ estimé",race:"Une course : plusieurs cas sur le même graphe, un point numéroté chacun",
   tlHead:(stat,unit,src)=>src==="estimate"?`Temps estimé par étape, pour chaque cas (${unit})`:`Temps mesuré par étape, ${stat==="mean"?"moyenne":"médiane"} des exécutions de chaque cas (${unit})`,
   runs:(n,left)=>`n\u00a0${n}`+(left.length?` · hors calcul\u00a0: `+left.map(([c,w])=>`${c}\u00a0${w??"en échec"}`).join(", "):""),measured:" · mesuré\u00a0: ",estimated:" · estimé\u00a0: ",
   seg:(node,v,unit,pct)=>`${node}\u00a0: ${v}\u00a0${unit} (${pct}\u00a0%)`,segNeq:" · l'étape qui change le plus par rapport à la première ligne",segGone:" · l'étape qui change le plus\u00a0: absente des lignes suivantes",
-  passes:"n<sup>e</sup> passage par un nœud qui revient",pass:(n,node,i,m)=>`passage ${n} par «\u00a0${node}\u00a0» · étape ${i}\u00a0: ${m}`,
-  hint:b=>`Cliquez une cellule\u00a0: elle ouvre le cas pas à pas, «\u00a0${b}\u00a0» à gauche, la réponse de la colonne à droite.`,credit:"créé avec truepath",
+  same:"= même chemin des deux côtés",sameBut:x=>`\u00a0; ce qui change\u00a0: ${x}`,sameAll:"\u00a0; mêmes valeurs\u00a0: un cas témoin",
+  passes:"n<sup>e</sup> passage par un nœud qui revient",goto:n=>`«\u00a0${n}\u00a0»\u00a0: aller à l'étape qui l'atteint, puis à la suivante`,pass:(n,node,i,m)=>`passage ${n} par «\u00a0${node}\u00a0» · étape ${i}\u00a0: ${m}`,
+  hint:b=>`Une cellule ouvre son cas pas à pas, comparé à «\u00a0${b}\u00a0».`,credit:"créé avec truepath",
   real:"● cas réel",illus:"○ illustratif",undecided:"⚠️ règle non décidée · ",field:"Champ",
   hide:"Masquer le détail ›",show:"‹ Détail pas à pas",pause:"Pause",play:"Lecture",side:"côte à côte",sep:"\u00a0: ",half:"0,5×",
   zoom:"Zoom",zin:"Zoomer",zout:"Dézoomer",fit:"Voir tout le diagramme",fitText:"Ajuster"},
  en:{tabs:"Scenarios",variants:"Compared answer",back:"Previous step",fwd:"Next step",restart:"Restart",speed:"Speed",
   home:"← matrix",source:"Source: ",logic:" · logic run: ",
   path:"scenario path",diverge:"≠ first difference between before and after",caseCol:"Case",cell:"Cell: ",outcome:"outcome, then ",hover:"On hover: ",
-  differs:b=>`≠ differs from “${b}”`,split:"the answers disagree",pick:"Click or Enter: compare as +. With Shift: as −.",esc:"<kbd>Esc</kbd> matrix",later:"step to come",
+  differs:b=>`≠ differs from “${b}”`,split:"the answers disagree",pick:"Click or Enter: compare as +. With Shift: as −.",pickShort:"<kbd>click</kbd> as + · <kbd>Shift</kbd>+<kbd>click</kbd> as −",prevCase:"Previous case (↑)",nextCase:"Next case (↓)",caseKeys:" · <kbd>↑</kbd><kbd>↓</kbd> case",esc:"<kbd>Esc</kbd> matrix",later:"step to come",
   keys:"Keys: <kbd>←</kbd><kbd>→</kbd> step · <kbd>Home</kbd><kbd>End</kbd> first, last · <kbd>Space</kbd> play",tabKeys:" · tab: <kbd>1</kbd>…<kbd>9</kbd>, or <kbd>↑</kbd><kbd>↓</kbd> from a tab",zoomKeys:" · <kbd>+</kbd><kbd>−</kbd><kbd>0</kbd> zoom",viewKeys:" · <kbd>V</kbd> view",views:"View",view:{flow:["↓","Top to bottom"],"flow-lr":["→","Left to right"]},minusOnly:"path of − only",plusOnly:"path of + only",code:"✓ code",port:"⚠ ported",definition:"◇ definition",double:"◌ double",measure:"◉ measured",estimate:"≈ estimated",race:"A race: several cases on one graph, a numbered dot each",
   tlHead:(stat,unit,src)=>src==="estimate"?`Estimated time per step, for each case (${unit})`:`Measured time per step, the ${stat} of each case's runs (${unit})`,
   runs:(n,left)=>`n\u00a0${n}`+(left.length?` · left out: `+left.map(([c,w])=>`${c}\u00a0${w??"failed"}`).join(", "):""),measured:" · measured: ",estimated:" · estimated: ",
   seg:(node,v,unit,pct)=>`${node}: ${v}\u00a0${unit} (${pct}%)`,segNeq:" · the step that changes most from the first row",segGone:" · the step that changes most: gone from the rows below",
-  passes:"n<sup>th</sup> pass through a node a loop revisits",pass:(n,node,i,m)=>`pass ${n} through “${node}” · step ${i}: ${m}`,
-  hint:b=>`Click a cell: it opens the case step by step, “${b}” on the left, the column's answer on the right.`,credit:"made with truepath",
+  same:"= the same path on both sides",sameBut:x=>`; what changes: ${x}`,sameAll:"; the same values: a control case",
+  passes:"n<sup>th</sup> pass through a node a loop revisits",goto:n=>`“${n}”: go to the step that reaches it, then the next one`,pass:(n,node,i,m)=>`pass ${n} through “${node}” · step ${i}: ${m}`,
+  hint:b=>`A cell opens its case step by step, against “${b}”.`,credit:"made with truepath",
   real:"● real case",illus:"○ illustrative",undecided:"⚠️ rule not decided · ",field:"Field",
   hide:"Hide detail ›",show:"‹ Step-by-step detail",pause:"Pause",play:"Play",side:"side by side",sep:": ",half:"0.5×",
   zoom:"Zoom",zin:"Zoom in",zout:"Zoom out",fit:"Show the whole diagram",fitText:"Fit"}}[page.lang];
@@ -314,7 +333,7 @@ const TABS=grid
     ...(page.races||[]).map(r=>({sides:r.scenarios.map(scenario),label:"⇉ "+plain(r.tab),title:words.race,race:r}))]; // its cases keep their tabs
 /** view: "detail" plays step by step beside the panel, "overview" draws the whole path. minus/plus: the two variants a grid case compares.
  * The page opens paused: the reader starts it. follow: a zoomed view keeps the moving dot in sight until the reader pans. */
-const st={tab:0,step:0,view:"detail",playing:false,follow:true,auto:false,readable:false,speed:1,raf:0,timer:0,section:0,
+const st={tab:0,step:0,revealed:-1,view:"detail",playing:false,follow:true,auto:false,readable:false,speed:1,raf:0,timer:0,section:0,
  minus:grid?grid.baseline:null,
  plus:grid?(grid.sections[0].columns.find(c=>c.variant!==grid.baseline)||grid.sections[0].columns[0]).variant:null};
  // + starts on the first section's first answer, a column of the section the page opens on
@@ -476,13 +495,16 @@ function listenZoom(svg){const pts=new Map();let pinch=null,gesture=1;
   e.preventDefault();panBy(svg,-e.deltaX*px,-e.deltaY*px);},{passive:false});
  svg.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse"&&e.button!==0)return;
   if(e.target.closest&&e.target.closest(".pass"))return; // a badge is pressed, not dragged: a captured pointer would send its click to the svg
-  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(svg.setPointerCapture)svg.setPointerCapture(e.pointerId);
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY}); // captured once it moves: a still press stays a click on a node
   if(pts.size===2)pinch={d:spread(),k:view.k};if(view.k>1||pinch)svg.classList.add("drag");});
  svg.addEventListener("pointermove",e=>{const last=pts.get(e.pointerId);if(!last)return;
-  const now={x:e.clientX,y:e.clientY};pts.set(e.pointerId,now);
+  const now={x:e.clientX,y:e.clientY,x0:last.x0,y0:last.y0,held:last.held};
+  if(!now.held&&Math.hypot(now.x-now.x0,now.y-now.y0)>3){now.held=true;if(svg.setPointerCapture)svg.setPointerCapture(e.pointerId);}
+  pts.set(e.pointerId,now);
   if(pinch&&pts.size===2){zoomAt(pinch.k*spread()/pinch.d/view.k,...toDiagram(svg,...middle()));return;}
   if(view.k>1)panBy(svg,now.x-last.x,now.y-last.y);});
- const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)svg.classList.remove("drag");};
+ const up=e=>{const was=pts.get(e.pointerId);if(was&&was.held)svg.dragged=performance.now(); // the click ending a drag opens nothing
+  pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)svg.classList.remove("drag");};
  svg.addEventListener("pointerup",up);svg.addEventListener("pointercancel",up);
  svg.addEventListener("gesturestart",e=>{e.preventDefault();gesture=1;}); // Safari's own pinch
  svg.addEventListener("gesturechange",e=>{e.preventDefault();zoomAt(e.scale/gesture,...toDiagram(svg,e.clientX,e.clientY));gesture=e.scale;});}
@@ -503,7 +525,8 @@ function draw(pane,k,sides){const [sg,sd]=signsOf();
   if(e.label&&e.labelPos){(labelEls[e.from+">"+e.to]=el("text",{x:e.labelPos[0],y:e.labelPos[1],class:"elabel"},svg)).textContent=e.label;}}
  // the dots come after the boxes, so a box never hides them; two sides carry their sign, not only their colour
  for(const [id,box] of Object.entries(geo.nodes)){
-  const n=page.nodes[id],g=el("g",{class:"node"+(n.role==="decision"?" dec":"")},svg);
+  const n=page.nodes[id],reach=pane.className!=="preview"&&sides.some(s=>s.steps.some(x=>x.hop.includes(id))); // a node of the path is a way to its steps
+  const g=el("g",{class:"node"+(n.role==="decision"?" dec":"")+(reach?" goto":""),"data-node":id,...(reach?{tabindex:0,role:"button","aria-label":words.goto(plain(n.label))}:{})},svg);
   const r=el("rect",{x:box.x,y:box.y,width:box.w,height:box.h,rx:n.role==="start"?box.h/2:8},g); // where a path starts is round
   if(n.kind){const c=page.kinds[n.kind].color;r.style.stroke=c;r.style.fill=`color-mix(in srgb, ${c} ${TINT}, var(--surface))`;}
   box.labelLines.forEach((l,i)=>{el("text",{x:box.x+box.w/2,y:box.y+box.h/2+(i-(box.labelLines.length-1)/2)*geo.lineHeight},g).textContent=l;});
@@ -512,6 +535,7 @@ function draw(pane,k,sides){const [sg,sd]=signsOf();
  const passes=el("g",{class:"passes"},svg);
  listenZoom(svg);
  listenPasses(svg);
+ listenNodes(svg);
  const trails=sides.map((s,j)=>{const g=el("g",{class:"trail"+(sides.length>1?" "+sd[j]:"")},svg);
   return {pts:[],els:Array.from({length:TRAIL_N},()=>el("circle",{r:0},g))};});
  const fx=el("g",{class:"fx"},svg);
@@ -520,29 +544,39 @@ function draw(pane,k,sides){const [sg,sd]=signsOf();
   if(sides.length>1)el("text",{class:"dsign","text-anchor":"middle","dominant-baseline":"central"},g).textContent=sg[j];return g;});
  return {svg,edgeEls,nodeEls,labelEls,k,sides,dots,passes,side:sd,sign:sg,trails,fx,landed:new Set(),landedAt:{}};
 }
-const PASS_R=8,PASS_GAP=3,PASS_MAX=3,PASS_CHAR=6.2,PASS_HIT=6; // PASS_HIT: unseen margin around a badge that still takes the click // a badge is a circle; beyond PASS_MAX visits on one branch, the earlier ones are one range
+const PASS_R=8,PASS_ABOVE=3,PASS_GAP=3,PASS_MAX=3,PASS_CHAR=6.2,PASS_HIT=6; // PASS_HIT: unseen margin around a badge that still takes the click // a badge is a circle; beyond PASS_MAX visits on one branch, the earlier ones are one range
 const geoEdge=k=>geo.edges.find(e=>e.from+">"+e.to===k);
-/** The badges of every pass so far, laid along their branch from its anchor (layout.py's `pass`); − above +, in a pair. */
-function paintPasses(d,step,detail){const layer=d.passes,two=d.sides.length>1,n=d.sides.length,focused=document.activeElement;
+/** The badges of every pass so far, laid along their branch from its anchor (layout.py's `pass`). A side gets a row on an
+ *  edge only when it has badges there: above a horizontal run (stack -1) the first row sits just above the line, a second
+ *  one (+ in a pair) mirrored just under it; beside a vertical run (stack 0) the rows are centred on the anchor.
+ *  The pass under way shows once the dot has run its hop (st.revealed): a badge appears after the dot, not before it. */
+function paintPasses(d,step,detail,fresh){const layer=d.passes,focused=document.activeElement;
  const keep=focused&&focused.getAttribute&&focused.getAttribute("data-key");layer.textContent="";
+ const byEdge=new Map(); // edge -> [[side, its passes on that edge]], in side order
  d.sides.forEach((s,j)=>{const here=stepOf(s,step),by=new Map();
-  for(const q of passesOf(s))if(!detail||q.step<=here){if(!by.has(q.edge))by.set(q.edge,[]);by.get(q.edge).push(q);}
-  for(const [k,list] of by){const e=geoEdge(k);if(!e||!e.pass)continue;let [x,y0,dir]=e.pass;const y=y0+(two?(2*j-(n-1))*(PASS_R+1):0); // one row per side, − above +
-   const lab=d.labelEls[k]; // layout.py estimates a label's width; the browser knows it
-   if(lab&&lab.getComputedTextLength){const w=lab.getComputedTextLength();if(w>0)x=e.labelPos[0]+w+4;}
+  for(const q of passesOf(s))if(!detail||q.step<here||(q.step===here&&st.revealed===step)){if(!by.has(q.edge))by.set(q.edge,[]);by.get(q.edge).push(q);}
+  for(const [k,list] of by){if(!byEdge.has(k))byEdge.set(k,[]);byEdge.get(k).push([j,list,here]);}});
+ for(const [k,rows] of byEdge){const e=geoEdge(k);if(!e||!e.pass)continue;const [x0,y0,dir,stack]=e.pass;
+  const lab=d.labelEls[k]; // layout.py estimates a label's width; the browser knows it
+  let x=x0;if(lab&&lab.getComputedTextLength){const w=lab.getComputedTextLength();if(w>0)x=e.labelPos[0]+w+4;}
+  rows.forEach(([j,list,here],r)=>{const s=d.sides[j],two=d.sides.length>1;
+   // above a run: even rows climb from the line, odd rows (a pair's +) mirror them under it; beside a run: centred
+   const away=Math.floor(r/2)*2*(PASS_R+1),y=stack===-1?(r%2?y0+2*(PASS_R+PASS_ABOVE)+away:y0-away):y0+(2*r-(rows.length-1))*(PASS_R+1);
    const last=list[list.length-1];
    const items=list.length<=PASS_MAX?list.map(q=>({q,text:String(q.visit)})):[{q:list[list.length-2],text:`${list[0].visit}–${list[list.length-2].visit}`,all:list.slice(0,-1)},{q:last,text:String(last.visit)}];
    let at=x; // layout.py leaves the room between the anchor and the line or the label
    for(const it of dir<0?[...items].reverse():items){const w=Math.max(2*PASS_R,it.text.length*PASS_CHAR+6),cx=at+dir*w/2;at+=dir*(w+PASS_GAP);
     const cur=detail&&it.q.step===here,node=plain(page.nodes[it.q.node].label),msg=plain(s.steps[it.q.step].message);
     const said=(it.all||[it.q]).map(q=>words.pass(q.visit,node,q.step+1,plain(s.steps[q.step].message))).join("\n");
-    const g=el("g",{class:"pass"+(two?" "+d.side[j]:"")+(cur?" cur":"")+(cur&&!REDUCED?" fresh":""),tabindex:0,role:"button",
+    const g=el("g",{class:"pass"+(two?" "+d.side[j]:"")+(cur?" cur":"")+(cur&&fresh&&!REDUCED?" fresh":""),tabindex:0,role:"button",
      "data-step":it.q.step,"data-key":`${j}:${k}:${it.text}`,"aria-label":words.pass(it.q.visit,node,it.q.step+1,msg)},layer);
     el("title",{},g).textContent=said;
     el("rect",{x:cx-w/2-PASS_HIT,y:y-PASS_R-PASS_HIT,width:w+2*PASS_HIT,height:2*(PASS_R+PASS_HIT),fill:"transparent",stroke:"none",class:"hit"},g);
     el("rect",{x:cx-w/2,y:y-PASS_R,width:w,height:2*PASS_R,rx:PASS_R},g);
-    el("text",{x:cx,y},g).textContent=it.text;}}});
+    el("text",{x:cx,y},g).textContent=it.text;}});}
  if(keep){const again=layer.querySelector&&layer.querySelector(`[data-key="${cssq(keep)}"]`);again&&again.focus&&again.focus();}}
+/** The dot has run the step's hop: its pass badges appear now, with a short pop. */
+function reveal(){if(st.revealed===st.step)return;st.revealed=st.step;if(st.view==="detail")diagrams.forEach(d=>paintPasses(d,st.step,true,true));}
 /** A badge says its step in the list on hover or focus; a click or Enter takes the cursor there. */
 function listenPasses(svg){const peek=(e,on)=>{const g=e.target.closest&&e.target.closest(".pass");if(!g)return;
   const li=$("steps").querySelector(`li[data-i="${g.getAttribute("data-step")}"]`);li&&li.classList.toggle("peek",on);};
@@ -552,6 +586,18 @@ function listenPasses(svg){const peek=(e,on)=>{const g=e.target.closest&&e.targe
  svg.addEventListener("click",e=>{const g=e.target.closest&&e.target.closest(".pass");if(g)goTo(g);});
  svg.addEventListener("keydown",e=>{const g=e.target.closest&&e.target.closest(".pass");if(!g||(e.key!=="Enter"&&e.key!==" "))return;
   e.preventDefault();e.stopPropagation();goTo(g);});} // Space on a badge goes there: it does not start Play
+/** The steps that reach a node, as the page counts them: a race on the clock counts arrivals, not each side's steps. */
+function stepsAt(id){const c=clockOn(),at=new Set();
+ sidesOf(TABS[st.tab]).forEach((s,j)=>s.steps.forEach((x,k)=>{if(!(x.hop.slice(1).includes(id)||(!k&&x.hop[0]===id)))return;
+  at.add(c?c.times.findIndex(t=>Math.abs(t-c.ends[j][k])<1e-6):k);}));
+ return [...at].filter(i=>i>=0).sort((a,b)=>a-b);}
+/** A click or Enter on a node takes the cursor to the first step that reaches it; already there, to the next one, then round. */
+function listenNodes(svg){const goTo=g=>{const at=stepsAt(g.getAttribute("data-node"));if(!at.length)return;
+  const k=at.indexOf(st.step),i=k<0?at[0]:at[(k+1)%at.length];st.playing=false;engage();go(i);
+  const again=svg.querySelector&&svg.querySelector(`.node[data-node="${cssq(g.getAttribute("data-node"))}"]`);again&&again.focus&&document.activeElement!==document.body&&again.focus();};
+ const hit=e=>{const g=e.target.closest&&e.target.closest(".node.goto");return g&&!(e.target.closest(".pass"))?g:null;};
+ svg.addEventListener("click",e=>{const g=hit(e);if(g&&!(performance.now()-(svg.dragged||-1e9)<300))goTo(g);});
+ svg.addEventListener("keydown",e=>{const g=hit(e);if(!g||(e.key!=="Enter"&&e.key!==" "))return;e.preventDefault();e.stopPropagation();goTo(g);});}
 let diagrams=[],preview=null;
 /** The matrix tab's graph: still, one path lit, the path of the cell under the pointer or the keyboard focus. */
 function showPreview(td){if(!preview||!td)return;const s=cellOf(grid.cases[+td.dataset.case].id,td.dataset.variant);
@@ -568,8 +614,9 @@ function buildPanes(){const tab=TABS[st.tab],box=$("panes");box.innerHTML="";dia
   if(!first||first.dataset.case==null)return;
   const more=document.createElement("p");more.className="pmore";more.setAttribute("aria-live","polite");pane.appendChild(more);
   preview={...draw(pane,"mx",[cellOf(grid.cases[+first.dataset.case].id,first.dataset.variant)]),head:h,more};showPreview(first);
-  mx.addEventListener("mouseover",e=>showPreview(e.target.closest&&e.target.closest("td[data-case]")));
-  mx.addEventListener("focusin",e=>showPreview(e.target.closest&&e.target.closest("td[data-case]")));
+  mx.addEventListener("mouseover",e=>showPreview(e.target.closest&&(e.target.closest("td[data-case]")||rowCell(e.target))));
+  mx.addEventListener("focusin",e=>showPreview(e.target.closest&&(e.target.closest("td[data-case]")||rowCell(e.target))));
+  alignHint();
   return;}
  const sides=sidesOf(tab);box.className="panes";
  const pane=document.createElement("div");pane.className="pane";box.appendChild(pane);
@@ -596,10 +643,17 @@ function matrixKey(hover,baseName){const used=[...new Set(page.scenarios.map(s=>
  const keys=[words.cell+words.outcome+rich(grid.show),...used.map(k=>`<span class="sw" style="${kindFill(page.kinds[k].color)}"></span>${rich(page.kinds[k].label)}`),
   esc(words.differs(baseName)),words.real,words.illus,...(hover.length?[words.hover+hover.map(rich).join(", ")]:[])];
  return `<p class="mxkey">${keys.map(k=>`<span>${k}</span>`).join("")}</p>`;}
+/** A case's name in the matrix stands for its row: the cell it opens is today against the section's first answer. */
+function rowCell(t){const b=t&&t.closest&&t.closest(".caselink");if(!b)return null;const sec=grid.sections[+b.dataset.section];
+ const v=(sec.columns.find(c=>c.variant!==grid.baseline)||sec.columns[0]).variant;
+ return $("panes").querySelector(`td[data-case="${b.dataset.openCase}"][data-section="${b.dataset.section}"][data-variant="${cssq(v)}"]`);}
+/** The hint speaks of the cells: it starts where they start, past the column of cases. */
+function alignHint(){const h=$("panes").querySelector&&$("panes").querySelector(".mxview .hint"),th=$("panes").querySelector&&$("panes").querySelector("table.mx th");
+ const w=th&&th.offsetWidth;if(h&&h.style&&isFinite(w)&&w>0)h.style.marginLeft=w+"px";}
 function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filter(l=>l!==grid.show);
  const val=(s,label)=>rowsOf(s).find(r=>r.label===label).shown,baseName=plain(variantOf(grid.baseline).short);let pulsed=false;
  wrap.innerHTML=`<p class="hint">${POINTER}<span>${esc(words.hint(baseName))}</span></p>`+grid.sections.map((sec,si)=>{
-  const head=`<tr><th scope="col">${sec.text?`<span class="q">${rich(sec.text)}</span>`:words.caseCol}</th>${sec.columns.map(c=>
+  const head=`<tr><th scope="col">${sec.text?`<span class="q">${rich(sec.text)}</span>`:grid.caseHead?rich(grid.caseHead):words.caseCol}</th>${sec.columns.map(c=>
    `<th scope="col">${rich(c.head)}${c.note?`<span class="note">${rich(c.note)}</span>`:""}</th>`).join("")}</tr>`;
   const body=sec.cases.map(cid=>{const ci=grid.cases.findIndex(c=>c.id===cid),c=grid.cases[ci],base=cellOf(cid,grid.baseline);
    // what the reader decides on: a case where the section's answers disagree with one another; a mere difference from
@@ -607,7 +661,7 @@ function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filt
    const said=s=>cellText(s,val(s,grid.show)); // outcome and value: what a reader compares
    const answers=sec.columns.filter(col=>col.variant!==grid.baseline).map(col=>said(cellOf(cid,col.variant)));
    const split=answers.length>1?new Set(answers).size>1:answers.some(x=>x!==said(base));
-   return `<tr class="${split?"split":""}"><th scope="row" title="${esc(plain(c.origin.text))}">${originBullet(c.origin)}${rich(c.label)}</th>${sec.columns.map(col=>{const s=cellOf(cid,col.variant),x=val(s,grid.show);
+   return `<tr class="${split?"split":""}"><th scope="row" title="${esc(plain(c.origin.text))}"><button type="button" class="caselink" data-open-case="${ci}" data-section="${si}">${originBullet(c.origin)}<span class="lbl">${rich(c.label)}</span></button></th>${sec.columns.map(col=>{const s=cellOf(cid,col.variant),x=val(s,grid.show);
     const answer=col.variant!==grid.baseline,tip=hover.map(l=>plain(l)+words.sep+val(s,l)).join("\n");
     const pulse=split&&answer&&!pulsed;if(pulse)pulsed=true;
     return `<td tabindex="0" role="button" class="${[pulse&&"pulse",split&&answer&&"hit"].filter(Boolean).join(" ")}" aria-label="${esc(plain(c.label)+" · "+plain(col.head)+words.sep+cellText(s,x)+(split&&answer?" · "+words.split:""))}" data-case="${ci}" data-variant="${esc(col.variant)}" data-section="${si}" data-head="${esc(plain(col.head))}" title="${esc(tip)}">${cellBody(s,x,answer&&base,val(base,grid.show))}${CHEVRON}</td>`;}).join("")}</tr>`;}).join("");
@@ -615,7 +669,7 @@ function matrix(){const wrap=document.createElement("div"),hover=grid.hover.filt
   +matrixKey(hover,baseName);
  const open=td=>{st.plus=td.dataset.variant;st.minus=grid.baseline;st.section=+td.dataset.section;
   st.from={case:td.dataset.case,variant:td.dataset.variant,section:td.dataset.section};openTab(+td.dataset.case+1);};
- wrap.onclick=e=>{const td=e.target.closest("td[data-case]");if(td)open(td);};
+ wrap.onclick=e=>{const td=e.target.closest("td[data-case]")||rowCell(e.target);if(td)open(td);};
  wrap.onkeydown=e=>{const td=e.target.closest&&e.target.closest("td[data-case]");if(!td||(e.key!=="Enter"&&e.key!==" "))return;
   e.preventDefault();e.stopPropagation();open(td);}; // Space opens the cell, it does not start Play
  return wrap;}
@@ -659,18 +713,40 @@ function paint(d,step,detail,div){const two=d.sides.length>1;
 /** Which answer plays on each side is picked in the case's row (miniRow); the bar keeps only the tabs of a page without grid. */
 function renderVariants(){$("variants").innerHTML="";} // a grid case's way back sits in its head, beside its row
 const originLine=o=>`<span class="origin ${o.kind==="real"?"real":"illustrative"}" title="${esc(plain(o.text))}">${o.kind==="real"?words.real:words.illus} · ${rich(o.text)}</span>`;
+/** The head of a grid case: back to the matrix, the case named as the title, a pick among the cases of its section,
+ *  the one before or after a button or ↑ ↓ away; − and + stay the answers the reader chose. */
+function caseNav(c){const ids=grid.sections[st.section].cases,at=ids.indexOf(c.id);
+ const opts=ids.map(id=>{const x=grid.cases.find(k=>k.id===id);return `<option value="${esc(id)}"${id===c.id?" selected":""}>${esc(originBullet(x.origin)+plain(x.label))}</option>`;}).join("");
+ const stepBtn=(d,label,glyph,off)=>`<button type="button" data-step-case="${d}" aria-label="${esc(label)}" title="${esc(label)}"${off?" disabled":""}>${glyph}</button>`;
+ return `<div class="casenav"><button type="button" class="home" data-home="1">${words.home}</button>`
+  +`<div class="casepick"><label class="cplabel" for="casesel">${grid.caseHead?rich(grid.caseHead):esc(words.caseCol)}</label>`
+  +`<span class="pickctl"><select id="casesel"${ids.length<2?" disabled":""}>${opts}</select>`
+  +`<span class="casestep">${stepBtn(-1,words.prevCase,"↑",at<=0)}${stepBtn(1,words.nextCase,"↓",at>=ids.length-1)}</span></span></div></div>`;}
+/** Another case of the section, the same answers on − and +; the focus goes back to the control that asked. */
+function openCase(id,again){const ci=grid.cases.findIndex(c=>c.id===id);if(ci<0||ci+1===st.tab)return;
+ st.from={case:String(ci),variant:st.plus,section:String(st.section)};openTab(ci+1);
+ const back=again&&$("summary").querySelector(again);back&&back.focus&&back.focus();}
+function caseStep(d){const ids=grid.sections[st.section].cases,at=ids.indexOf(TABS[st.tab].case.id),to=ids[at+d];
+ if(to)openCase(to,`[data-step-case="${d}"]:not([disabled])`);}
 /** The open case's row of its matrix section: the cells it compares marked − and +, another cell a click away. */
 function miniRow(c){const sec=grid.sections[st.section],ci=grid.cases.findIndex(x=>x.id===c.id);
  const show=s=>rowsOf(s).find(r=>r.label===grid.show).shown;
  return `<table class="mx mini"><tr>${sec.columns.map(col=>`<th scope="col">${rich(col.head)}</th>`).join("")}</tr><tr>${sec.columns.map(col=>{
   const sg=col.variant===st.minus?"−":col.variant===st.plus?"+":"",s=cellOf(c.id,col.variant),base=cellOf(c.id,grid.baseline);
   return `<td tabindex="0" role="button" class="${sg?"side":""}" data-case="${ci}" data-variant="${esc(col.variant)}" data-section="${st.section}" title="${esc(words.pick)}" aria-label="${esc(plain(col.head)+words.sep+cellText(s,show(s)))}"${sg?' aria-current="true"':""}>${sg?`<span class="sgn">${sg}</span>`:""}${cellBody(s,show(s),col.variant!==grid.baseline&&base,show(base))}</td>`;}).join("")}</tr></table>`;}
-function renderSummary(tab,sides){
+/** Two sides on one path: the graph shows a single route, so the page says it, and names the values that still differ. */
+function samePath(a,b){if(forkOf(a,b))return "";const ra=rowsOf(a),rb=rowsOf(b),last=r=>valueAt(r,Infinity);
+ const moved=ra.filter((r,i)=>!r.compared&&!(grid&&r.answer)&&last(r)!==last(rb[i])).map(r=>rich(r.label));
+ return `<span class="same">${esc(words.same)}${moved.length?words.sameBut(moved.join(", ")):esc(words.sameAll)}</span>`;}
+function renderSummary(tab,sides){const same=sides.length===2&&!tab.race?samePath(sides[0],sides[1]):"";
  if(grid){const notes=sides.map((s,k)=>{const v=variantOf(s.variant);return v.note?`<span class="vnote">${k?"+":"−"} ${rich(headOf(v.id))}${words.sep}${rich(v.note)}</span>`:"";}).join("");
-  $("summary").innerHTML=`<div class="casehead"><div class="casetext">${rich(tab.case.summary)+originLine(tab.case.origin)+notes}</div>`
-   +`<div class="caserow"><button class="home" data-home="1">${words.home}</button><div>${miniRow(tab.case)}<p class="pickhint">${esc(words.pick)}</p></div></div></div>`;}
- else if(tab.race)$("summary").innerHTML=rich(tab.race.summary)+raceOrder(sides);
- else if(sides.length>1)$("summary").innerHTML=rich(tab.pair.summary);
+  const key=[st.tab,st.minus,st.plus,st.section].join("|");if(st.headKey===key)return; // drawn once per case and sides: a step keeps the picker's focus
+  st.headKey=key;
+  $("summary").innerHTML=caseNav(tab.case)+`<div class="casehead"><div class="casetext">${rich(tab.case.summary)+same+originLine(tab.case.origin)+notes}</div>`
+   +`<div class="caserow"><div>${miniRow(tab.case)}<p class="pickhint">${words.pickShort}</p></div></div></div>`;return;}
+ st.headKey=null;
+ if(tab.race)$("summary").innerHTML=rich(tab.race.summary)+raceOrder(sides);
+ else if(sides.length>1)$("summary").innerHTML=rich(tab.pair.summary)+same;
  else $("summary").innerHTML=(sides[0].undecided?`<span class="warn">${words.undecided}</span>`:"")+rich(sides[0].summary)+originLine(sides[0].origin);}
 /** One scenario: its caption, its data so far, its steps. */
 function renderOne(s){const step=s.steps[st.step];$("caption").innerHTML=rich(step.caption);$("msg").innerHTML=rich(step.message);
@@ -797,9 +873,10 @@ function runRace(c){const d=diagrams[0],c1=c.times[st.step],c0=st.step?c.times[s
   const landing=run.find(x=>x.end); // a dot just arrived: its landing is what to see, ahead of the leader
   const lead=landing||run.filter(x=>!x.end).reduce((b,x)=>!b||x.p>b.p?x:b,null)||run[0]; // else the leader: furthest along its own way
   if(st.readable&&lead)camera(run,lead);else follow(lastDots);};
- const tick=ts=>{if(!st.playing){place(c1);return;}
+ const tick=ts=>{if(!st.playing){place(c1);reveal();return;}
   t0??=ts;const f=Math.min(1,(ts-t0)/dur);place(c0+(c1-c0)*(soft?easeOut(f):f));
   if(f<1){st.raf=requestAnimationFrame(tick);return;}
+  reveal();
   const last=st.step===nSteps()-1;
   st.timer=setTimeout(()=>{if(!st.playing)return;
    if(last&&st.view==="detail"){st.playing=false;render();return;}
@@ -818,10 +895,10 @@ function runHop(){cancelAnimationFrame(st.raf);clearTimeout(st.timer);if(!diagra
   hops.forEach((h,j)=>{h.dot.setAttribute("transform",`translate(${qs[j].x+dx[j]} ${qs[j].y})`);if(!h.arrived)trail(h.d,h.j,qs[j]);});
   lastDots=qs.filter((q,j)=>!hops[j].arrived);follow(lastDots);};
  hops.forEach(h=>{if(!h.end)h.d.landed.delete(h.j);});
- const tick=ts=>{if(!st.playing){place(1);return;}
+ const tick=ts=>{if(!st.playing){place(1);reveal();return;}
   t0??=ts;f0=Math.min(1,(ts-t0)/dur);place(ending?easeOut(f0):easeInOut(f0));
   if(f0<1){st.raf=requestAnimationFrame(tick);return;}
-  hops.forEach(h=>{if(h.end&&!h.arrived)land(h.d,h.j,h.p.getPointAtLength(h.len),h.id,h.fall);});
+  reveal();hops.forEach(h=>{if(h.end&&!h.arrived)land(h.d,h.j,h.p.getPointAtLength(h.len),h.id,h.fall);});
   st.timer=setTimeout(()=>{if(!st.playing)return;const last=st.step===nSteps()-1;
    if(last&&st.view==="detail"){st.playing=false;render();return;}
    st.step=last?0:st.step+1;render();runHop();},st.view==="detail"?dwellAfter(st.step)/st.speed:OVERVIEW_PAUSE);};
@@ -830,7 +907,7 @@ function runHop(){cancelAnimationFrame(st.raf);clearTimeout(st.timer);if(!diagra
 function pathOf(d,h){if(h.length===2)return d.edgeEls[h.join(">")];const key=h.join(">");
  d.via??={};return d.via[key]??=el("path",{d:legs(h).map((k,i)=>{const e=d.edgeEls[k].getAttribute("d");return i?e.replace(/^M/,"L"):e;}).join(" "),
   class:"via",fill:"none",stroke:"none"},d.svg);}
-function go(i){st.step=Math.max(0,Math.min(nSteps()-1,i));render();runHop();}
+function go(i){st.step=Math.max(0,Math.min(nSteps()-1,i));st.revealed=-1;render();runHop();}
 /** The case's diagram fills the screen below what sits above it, whole, outcomes included: a projected page shows the fork. */
 const WIN=typeof window==="undefined"?null:window; // absent when the page is played without a browser (tests)
 function fitHeight(){if(!WIN)return;const tl=$("timeline"),below=$("controls").offsetHeight+$("legend").offsetHeight+(tl.classList.contains("up")?0:tl.offsetHeight)+FOOT_ROOM;
@@ -847,15 +924,33 @@ function readable(){if(!WIN||st.view!=="detail"||!diagrams.length)return;const d
  if(geo.width/r.width>=.99*geo.height/r.height&&tall>r.height+1)diagrams.forEach(x=>{x.svg.style.height=Math.round(tall)+"px";}); // max-height still caps it
  const b=geo.nodes[d.sides[0].steps[0].hop[0]];setView({x:b.x+b.w/2-viewW()/2,y:b.y-viewH()*FOLLOW_MARGIN});}
 /** A case opens whole: the fork and where each side ends are in sight. The readable zoom waits for the reader to move. */
-function openTab(i){st.tab=i;st.playing=false;st.step=0;buildPanes();fit();go(0);fitHeight();st.auto=true;}
+function openTab(i){st.headKey=null;st.tab=i;st.playing=false;st.step=0;buildPanes();fit();go(0);fitHeight();st.auto=true;remember();}
+/** The browser's history follows the reader: each case opened, each side picked, each view is one entry, and the address
+ *  says it (#case=…&minus=…&plus=…, #tab=…, &view=…), so Back and Forward retrace the way and a link opens the same case. */
+let restoring=false;
+function stateHash(){const t=TABS[st.tab],q=new URLSearchParams();
+ if(t.case){q.set("case",t.case.id);q.set("minus",st.minus);q.set("plus",st.plus);if(st.section)q.set("section",st.section);}
+ else if(!t.matrix&&st.tab)q.set("tab",st.tab+1);
+ const vs=DATA.views?Object.keys(DATA.views):[],v=vs.find(k=>DATA.views[k]===geo);if(v&&v!==vs[0])q.set("view",v);
+ return q.toString();}
+function remember(){if(!WIN||restoring)return;const h=stateHash();if(h===WIN.location.hash.slice(1))return;
+ try{WIN.history.pushState(null,"",h?"#"+h:WIN.location.pathname+WIN.location.search);}catch(e){}} // a page opened from disk may refuse: the page still works
+function restore(){const q=new URLSearchParams(WIN?WIN.location.hash.slice(1):"");restoring=true;
+ try{if(DATA.views){const vs=Object.keys(DATA.views),v=DATA.views[q.get("view")]?q.get("view"):vs[0];if(DATA.views[v]!==geo)useView(v);}
+  const ci=grid&&q.get("case")?grid.cases.findIndex(c=>c.id===q.get("case")):-1;
+  if(ci>=0){const sec=Math.max(0,Math.min(grid.sections.length-1,+q.get("section")||0)),known=x=>grid.sections[sec].columns.some(c=>c.variant===x);
+   st.section=sec;st.minus=known(q.get("minus"))?q.get("minus"):grid.baseline;if(known(q.get("plus")))st.plus=q.get("plus");
+   st.from={case:String(ci),variant:st.plus,section:String(sec)};openTab(ci+1);return;}
+  const t=+q.get("tab");openTab(!grid&&t>=1&&t<=TABS.length?t-1:0);}
+ finally{restoring=false;}}
 /** The first Play or step after opening: now the view zooms to readable labels and follows the dots. */
 function engage(){if(!st.auto)return;st.auto=false;readable();}
 // ---- controls
 if(!grid)TABS.forEach((t,i)=>{const b=document.createElement("button");b.setAttribute("role","tab");b.textContent=t.label;b.title=t.title;if(t.pair)b.className="pair";b.onclick=()=>openTab(i);$("tabs").appendChild(b);});
-$("keys").innerHTML=words.keys+(!grid&&TABS.length>1?words.tabKeys:"")+words.zoomKeys+(DATA.views?words.viewKeys:"")+(grid?" · "+words.esc:"");
+$("keys").innerHTML=words.keys+(!grid&&TABS.length>1?words.tabKeys:"")+(grid?words.caseKeys:"")+words.zoomKeys+(DATA.views?words.viewKeys:"")+(grid?" · "+words.esc:"");
 /** Another view of the same paths: drawn anew, on the same step. */
 function useView(v){geo=DATA.views[v];for(const b of $("views").children)b.setAttribute("aria-pressed",String(b.dataset.view===v));
- const keep=st.step;buildPanes();fit();if(!TABS[st.tab].matrix)go(keep);fitHeight();}
+ const keep=st.step;buildPanes();fit();if(!TABS[st.tab].matrix)go(keep);fitHeight();remember();}
 if(DATA.views){const g=$("views");g.hidden=false;g.setAttribute("role","group");g.setAttribute("aria-label",words.views);
  Object.keys(DATA.views).forEach((v,i)=>{const b=document.createElement("button");b.dataset.view=v;
   [b.textContent,b.title]=words.view[v];b.setAttribute("aria-label",words.view[v][1]);b.setAttribute("aria-pressed",String(!i));
@@ -882,6 +977,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&grid&&!TABS[st.tab]
  const story=!TABS[st.tab].matrix;
  if(e.key==="ArrowRight")$("fwd").click();else if(e.key==="ArrowLeft")$("back").click();
  else if((e.key==="Home"||e.key==="End")&&story){e.preventDefault();st.playing=false;engage();go(e.key==="Home"?0:nSteps()-1);}
+ else if((e.key==="ArrowUp"||e.key==="ArrowDown")&&grid&&story){e.preventDefault();caseStep(e.key==="ArrowDown"?1:-1);}
  else if((e.key==="ArrowUp"||e.key==="ArrowDown")&&onTab(t)){e.preventDefault();toTab((st.tab+(e.key==="ArrowDown"?1:-1)+TABS.length)%TABS.length);}
  else if(/^[1-9]$/.test(e.key)&&!grid&&+e.key<=TABS.length)toTab(+e.key-1);
  else if(e.key===" "){if(t.tagName==="BUTTON"&&!onTab(t))return; // a control presses itself; a tab does not reopen, it plays
@@ -893,12 +989,14 @@ document.addEventListener("keyup",e=>{if(e.key===" "&&onTab(e.target))e.preventD
 function pick(td,minus){const v=td.dataset.variant,[me,other]=minus?["minus","plus"]:["plus","minus"];if(v===st[me])return;
  if(v===st[other])st[other]=st[me];st[me]=v;openTab(st.tab);
  const again=$("summary").querySelector(`td[data-variant="${cssq(v)}"]`);again&&again.focus&&again.focus();} // the row is drawn anew: focus stays on the cell
+$("summary").addEventListener("change",e=>{if(e.target.id==="casesel")openCase(e.target.value,"#casesel");});
 $("summary").addEventListener("click",e=>{if(e.target.closest&&e.target.closest("[data-home]")){home();return;}
+ const stp=e.target.closest&&e.target.closest("[data-step-case]");if(stp){caseStep(+stp.dataset.stepCase);return;}
  const td=e.target.closest&&e.target.closest("td[data-case]");if(td)pick(td,e.shiftKey);});
 $("summary").addEventListener("keydown",e=>{const td=e.target.closest&&e.target.closest("td[data-case]");
  if(!td||(e.key!=="Enter"&&e.key!==" "))return;e.preventDefault();e.stopPropagation();pick(td,e.shiftKey);});
 if(grid)document.body.classList.add("grid");
-WIN&&WIN.addEventListener("resize",()=>{fitHeight();if(st.readable)readable();}); // a readable zoom is measured again
+WIN&&WIN.addEventListener("resize",()=>{fitHeight();alignHint();if(st.readable)readable();}); // a readable zoom is measured again
 listenTimeline();
-openTab(0);
+if(WIN){WIN.addEventListener("popstate",restore);restore();}else openTab(0);
 </script></body></html>

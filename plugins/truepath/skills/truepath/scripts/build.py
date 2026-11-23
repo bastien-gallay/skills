@@ -504,7 +504,7 @@ def expand_grid(g):
                                   "sameAnswer": []} for v in variants]}]
     grid = {"baseline": baseline, "variants": variants, "sections": sections, "cases": g["cases"],
             "show": g.get("show", g["hover"][0] if g["hover"] else None), "hover": g["hover"],
-            "summary": g.get("summary", "")}
+            "summary": g.get("summary", ""), "caseHead": g.get("caseHead")}
     cells = [{
         "id": f"{c['id']}/{v['id']}", "case": c["id"], "variant": v["id"], "answer": v["short"],
         "tab": c["label"], "summary": c["summary"], "origin": c["origin"],
@@ -759,7 +759,7 @@ def c13_panel_rows_appear_at_a_real_step(b):
 
 
 # What a text may say at most, in characters: the motion carries the explanation, the text labels it.
-TEXT_BUDGET = {"title": 60, "subtitle": 90, "summary": 110, "question": 90, "origin": 110, "caption": 70, "message": 40}
+TEXT_BUDGET = {"title": 60, "subtitle": 90, "summary": 110, "question": 90, "origin": 110, "caption": 70, "message": 40, "caseHead": 40}
 
 
 def c14_texts_stay_within_their_budget(b):
@@ -771,7 +771,7 @@ def c14_texts_stay_within_their_budget(b):
         return None
     spec, grid = b.spec, b.spec.get("grid") or {}
     texts = [("title", "title", spec.get("title")), ("subtitle", "subtitle", spec.get("subtitle")),
-             ("summary", "grid", grid.get("summary"))]
+             ("summary", "grid", grid.get("summary")), ("caseHead", "grid", grid.get("caseHead"))]
     texts += [("question", f"question {q.get('id')}", q.get("text")) for q in grid.get("questions", [])]
     for c in grid.get("cases", []):
         texts += [("summary", f"case {c.get('id')}", c.get("summary")),
@@ -883,6 +883,20 @@ def c18_a_measure_says_what_it_sums_up(b):
             yield f"{s['id']}: its measure gives no `basis`: where the times come from, and how runs were cut into steps"
 
 
+def c19_a_branch_name_says_where_it_goes(b):
+    """Two branches of one node under one name: the reader cannot tell which one a case takes, nor why.
+
+    An answer that leads to several outcomes hides a second decision: draw it as a node of its own."""
+    seen = {}
+    for a, t, label in b.spec["edges"]:
+        if str(label or "").strip():
+            seen.setdefault((a, label.strip()), []).append(t)
+    for (a, label), targets in seen.items():
+        if len(targets) > 1:
+            yield (f"{a}: {len(targets)} branches named {label!r} (to {', '.join(targets)}); "
+                   "what picks one of them is a decision of its own, draw it as a node")
+
+
 # The ids are the handles SKILL.md documents: stable, never renumbered.
 CHECKS = [
     ("C1", c1_hops_are_edges), ("C2", c2_path_is_unbroken_from_a_source), ("C3", c3_expect_is_what_the_logic_gives),
@@ -892,7 +906,7 @@ CHECKS = [
     ("C12", c12_every_case_is_in_the_matrix), ("C13", c13_panel_rows_appear_at_a_real_step),
     ("C14", c14_texts_stay_within_their_budget), ("C15", c15_no_case_rests_on_an_open_doubt),
     ("C16", c16_measured_steps_add_up_to_the_total), ("C17", c17_measured_nodes_are_on_the_path),
-    ("C18", c18_a_measure_says_what_it_sums_up),
+    ("C18", c18_a_measure_says_what_it_sums_up), ("C19", c19_a_branch_name_says_where_it_goes),
 ]
 
 
@@ -946,6 +960,7 @@ def page_data(spec, scenarios, grid, geo, verdict_source):
         "races": [{k: r[k] for k in ("scenarios", "tab", "summary")} for r in spec.get("races", [])],
         "grid": grid and {
             "baseline": grid["baseline"], "show": grid["show"], "hover": grid["hover"], "summary": grid["summary"],
+            "caseHead": grid["caseHead"],
             "variants": [{k: v[k] for k in ("id", "label", "short", "note")} for v in grid["variants"]],
             "sections": [{"text": sec["text"], "cases": sec["cases"],
                           "columns": [{"variant": c["variant"], "head": c["head"], "short": c["short"], "note": c.get("note")}
