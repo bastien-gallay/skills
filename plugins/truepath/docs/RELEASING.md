@@ -1,7 +1,9 @@
 # Releasing truepath
 
 Maintainer notes: how a version is cut. There is no build step and no
-bundle; a release is a commit on `main`, a tag on it, and a line in the hub.
+bundle; a release is a pull request merged into `main`, a tag on its merge
+commit, and a second pull request for the hub's `registry.json`, in the same
+monorepo.
 
 ## What a release is
 
@@ -10,9 +12,9 @@ bundle; a release is a commit on `main`, a tag on it, and a line in the hub.
 | `.claude-plugin/plugin.json` | `version` |
 | `CHANGELOG.md` | a `## X.Y.Z` section, first in the file |
 | `README.md` | the first line of `## Status`: version, tag and date (CI does not read it) |
-| git | an annotated, signed tag `truepath/vX.Y.Z` on the commit that carries the above |
+| git | an annotated, signed tag `truepath/vX.Y.Z` on the merge commit that carries the above |
 | GitHub | a release on that tag, its notes taken from the changelog section |
-| [bastien-gallay/skills](https://github.com/bastien-gallay/skills) | `version` of the `truepath` entry in `registry.json`, and the file's `updated` |
+| `registry.json` (monorepo root) | `version` of the `truepath` entry, and the file's `updated` |
 
 The `plugin.json` version and the changelog heading must agree, and the root
 marketplace must list truepath without a version: CI refuses a push where
@@ -25,9 +27,10 @@ reaches nobody.
 1. Run what CI runs, listed under *Verification commands* in
    [`.wrap.md`](../.wrap.md). If `runtime.html` or `layout.py` changed,
    rebuild the port examples and commit their `sim.html` with the change.
-2. Write the four version places of the table, commit as
-   `truepath X.Y.Z: <the conclusion>`, push, and wait for CI.
-3. Tag and publish:
+2. On a branch, write the four version places of the table, commit as
+   `truepath X.Y.Z: <the conclusion>`, push, open a pull request, wait for
+   CI, merge. No direct push to `main`: a convention, `main` is not protected.
+3. Tag the merge commit and publish:
 
    ```sh
    git tag -s truepath/vX.Y.Z -m "truepath X.Y.Z"
@@ -35,8 +38,8 @@ reaches nobody.
    gh release create truepath/vX.Y.Z --title "truepath X.Y.Z" --notes-file <the changelog section>
    ```
 
-4. In the hub, on a branch: update the `truepath` entry of `registry.json`,
-   run `node docs/build.mjs`, open a pull request.
+4. On another branch: update the `truepath` entry of `registry.json` at the
+   monorepo root, run `node docs/build.mjs`, open a pull request.
 
 ## Which number
 
